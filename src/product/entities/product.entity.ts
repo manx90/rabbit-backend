@@ -1,4 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
+import { Category } from './category.entity';
+import { SubCategory } from './sub-category.entity';
+import { ProductSize } from './product-size.entity';
 
 @Entity()
 export class Product {
@@ -17,36 +20,18 @@ export class Product {
   @Column({ default: 0 })
   Quantity: number;
 
-  @Column('text', { array: true, nullable: true }) // ← نخزن Base64 لكل صورة
-  images: string[];
-}
-
-@Entity()
-export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column()
-  name: string;
-
-  @Column()
-  email: string;
-
-  @Column()
-  password: string;
-
-  @Column()
-  role: 'admin' | 'Poster' | 'user';
-
-  @Column({ default: true })
-  isActive: boolean;
-
-  @Column()
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @Column()
-  updatedAt: Date;
+  @ManyToOne(() => Category)
+  category: Category;
 
-  @Column()
-  deletedAt: Date;
+  @ManyToOne(() => SubCategory)
+  subCategory: SubCategory;
+
+  @OneToMany(() => ProductSize, size => size.product)
+  sizes: ProductSize[];
+
+  @Column('text', { array: true, nullable: true }) // ← نخزن Base64 لكل صورة
+  images: string[];
 }
