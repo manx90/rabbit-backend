@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param, Delete, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Patch,
+} from '@nestjs/common';
 import { OrderService } from './order.service';
 
 @Controller('order')
@@ -6,18 +14,21 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Post()
-  create(@Body() orderData: {
-    customerName: string;
-    phoneNumber: string;
-    city: string;
-    address: string;
-    items: Array<{
-      productId: number;
-      sizeId: number;
-      colorId: number;
-      quantity: number;
-    }>;
-  }) {
+  create(
+    @Body()
+    orderData: {
+      customerName: string;
+      phoneNumber: string;
+      city: string;
+      address: string;
+      items: Array<{
+        productId: number;
+        sizeId: number;
+        colorId: number;
+        quantity: number;
+      }>;
+    },
+  ) {
     return this.orderService.create(orderData);
   }
 
@@ -32,10 +43,7 @@ export class OrderController {
   }
 
   @Patch(':id/status')
-  updateStatus(
-    @Param('id') id: string,
-    @Body('status') status: string,
-  ) {
+  updateStatus(@Param('id') id: string, @Body('status') status: string) {
     return this.orderService.updateStatus(+id, status);
   }
 

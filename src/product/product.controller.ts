@@ -21,7 +21,8 @@ export class ProductController {
   @UseInterceptors(FilesInterceptor('images'))
   async create(
     @UploadedFiles() images: Express.Multer.File[],
-    @Body() createProductDto: {
+    @Body()
+    createProductDto: {
       name: string;
       description: string;
       categoryId: number;
@@ -75,7 +76,8 @@ export class ProductController {
   @Patch(':id')
   async update(
     @Param('id') id: string,
-    @Body() updateProductDto: Partial<{
+    @Body()
+    updateProductDto: Partial<{
       name: string;
       description: string;
       categoryId: number;
