@@ -1,28 +1,74 @@
+import { IsString, IsNotEmpty, IsArray } from 'class-validator';
+
 export class CreateProductDto {
+
+  @IsString()
+  // @IsNotEmpty()
   name: string;
+
+  @IsString()
+  // @IsNotEmpty()
   description: string;
-  price: number = 0; // Add a default value to the price property
-  Quantity: number;
-  imageCover: string;
-  images?: string[];
-  imageSize: string;
-  imageTypes: string;
+
+  @IsString()
+  // @IsNotEmpty()
+  priceCover: number;
+
+  @IsArray()
+  // @IsNotEmpty()
+  images: File[];
+
+  @IsString()
+  // @IsNotEmpty()
   category: string;
+
+  @IsString()
+  // @IsNotEmpty()
   subCategory: string;
+  
+  @IsArray()
+  // @IsNotEmpty()
+  sizes: [
+    {
+      size: string;
+      price: number;
+      quantity: number; 
+      imgColorIndex: number;
+    }
+  ];
+
+  @IsArray()
+  // @IsNotEmpty()
+  imgColors: File[];
+
+  @IsString()
+  // @IsNotEmpty()
+  imgSize: File;
+
+  @IsString()
+  // @IsNotEmpty()
+  imgMeasure: File;
+
+  @IsString()
+  // @IsNotEmpty()
+  imgCover: File;
+
+
+  @IsString()
+  // @IsNotEmpty()
   isActive: boolean;
-  PosterId: number;
+
+  @IsString()
+  // @IsNotEmpty()
+  isFeatured: boolean;
+
+  @IsString()
+  // @IsNotEmpty()
+  isTrending: boolean;
+
+  @IsString()
+  // @IsNotEmpty()
+  isNew: boolean;
+
 }
-export class UpdateProductDto {
-  name: string;
-  description: string;
-  price: number;
-  Quantity: number;
-  imageCover: string;
-  images: string[];
-  imageSize: string;
-  imageTypes: string;
-  category: string;
-  subCategory: string;
-  isActive: boolean;
-  PosterId: number;
-}
+
