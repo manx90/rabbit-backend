@@ -1,4 +1,10 @@
-import { Controller, Post, Body, UseInterceptors, UploadedFiles, UploadedFile } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseInterceptors,
+  UploadedFiles,
+} from '@nestjs/common';
 import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/Product.dto';
@@ -15,13 +21,14 @@ export class ProductController {
   @UseInterceptors(FileInterceptor('imgCover'))
   async createProduct(
     @Body() createProductDto: CreateProductDto,
-    @UploadedFiles() files: {
-      images?: Express.Multer.File[],
-      imgColors?: Express.Multer.File[],
-      imgSize?: Express.Multer.File[],
-      imgMeasure?: Express.Multer.File[],
-      imgCover?: Express.Multer.File[]
-    }
+    @UploadedFiles()
+    files: {
+      images?: Express.Multer.File[];
+      imgColors?: Express.Multer.File[];
+      imgSize?: Express.Multer.File[];
+      imgMeasure?: Express.Multer.File[];
+      imgCover?: Express.Multer.File[];
+    },
   ) {
     return this.productService.createProduct(createProductDto, files);
   }

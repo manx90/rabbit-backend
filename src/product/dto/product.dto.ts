@@ -1,7 +1,6 @@
 import { IsString, IsNotEmpty, IsArray } from 'class-validator';
 
 export class CreateProductDto {
-
   @IsString()
   // @IsNotEmpty()
   name: string;
@@ -25,16 +24,16 @@ export class CreateProductDto {
   @IsString()
   // @IsNotEmpty()
   subCategory: string;
-  
+
   @IsArray()
   // @IsNotEmpty()
   sizes: [
     {
       size: string;
       price: number;
-      quantity: number; 
+      quantity: number;
       imgColorIndex: number;
-    }
+    },
   ];
 
   @IsArray()
@@ -53,7 +52,6 @@ export class CreateProductDto {
   // @IsNotEmpty()
   imgCover: File;
 
-
   @IsString()
   // @IsNotEmpty()
   isActive: boolean;
@@ -69,6 +67,4 @@ export class CreateProductDto {
   @IsString()
   // @IsNotEmpty()
   isNew: boolean;
-
 }
-

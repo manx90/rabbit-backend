@@ -1,12 +1,17 @@
-import { PrimaryGeneratedColumn, Column, Entity, ManyToOne, OneToMany } from "typeorm";
-
+import {
+  PrimaryGeneratedColumn,
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
 
 @Entity()
 export class Category {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({type: 'text'})
+  @Column({ type: 'text' })
   name: string;
 
   @OneToMany(() => SubCategory, (subCategory) => subCategory.category)
@@ -15,7 +20,7 @@ export class Category {
   @OneToMany(() => Product, (product) => product.category)
   products: Product[];
 
-  @Column({type: 'boolean'})
+  @Column({ type: 'boolean' })
   isActive: boolean;
 }
 
@@ -24,7 +29,7 @@ export class SubCategory {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({type: 'text'})
+  @Column({ type: 'text' })
   name: string;
 
   @ManyToOne(() => Category, (category) => category.subCategories)
@@ -33,7 +38,7 @@ export class SubCategory {
   @OneToMany(() => Product, (product) => product.subCategory)
   products: Product[];
 
-  @Column({type: 'boolean'})
+  @Column({ type: 'boolean' })
   isActive: boolean;
 }
 
@@ -42,28 +47,28 @@ export class Product {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({type: 'text'})
+  @Column({ type: 'text' })
   name: string;
 
-  @Column({type: 'numeric'})
+  @Column({ type: 'numeric' })
   priceCover: number;
 
-  @Column({type: 'text'})
+  @Column({ type: 'text' })
   description: string;
 
-  @Column({type: 'bytea', array: true})
+  @Column({ type: 'bytea', array: true })
   images: Buffer[];
 
-  @Column({type: 'bytea'})
+  @Column({ type: 'bytea' })
   imgCover: Buffer;
 
-  @Column({type: 'bytea'})
+  @Column({ type: 'bytea' })
   imgSize: Buffer;
 
-  @Column({type: 'bytea'})
+  @Column({ type: 'bytea' })
   imgMeasure: Buffer;
-  
-  @Column({type: 'bytea', array: true})
+
+  @Column({ type: 'bytea', array: true })
   imgColors: Buffer[];
 
   @ManyToOne(() => Category, (category) => category.products)
@@ -72,33 +77,32 @@ export class Product {
   @ManyToOne(() => SubCategory, (subCategory) => subCategory.products)
   subCategory: SubCategory;
 
-  @Column({type: 'numeric'})
+  @Column({ type: 'numeric' })
   quantity: number;
 
-  @Column({type: 'date'})
+  @Column({ type: 'date' })
   createdAt: Date;
 
-  @Column({type: 'date'})
+  @Column({ type: 'date' })
   updatedAt: Date;
 
-  @Column({type: 'boolean', default: true})
+  @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
-  @Column({type: 'boolean', default: false})
+  @Column({ type: 'boolean', default: false })
   isDeleted: boolean;
 
-  @Column({type: 'boolean', default: false})
+  @Column({ type: 'boolean', default: false })
   isFeatured: boolean;
 
-  @Column({type: 'boolean', default: false})
+  @Column({ type: 'boolean', default: false })
   isTrending: boolean;
 
-  @Column({type: 'boolean', default: true})
-  isNew: boolean; 
+  @Column({ type: 'boolean', default: true })
+  isNew: boolean;
 
   @OneToMany(() => ProductSize, (size) => size.product)
   sizes: ProductSize[];
-
 }
 
 @Entity()
@@ -106,20 +110,20 @@ export class ProductSize {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({type: 'text'})
+  @Column({ type: 'text' })
   size: string;
 
-  @Column({type: 'numeric'})
+  @Column({ type: 'numeric' })
   quantity: number;
-  @Column({type: 'numeric'})
+  @Column({ type: 'numeric' })
   price: number;
 
-  @Column({type: 'int'})
+  @Column({ type: 'int' })
   imgColorIndex: number;
 
   @ManyToOne(() => Product, (product) => product.sizes)
   product: Product;
 
-  @Column({type: 'boolean'})
+  @Column({ type: 'boolean' })
   isActive: boolean;
 }

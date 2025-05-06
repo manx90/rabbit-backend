@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
 import * as bcrypt from 'bcrypt';
@@ -27,9 +31,12 @@ export class AuthService {
   }
 
   async signIn(signInDto: SignInDto): Promise<{ access_token: string }> {
-    const user = await this.validateUser(signInDto.username, signInDto.password);
+    const user = await this.validateUser(
+      signInDto.username,
+      signInDto.password,
+    );
     const payload = { username: user.name, sub: user.id, role: user.role };
-    
+
     return {
       access_token: this.jwtService.sign(payload),
     };
