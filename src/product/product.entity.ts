@@ -6,13 +6,18 @@ import {
   OneToMany,
 } from 'typeorm';
 
+interface ColorImage {
+  colorName: string;
+  imgColor: Buffer;
+}
+
 @Entity()
 export class Category {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ type: 'text' })
-  name: string;
+  category: string;
 
   @OneToMany(() => SubCategory, (subCategory) => subCategory.category)
   subCategories: SubCategory[];
@@ -56,20 +61,20 @@ export class Product {
   @Column({ type: 'text' })
   description: string;
 
-  @Column({ type: 'bytea', array: true })
+  @Column({ type: 'bytea', array: true, default: null })
   images: Buffer[];
 
-  @Column({ type: 'bytea' })
+  @Column({ type: 'bytea', default: null })
   imgCover: Buffer;
 
-  @Column({ type: 'bytea' })
+  @Column({ type: 'bytea', default: null })
   imgSize: Buffer;
 
-  @Column({ type: 'bytea' })
+  @Column({ type: 'bytea', default: null })
   imgMeasure: Buffer;
 
-  @Column({ type: 'bytea', array: true })
-  imgColors: Buffer[];
+  @Column({ type: 'jsonb', default: null })
+  imgColors: ColorImage[];
 
   @ManyToOne(() => Category, (category) => category.products)
   category: Category;
@@ -77,13 +82,13 @@ export class Product {
   @ManyToOne(() => SubCategory, (subCategory) => subCategory.products)
   subCategory: SubCategory;
 
-  @Column({ type: 'numeric' })
+  @Column({ type: 'numeric', default: null })
   quantity: number;
 
-  @Column({ type: 'date' })
+  @Column({ type: 'date', default: new Date() })
   createdAt: Date;
 
-  @Column({ type: 'date' })
+  @Column({ type: 'date', default: null })
   updatedAt: Date;
 
   @Column({ type: 'boolean', default: true })
@@ -111,15 +116,13 @@ export class ProductSize {
   id: number;
 
   @Column({ type: 'text' })
-  size: string;
+  sizeName: string;
 
   @Column({ type: 'numeric' })
-  quantity: number;
-  @Column({ type: 'numeric' })
-  price: number;
+  Price: number;
 
-  @Column({ type: 'int' })
-  imgColorIndex: number;
+  @Column({ type: 'jsonb' })
+  Colors: { colorName: string; quantity: number }[];
 
   @ManyToOne(() => Product, (product) => product.sizes)
   product: Product;

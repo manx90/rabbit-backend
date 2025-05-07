@@ -1,12 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ProductController } from './product.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import {
-  Product,
-  Category,
-  SubCategory,
-  ProductSize,
-} from './entities/product.entity';
+import { Product, Category, SubCategory, ProductSize } from './product.entity';
 import { ProductService } from './product.service';
 @Module({
   controllers: [ProductController],
