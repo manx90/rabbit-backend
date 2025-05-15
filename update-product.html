@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Update Product</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+    }
+
+    .color-group {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+    }
+
+    .size-group {
+      margin-left: 20px;
+      margin-bottom: 10px;
+    }
+
+    .size-item {
+      border: 1px solid #eee;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      position: relative;
+    }
+
+    .remove-size {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      background-color: #ff4444;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 2px 8px;
+      cursor: pointer;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .add-size-btn {
+      background-color: #2196F3;
+    }
+
+    .add-size-btn:hover {
+      background-color: #1976D2;
+    }
+
+    #response {
+      margin-top: 20px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      white-space: pre-wrap;
+    }
+
+    .image-preview {
+      max-width: 100px;
+      max-height: 100px;
+      margin: 5px;
+      border: 1px solid #ddd;
+    }
+
+    .search-section {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f5f5f5;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Update Product</h1>
+
+  <div class="search-section">
+    <h2>Search Product</h2>
+    <div class="form-group">
+      <label for="searchId">Product ID:</label>
+      <input type="number" id="searchId" placeholder="Enter product ID">
+      <button onclick="searchProduct()">Search</button>
+    </div>
+  </div>
+
+  <form id="productForm" style="display: none;">
+    <div class="form-group">
+      <label for="name">Product Name:</label>
+      <input type="text" id="name" name="name" required>
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description:</label>
+      <textarea id="description" name="description" required></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="priceCover">Price Cover:</label>
+      <input type="number" id="priceCover" name="priceCover" required>
+    </div>
+
+    <div class="form-group">
+      <label for="category">Category:</label>
+      <input type="text" id="category" name="category">
+    </div>
+
+    <div class="form-group">
+      <label for="subCategory">Sub Category:</label>
+      <input type="text" id="subCategory" name="subCategory">
+    </div>
+
+    <div class="form-group">
+      <label>Product Images:</label>
+      <input type="file" name="images" multiple accept="image/*">
+      <div id="currentImages"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Size Chart:</label>
+      <input type="file" name="imgSize" accept="image/*">
+      <div id="currentSizeChart"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Measure Chart:</label>
+      <input type="file" name="imgMeasure" accept="image/*">
+      <div id="currentMeasureChart"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Cover Image:</label>
+      <input type="file" name="imgCover" accept="image/*">
+      <div id="currentCoverImage"></div>
+    </div>
+
+    <h3>Colors and Sizes</h3>
+    <div id="colorsContainer">
+      <!-- Color groups will be added here -->
+    </div>
+
+    <button type="button" onclick="addColorGroup()">Add Color</button>
+    <button type="submit">Update Product</button>
+  </form>
+
+  <div id="response"></div>
+
+  <script>
+    let currentProductId = null;
+
+    function displayImage(base64String, containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = `<img src="data:image/jpeg;base64,${base64String}" class="image-preview">`;
+    }
+
+    function displayImages(base64Array, containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = base64Array.map(base64 =>
+        `<img src="data:image/jpeg;base64,${base64}" class="image-preview">`
+      ).join('');
+    }
+
+    function addSizeGroup(colorIndex, sizeIndex, size = '', quantity = '') {
+      const sizeGroup = document.createElement('div');
+      sizeGroup.className = 'size-item';
+      sizeGroup.innerHTML = `
+        <button type="button" class="remove-size" onclick="this.parentElement.remove()">×</button>
+        <div class="form-group">
+          <label>Size:</label>
+          <input type="text" name="colorsWithSizes[${colorIndex}].sizes[${sizeIndex}].size" 
+                 value="${size}" placeholder="e.g., X" required>
+          <label>Quantity:</label>
+          <input type="number" name="colorsWithSizes[${colorIndex}].sizes[${sizeIndex}].quantity" 
+                 value="${quantity}" required>
+        </div>
+      `;
+      return sizeGroup;
+    }
+
+    function addColorGroup(colorData = null) {
+      const colorIndex = document.querySelectorAll('.color-group').length;
+      const colorGroup = document.createElement('div');
+      colorGroup.className = 'color-group';
+      colorGroup.innerHTML = `
+        <h4>Color ${colorIndex + 1}</h4>
+        <div class="form-group">
+          <label>Color Name:</label>
+          <input type="text" name="colorsWithSizes[${colorIndex}].name" 
+                 value="${colorData ? colorData.name : ''}" required>
+        </div>
+        <div class="form-group">
+          <label>Color Image:</label>
+          <input type="file" name="imgColor" accept="image/*">
+          ${colorData && colorData.imgColor ?
+          `<div><img src="data:image/jpeg;base64,${colorData.imgColor}" class="image-preview"></div>` : ''}
+        </div>
+        <div class="size-group">
+          <h5>Sizes</h5>
+          <div id="sizes-${colorIndex}">
+            <!-- Size groups will be added here -->
+          </div>
+          <button type="button" class="add-size-btn" onclick="addSizeToColor(${colorIndex})">Add Size</button>
+        </div>
+        <button type="button" onclick="this.parentElement.remove()">Remove Color</button>
+      `;
+      document.getElementById('colorsContainer').appendChild(colorGroup);
+
+      // Add size groups if colorData exists
+      const sizesContainer = document.getElementById(`sizes-${colorIndex}`);
+      if (colorData && colorData.sizes) {
+        colorData.sizes.forEach((sizeData, index) => {
+          sizesContainer.appendChild(addSizeGroup(colorIndex, index, sizeData.size, sizeData.quantity));
+        });
+      } else {
+        sizesContainer.appendChild(addSizeGroup(colorIndex, 0));
+      }
+    }
+
+    function addSizeToColor(colorIndex) {
+      const sizesContainer = document.getElementById(`sizes-${colorIndex}`);
+      const sizeIndex = sizesContainer.children.length;
+      sizesContainer.appendChild(addSizeGroup(colorIndex, sizeIndex));
+    }
+
+    async function searchProduct() {
+      const productId = document.getElementById('searchId').value;
+      if (!productId) {
+        alert('Please enter a product ID');
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://localhost:3003/product/${productId}`);
+        const product = await response.json();
+
+        if (response.status === 404) {
+          alert('Product not found');
+          return;
+        }
+
+        currentProductId = productId;
+        document.getElementById('productForm').style.display = 'block';
+
+        // Fill in the form with product data
+        document.getElementById('name').value = product.name;
+        document.getElementById('description').value = product.description;
+        document.getElementById('priceCover').value = product.priceCover;
+        document.getElementById('category').value = product.category?.category || '';
+        document.getElementById('subCategory').value = product.subCategory?.name || '';
+
+        // Display current images
+        if (product.images) {
+          displayImages(product.images, 'currentImages');
+        }
+        if (product.imgSize) {
+          displayImage(product.imgSize, 'currentSizeChart');
+        }
+        if (product.imgMeasure) {
+          displayImage(product.imgMeasure, 'currentMeasureChart');
+        }
+        if (product.imgCover) {
+          displayImage(product.imgCover, 'currentCoverImage');
+        }
+
+        // Clear existing color groups
+        document.getElementById('colorsContainer').innerHTML = '';
+
+        // Add color groups
+        if (product.colorsWithSizes) {
+          product.colorsWithSizes.forEach(colorData => {
+            addColorGroup(colorData);
+          });
+        } else {
+          addColorGroup();
+        }
+
+      } catch (error) {
+        alert('Error fetching product: ' + error.message);
+      }
+    }
+
+    document.getElementById('productForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentProductId) {
+        alert('Please search for a product first');
+        return;
+      }
+
+      const formData = new FormData(e.target);
+
+      try {
+        const response = await fetch(`http://localhost:3003/product/${currentProductId}`, {
+          method: 'PUT',
+          body: formData
+        });
+        const result = await response.json();
+        document.getElementById('response').textContent = JSON.stringify(result, null, 2);
+        alert('Product updated successfully!');
+      } catch (error) {
+        document.getElementById('response').textContent = 'Error: ' + error.message;
+      }
+    });
+  </script>
+</body>
+
+</html>
