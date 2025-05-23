@@ -4,7 +4,33 @@ import {
   IsNumber,
   IsBoolean,
   IsOptional,
+  IsArray,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class SizeQuantityDto {
+  @IsString()
+  @IsNotEmpty()
+  size: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  quantity: number;
+}
+
+export class ColorWithSizesDto {
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @IsString()
+  @IsOptional()
+  imgColor?: string;
+
+  @IsArray()
+  @Type(() => SizeQuantityDto)
+  sizes: SizeQuantityDto[];
+}
 
 export class CreateProductDto {
   @IsString()
@@ -15,37 +41,28 @@ export class CreateProductDto {
   @IsNotEmpty()
   description: string;
 
+  @IsNumber()
   @IsOptional()
-  @IsNumber({}, { message: 'Price cover must be a valid number' })
-  priceCover?: number | null;
+  @Type(() => Number)
+  priceCover?: number;
 
-  @IsString()
+  @IsNumber()
   @IsOptional()
-  category?: string;
+  @Type(() => Number)
+  categoryId?: number;
 
-  @IsString()
+  @IsNumber()
   @IsOptional()
-  subCategory?: string;
+  @Type(() => Number)
+  subCategoryId?: number;
 
-  // For colorsWithSizes structure
-  'colorsWithSizes[0].name'?: string;
-  'colorsWithSizes[0].imgColor'?: string;
-  'colorsWithSizes[0].sizes[0].size'?: string;
-  'colorsWithSizes[0].sizes[0].quantity'?: number;
-  'colorsWithSizes[0].sizes[1].size'?: string;
-  'colorsWithSizes[0].sizes[1].quantity'?: number;
-
-  'colorsWithSizes[1].name'?: string;
-  'colorsWithSizes[1].imgColor'?: string;
-  'colorsWithSizes[1].sizes[0].size'?: string;
-  'colorsWithSizes[1].sizes[0].quantity'?: number;
-  'colorsWithSizes[1].sizes[1].size'?: string;
-  'colorsWithSizes[1].sizes[1].quantity'?: number;
+  // For dynamic form data
+  [key: string]: any;
 
   // utils
   @IsBoolean()
   @IsOptional()
-  isActive: boolean;
+  isActive?: boolean;
 
   @IsBoolean()
   @IsOptional()
@@ -61,7 +78,7 @@ export class CreateProductDto {
 
   @IsBoolean()
   @IsOptional()
-  isBestSeller: boolean;
+  isBestSeller?: boolean;
 }
 
 export class UpdateProductDto {
@@ -77,13 +94,13 @@ export class UpdateProductDto {
   @IsOptional()
   priceCover?: number;
 
-  @IsString()
+  @IsNumber()
   @IsOptional()
-  category?: string;
+  categoryId?: number;
 
-  @IsString()
+  @IsNumber()
   @IsOptional()
-  subCategory?: string;
+  subCategoryId?: number;
 
   // utils
   @IsBoolean()

@@ -1,10 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthMiddlewareModule, AuthModule } from './auth/auth.module';
-import {
-  AuthMiddlewareProductModule,
-  ProductModule,
-} from './product/product.module';
+import { ProductModule } from './product/product.module';
 import { ConfigModule } from '@nestjs/config';
 import { OptosModule } from './optos/optos.module';
 import { OrderModule } from './order/order.module';
@@ -35,7 +32,6 @@ import { JwtModule } from '@nestjs/jwt';
     ProductModule,
     OptosModule,
     AuthMiddlewareModule,
-    AuthMiddlewareProductModule,
   ],
 })
 export class AppModule {}

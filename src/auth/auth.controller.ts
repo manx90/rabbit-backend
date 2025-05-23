@@ -96,6 +96,7 @@ export class AuthController {
       data: result,
     };
   }
+
   @Get('isAdmin')
   async isAdmin(@Request() req): Promise<any> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -106,6 +107,7 @@ export class AuthController {
       data: result,
     };
   }
+
   @Get()
   async getAllUsers() {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call

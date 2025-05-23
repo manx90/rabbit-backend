@@ -8,16 +8,19 @@ import {
   Delete,
   Param,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/Product.dto';
+import { SuperAdminGuard } from 'src/auth/guards';
 
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Post()
+  // @UseGuards(SuperAdminGuard)
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'images', maxCount: 10 },
@@ -47,6 +50,7 @@ export class ProductController {
   }
 
   @Delete()
+  @UseGuards(SuperAdminGuard)
   Deleteall() {
     return this.productService.Deleteall();
   }
@@ -62,6 +66,7 @@ export class ProductController {
   }
 
   @Put(':id')
+  @UseGuards(SuperAdminGuard)
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'images', maxCount: 10 },

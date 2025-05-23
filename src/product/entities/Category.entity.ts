@@ -13,7 +13,7 @@ export class Category {
   id: number;
 
   @Column({ type: 'text' })
-  category: string;
+  category: string;  
 
   @OneToMany(() => SubCategory, (subCategory) => subCategory.category)
   subCategories: SubCategory[];
@@ -33,12 +33,14 @@ export class SubCategory {
   @Column({ type: 'text' })
   name: string;
 
-  @ManyToOne(() => Category, (category) => category.subCategories)
+  @ManyToOne(() => Category, (category) => category.subCategories, {
+    onDelete: 'CASCADE',
+  })
   category: Category;
 
   @OneToMany(() => Product, (product) => product.subCategory)
   products: Product[];
 
-  @Column({ type: 'boolean' })
+  @Column({ type: 'boolean', default: true })
   isActive: boolean;
 }

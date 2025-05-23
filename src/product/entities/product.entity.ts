@@ -4,9 +4,11 @@ import {
   Entity,
   ManyToOne,
   BeforeInsert,
+  // OneToOne,
 } from 'typeorm';
 import { Category, SubCategory } from './Category.entity';
 import { ColorWithSizes } from './../interface/entity.interface';
+import { Auth } from 'src/auth/auth.entity';
 
 export interface ProductResponse {
   id: number;
@@ -28,9 +30,6 @@ export class Product {
   @Column({ type: 'text' })
   name: string;
 
-  @Column({ type: 'numeric' })
-  priceCover: number;
-
   @Column({ type: 'text' })
   description: string;
 
@@ -47,12 +46,14 @@ export class Product {
   imgMeasure: string;
 
   @Column({ type: 'jsonb', default: null })
-  colorsWithSizes: ColorWithSizes[];
+  ColorQuantityPriceSize: ColorWithSizes[];
 
   @ManyToOne(() => Category, (category) => category.products)
   category: Category;
 
-  @ManyToOne(() => SubCategory, (subCategory) => subCategory.products)
+  @ManyToOne(() => SubCategory, (subCategory) => subCategory.products, {
+    onDelete: 'CASCADE',
+  })
   subCategory: SubCategory;
 
   @Column({ type: 'numeric', default: null })
@@ -92,4 +93,10 @@ export class Product {
 
   @Column({ type: 'boolean', default: false })
   isBestSeller: boolean;
+
+  @Column({ type: 'numeric', default: 0 })
+  Sales: number;
+
+  @ManyToOne()
+  Poster: Auth;
 }

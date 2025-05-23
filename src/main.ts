@@ -24,7 +24,12 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({
+    transform: true,
+    transformOptions: {
+      enableImplicitConversion: true, // <- This line here
+    },
+  }));
 
   await app.listen(process.env.PORT ?? 3003, '0.0.0.0');
 }

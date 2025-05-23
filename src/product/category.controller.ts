@@ -1,3 +1,4 @@
+// eslint-disable @typescript-eslint/no-unsafe-argument, eslint-disable @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
 import {
   Controller,
   Get,
@@ -8,19 +9,21 @@ import {
   Param,
   HttpException,
   HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 
-@Controller('categories')
+@Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   async createCategory(@Body() body: { category: string }) {
     try {
-      return await this.categoryService.createCategory(body.category);
+      const result = await this.categoryService.createCategory(body.category);
+      return { message: 'Category created successfully', data: result };
     } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -33,16 +36,21 @@ export class CategoryController {
         body.name,
       );
     } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      // eslint-disable @typescript-eslint/no-unsafe-argument
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
 
   @Get()
   async getAllCategories() {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return await this.categoryService.getAllCategories();
   }
 
+  @Delete()
+  async deleteAllCategories() {
+    await this.categoryService.deleteAll();
+  }
   @Get(':id')
   async getCategoryById(@Param('id') id: string) {
     try {

@@ -19,16 +19,8 @@ export class OrderRepository {
     private productRepository: Repository<Product>,
   ) {}
 
-  /**
-   * Create a new order with items
-   * @param createOrderData Order data from request
-   * @returns The created order
-   */
   async createOrder(createOrderData: CreateOrderDto): Promise<Order> {
-    // Create new order instance
     const order = new Order();
-
-    // Set business information
     order.business = 1;
     order.business_address = 1;
 

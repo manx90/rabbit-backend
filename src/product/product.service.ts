@@ -1,3 +1,6 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -26,101 +29,140 @@ export class ProductService {
       imgMeasure?: Express.Multer.File[];
       imgCover?: Express.Multer.File[];
     },
-  ): Promise<Product> {
-    console.log('here');
-    const product = new Product();
-    product.name = createProductDto.name;
-    product.description = createProductDto.description;
-    product.priceCover = createProductDto.priceCover || 0;
-    // Handle file uploads
-    if (files.images) {
-      product.images = files.images.map((file) =>
-        file.buffer.toString('base64'),
-      );
-    }
-    // Handle image size
-    if (files.imgSize) {
-      product.imgSize = files.imgSize[0].buffer.toString('base64');
-    }
-    // Handle image measure
-    if (files.imgMeasure) {
-      product.imgMeasure = files.imgMeasure[0].buffer.toString('base64');
-    }
-    // Handle image cover
-    if (files.imgCover) {
-      product.imgCover = files.imgCover[0].buffer.toString('base64');
-    }
+  ): Promise<any> {
+    try {
+      const product = new Product();
+      product.name = createProductDto.name;
+      product.description = createProductDto.description;
+      product.priceCover = createProductDto.priceCover || 0;
 
-    // Handle colorsWithSizes
-    const colorsWithSizes: ColorWithSizes[] = [];
-    let colorIndex = 0;
+      // Handle file uploads
+      if (files.images) {
+        product.images = files.images.map((file) =>
+          file.buffer.toString('base64'),
+        );
+      }
+      if (files.imgSize) {
+        product.imgSize = files.imgSize[0].buffer.toString('base64');
+      }
+      if (files.imgMeasure) {
+        product.imgMeasure = files.imgMeasure[0].buffer.toString('base64');
+      }
+      if (files.imgCover) {
+        product.imgCover = files.imgCover[0].buffer.toString('base64');
+      }
 
-    while (createProductDto[`colorsWithSizes[${colorIndex}].name`]) {
-      const color: ColorWithSizes = {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        name: createProductDto[`colorsWithSizes[${colorIndex}].name`],
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        imgColor:
-          files.imgColor?.[colorIndex] && files.imgColor[colorIndex].buffer
-            ? files.imgColor[colorIndex].buffer.toString('base64')
-            : createProductDto[`colorsWithSizes[${colorIndex}].imgColor`],
-        sizes: [],
-      };
+      // Handle colorsWithSizes
+      const colorsWithSizes: ColorWithSizes[] = [];
+      let colorIndex = 0;
 
-      let sizeIndex = 0;
-      while (
-        createProductDto[
-          `colorsWithSizes[${colorIndex}].sizes[${sizeIndex}].size`
-        ]
-      ) {
-        color.sizes.push({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          size: createProductDto[
+      while (createProductDto[`colorsWithSizes[${colorIndex}].name`]) {
+        const color: ColorWithSizes = {
+          name: createProductDto[`colorsWithSizes[${colorIndex}].name`],
+          imgColor:
+            files.imgColor?.[colorIndex] && files.imgColor[colorIndex].buffer
+              ? files.imgColor[colorIndex].buffer.toString('base64')
+              : createProductDto[`colorsWithSizes[${colorIndex}].imgColor`],
+          sizes: [],
+        };
+
+        let sizeIndex = 0;
+        while (
+          createProductDto[
             `colorsWithSizes[${colorIndex}].sizes[${sizeIndex}].size`
-          ],
-          quantity: Number(
+          ]
+        ) {
+          const quantity = Number(
             createProductDto[
               `colorsWithSizes[${colorIndex}].sizes[${sizeIndex}].quantity`
             ],
-          ),
+          );
+
+          if (isNaN(quantity)) {
+            throw new Error(
+              `Invalid quantity for color ${color.name} size ${createProductDto[`colorsWithSizes[${colorIndex}].sizes[${sizeIndex}].size`]}`,
+            );
+          }
+
+          color.sizes.push({
+            size: createProductDto[
+              `colorsWithSizes[${colorIndex}].sizes[${sizeIndex}].size`
+            ],
+            quantity,
+          });
+          sizeIndex++;
+        }
+
+        colorsWithSizes.push(color);
+        colorIndex++;
+      }
+
+      product.colorsWithSizes = colorsWithSizes;
+
+      // Handle product category
+      if (createProductDto.categoryId) {
+        const category = await this.categoryRepository.findOne({
+          where: { id: createProductDto.categoryId },
+          relations: ['subCategories'],
         });
-        sizeIndex++;
+        if (!category) {
+          throw new Error('Category not found');
+        }
+        product.category = category;
+
+        // If subcategory is provided, verify it belongs to the category
+        if (createProductDto.subCategoryId) {
+          const subCategory = await this.subCategoryRepository.findOne({
+            where: { id: createProductDto.subCategoryId },
+            relations: ['category'],
+          });
+          if (!subCategory) {
+            throw new Error('SubCategory not found');
+          }
+          if (subCategory.category.id !== category.id) {
+            throw new Error(
+              'SubCategory does not belong to the specified category',
+            );
+          }
+          product.subCategory = subCategory;
+        }
+      } else if (createProductDto.subCategoryId) {
+        // If only subcategory is provided without category
+        const subCategory = await this.subCategoryRepository.findOne({
+          where: { id: createProductDto.subCategoryId },
+          relations: ['category'],
+        });
+        if (!subCategory) {
+          throw new Error('SubCategory not found');
+        }
+        product.subCategory = subCategory;
+        product.category = subCategory.category;
       }
 
-      colorsWithSizes.push(color);
-      colorIndex++;
-    }
+      // Calculate total quantity
+      product.quantity = colorsWithSizes.reduce((total, color) => {
+        return (
+          total +
+          color.sizes.reduce(
+            (colorTotal, size) => colorTotal + size.quantity,
+            0,
+          )
+        );
+      }, 0);
 
-    product.colorsWithSizes = colorsWithSizes;
+      // Set default values
+      product.isActive = true;
+      product.isNew = true;
+      product.isFeatured = false;
+      product.isTrending = false;
+      product.isBestSeller = false;
+      product.Sales = 0;
 
-    // Handle product category
-    if (createProductDto.category) {
-      const category = await this.categoryRepository.findOne({
-        where: { category: createProductDto.category },
-      });
-      if (!category) {
-        throw new Error('Category not found');
-      }
-      product.category = category;
+      // Save product
+      return await this.productRepository.save(product);
+    } catch (error) {
+      throw new Error(`Failed to create product: ${error.message}`);
     }
-    if (createProductDto.subCategory) {
-      const subCategory = await this.subCategoryRepository.findOne({
-        where: { name: createProductDto.subCategory },
-      });
-      if (!subCategory) {
-        throw new Error('SubCategory not found');
-      }
-      product.subCategory = subCategory;
-    }
-
-    product.quantity = colorsWithSizes.reduce((total, color) => {
-      return (
-        total +
-        color.sizes.reduce((colorTotal, size) => colorTotal + size.quantity, 0)
-      );
-    }, 0);
-    // Save product
-    return await this.productRepository.save(product);
   }
 
   async updateProduct(
@@ -220,9 +262,9 @@ export class ProductService {
     }
 
     // Handle category updates
-    if (updateProductDto.category) {
+    if (updateProductDto.categoryId) {
       const category = await this.categoryRepository.findOne({
-        where: { category: updateProductDto.category },
+        where: { id: updateProductDto.categoryId },
       });
       if (!category) {
         throw new Error('Category not found');
@@ -231,9 +273,9 @@ export class ProductService {
     }
 
     // Handle subcategory updates
-    if (updateProductDto.subCategory) {
+    if (updateProductDto.subCategoryId) {
       const subCategory = await this.subCategoryRepository.findOne({
-        where: { name: updateProductDto.subCategory },
+        where: { id: updateProductDto.subCategoryId },
       });
       if (!subCategory) {
         throw new Error('SubCategory not found');
@@ -284,19 +326,9 @@ export class ProductService {
   }
 
   async Getall(): Promise<ProductResponse[]> {
-    const products = await this.productRepository.find();
-    // return products.map((product) => {
-    //   const response: ProductResponse = {
-    //     ...product,
-    //     images: product.images || undefined,
-    //     imgCover: product.imgCover || undefined,
-    //     imgSize: product.imgSize || undefined,
-    //     imgMeasure: product.imgMeasure || undefined,
-    //     colorsWithSizes: product.colorsWithSizes,
-    //     isActive: product.isActive,
-    //   };
-    //   return response;
-    // });
+    const products = await this.productRepository.find({
+      relations: ['category', 'subCategory'],
+    });
     return products;
   }
 

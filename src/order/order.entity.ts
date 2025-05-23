@@ -39,10 +39,8 @@ export class Order {
   updatedAt: Date;
 
   // optemus
-
   @Column('decimal', { precision: 10, scale: 2 })
   Cod_amount: number;
-
   @BeforeInsert()
   setCod_amount() {
     // Use the provided Cod_amount instead of calculating from items

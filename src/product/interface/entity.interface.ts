@@ -1,10 +1,19 @@
 export interface ColorWithSizes {
-  name: string;
-  imgColor: string;
-  sizes: SizeQuantity[];
+  SizeName: string;
+  Price: string;
+  QuantityColor: [
+    {
+      ColorName: ColorAndImage.name;
+      Quantity: number;
+    },
+  ];
 }
 
-interface SizeQuantity {
-  size: string;
-  quantity: number;
+interface ColorAndImage {
+  name: string;
+  imgColor: string;
 }
+// interface SizeQuantity {
+//   size: string;
+//   quantity: number;
+// }
