@@ -21,8 +21,11 @@ import {
 import { AuthRepository } from '../common/Repositories/auth.repository';
 import { ConfigService } from '@nestjs/config';
 
-export type AuthenticatedUser = Omit<Auth, 'password'>;
-
+export interface AuthenticatedUser {
+  id: string;
+  username: string;
+  role: string;
+}
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);

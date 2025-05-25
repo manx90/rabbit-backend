@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-// src/auth/auth.repository.ts
 import {
   Injectable,
   NotFoundException,

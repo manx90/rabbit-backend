@@ -1,4 +1,3 @@
-// src/category/dto/category.dto.ts
 import {
   IsString,
   IsNotEmpty,
