@@ -4,11 +4,16 @@ import {
   Entity,
   ManyToOne,
   BeforeInsert,
+  JoinColumn,
+  BeforeUpdate,
   // OneToOne,
 } from 'typeorm';
 import { Category, SubCategory } from './Category.entity';
-import { ColorWithSizes } from './../interface/entity.interface';
-import { Auth } from 'src/auth/auth.entity';
+import {
+  SizeDetail,
+  PublishState,
+} from '../../common/interfaces/entity.interface';
+import { Auth } from 'src/auth/entities/auth.entity';
 
 export interface ProductResponse {
   id: number;
@@ -22,65 +27,61 @@ export interface ProductResponse {
   setIsActive?: () => void;
 }
 
-@Entity()
+@Entity('Product')
 export class Product {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'jsonb', default: null })
+  @Column({ type: 'jsonb', nullable: true })
   images: string[];
 
-  @Column({ type: 'jsonb', default: null })
+  @Column({ type: 'varchar', nullable: true })
   imgCover: string;
 
-  @Column({ type: 'jsonb', default: null })
-  imgSize: string;
+  @Column({ type: 'varchar', nullable: true })
+  imgSizeChart: string;
 
-  @Column({ type: 'jsonb', default: null })
+  @Column({ type: 'varchar', nullable: true })
   imgMeasure: string;
 
-  @Column({ type: 'jsonb', default: null })
-  ColorQuantityPriceSize: ColorWithSizes[];
+  @Column({ type: 'jsonb' })
+  sizeDetails: SizeDetail[];
 
-  @ManyToOne(() => Category, (category) => category.products)
+  @Column({
+    type: 'enum',
+    enum: PublishState,
+    default: PublishState.DRAFT,
+  })
+  publishState: PublishState;
+
+  @ManyToOne(() => Category, (category) => category.products, {
+    eager: true,
+  })
+  @JoinColumn({ name: 'categoryId' })
   category: Category;
 
   @ManyToOne(() => SubCategory, (subCategory) => subCategory.products, {
+    eager: true,
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'subCategoryId' })
   subCategory: SubCategory;
+
+  @ManyToOne(() => Auth, { nullable: true })
+  @JoinColumn({ name: 'posterId' })
+  poster: Auth;
 
   @Column({ type: 'numeric', default: null })
   quantity: number;
 
-  @Column({ type: 'date', default: new Date() })
-  createdAt: Date;
-
-  @Column({ type: 'date', default: null })
-  PosterAt: Date;
-
-  @Column({ type: 'date', default: null })
-  updatedAt: Date;
-
-  @Column({
-    type: 'boolean',
-    default: true,
-  })
-  isActive: boolean;
-
-  @BeforeInsert()
-  setIsActive() {
-    this.isActive = this.PosterAt === null;
-  }
-
   @Column({ type: 'boolean', default: false })
-  isDeleted: boolean;
+  isActive: boolean;
 
   @Column({ type: 'boolean', default: false })
   isFeatured: boolean;
@@ -94,9 +95,103 @@ export class Product {
   @Column({ type: 'boolean', default: false })
   isBestSeller: boolean;
 
-  @Column({ type: 'numeric', default: 0 })
-  Sales: number;
+  @Column({ type: 'boolean', default: false })
+  isDeleted: boolean;
 
-  @ManyToOne()
-  Poster: Auth;
+  @Column({ type: 'int', default: 0 })
+  sales: number;
+
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @Column({ type: 'timestamptz', default: null, nullable: true })
+  PosterAt: Date;
+
+  @Column({ type: 'timestamptz', default: null, nullable: true })
+  updatedAt: Date;
+
+  /**
+   * Calculate total quantity from all sizes and colors
+   */
+  getTotalQuantity(): number {
+    if (!this.sizeDetails) return 0;
+
+    return this.sizeDetails.reduce((total, size) => {
+      const sizeTotal = size.quantities.reduce((sizeSum, colorQty) => {
+        return sizeSum + colorQty.quantity;
+      }, 0);
+      return total + sizeTotal;
+    }, 0);
+  }
+
+  /**
+   * Get all available colors from all sizes
+   */
+  getAvailableColors(): Array<{ name: string; imgColor?: string }> {
+    if (!this.sizeDetails) return [];
+
+    const colorsMap = new Map<string, string>();
+
+    this.sizeDetails.forEach((size) => {
+      size.quantities.forEach((colorQty) => {
+        if (colorQty.quantity > 0) {
+          colorsMap.set(colorQty.colorName, colorQty.imgColor || '');
+        }
+      });
+    });
+
+    return Array.from(colorsMap.entries()).map(([name, imgColor]) => ({
+      name,
+      imgColor,
+    }));
+  }
+
+  /**
+   * Get all available sizes
+   */
+  getAvailableSizes(): string[] {
+    if (!this.sizeDetails) return [];
+
+    return this.sizeDetails
+      .filter((size) => size.quantities.some((q) => q.quantity > 0))
+      .map((size) => size.sizeName);
+  }
+
+  /**
+   * Before insert hook - set isActive based on publishState
+   */
+  @BeforeInsert()
+  @BeforeUpdate()
+  setActiveStatus() {
+    this.isActive = this.publishState === PublishState.PUBLISHED;
+  }
+
+  /**
+   * Before insert hook - validate size details
+   */
+  @BeforeInsert()
+  @BeforeUpdate()
+  validateSizeDetails() {
+    if (!this.sizeDetails || this.sizeDetails.length === 0) {
+      throw new Error('Product must have at least one size detail');
+    }
+
+    this.sizeDetails.forEach((size) => {
+      if (!size.sizeName || size.price <= 0) {
+        throw new Error('Each size must have a valid name and price');
+      }
+
+      if (!size.quantities || size.quantities.length === 0) {
+        throw new Error('Each size must have at least one color quantity');
+      }
+
+      size.quantities.forEach((colorQty) => {
+        if (!colorQty.colorName || colorQty.quantity < 0) {
+          throw new Error(
+            'Each color quantity must have a valid color name and non-negative quantity',
+          );
+        }
+      });
+    });
+  }
 }

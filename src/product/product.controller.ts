@@ -8,91 +8,87 @@ import {
   Delete,
   Param,
   Put,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ProductService } from './product.service';
-import { CreateProductDto } from './dto/Product.dto';
-import { SuperAdminGuard } from 'src/auth/guards';
-
+import { CreateProductDto, UpdateProductDto } from './dto/Product.dto';
+import { Request } from 'express';
+import { Auth } from 'src/auth/entities/auth.entity';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { Role } from '../common/constants/roles.constant';
+import { Roles } from '../common/decorators/roles.decorator';
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Post()
-  // @UseGuards(SuperAdminGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin)
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'images', maxCount: 10 },
-      { name: 'imgColor', maxCount: 10 },
-      { name: 'imgSize', maxCount: 1 },
-      { name: 'imgMeasure', maxCount: 1 },
       { name: 'imgCover', maxCount: 1 },
+      { name: 'imgSizeChart', maxCount: 1 },
+      { name: 'imgMeasure', maxCount: 1 },
     ]),
   )
-  createProduct(
+  async createProduct(
     @Body() createProductDto: CreateProductDto,
     @UploadedFiles()
     files: {
       images?: Express.Multer.File[];
-      imgColor?: Express.Multer.File[];
-      imgSize?: Express.Multer.File[];
-      imgMeasure?: Express.Multer.File[];
       imgCover?: Express.Multer.File[];
+      imgSizeChart?: Express.Multer.File[];
+      imgMeasure?: Express.Multer.File[];
     },
+    @Req() req: Request,
   ) {
-    return this.productService.createProduct(createProductDto, files);
+    const poster = req.user as Auth; // assumes Auth guard populates req.user
+    return this.productService.create(createProductDto, files, poster);
   }
 
   @Get()
-  getAll(): Promise<any> {
-    return this.productService.Getall();
-  }
-
-  @Delete()
-  @UseGuards(SuperAdminGuard)
-  Deleteall() {
-    return this.productService.Deleteall();
+  findAll() {
+    return this.productService.findAll();
   }
 
   @Get(':id')
-  GetOne(@Param('id') id: number): Promise<any> {
-    return this.productService.GetOne(id);
-  }
-
-  @Get('name/:name')
-  GetByName(@Param('name') name: string): Promise<any> {
-    return this.productService.GetOneByName(name);
+  findOne(@Param('id') id: number) {
+    return this.productService.findOne(+id);
   }
 
   @Put(':id')
-  @UseGuards(SuperAdminGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin)
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'images', maxCount: 10 },
-      { name: 'imgColor', maxCount: 10 },
-      { name: 'imgSize', maxCount: 1 },
-      { name: 'imgMeasure', maxCount: 1 },
       { name: 'imgCover', maxCount: 1 },
+      { name: 'imgSizeChart', maxCount: 1 },
+      { name: 'imgMeasure', maxCount: 1 },
     ]),
   )
-  updateProduct(
+  async updateProduct(
     @Param('id') id: number,
-    @Body() updateProductDto: Partial<CreateProductDto>,
+    @Body() updateProductDto: UpdateProductDto,
     @UploadedFiles()
     files: {
       images?: Express.Multer.File[];
-      imgColor?: Express.Multer.File[];
-      imgSize?: Express.Multer.File[];
-      imgMeasure?: Express.Multer.File[];
       imgCover?: Express.Multer.File[];
+      imgSizeChart?: Express.Multer.File[];
+      imgMeasure?: Express.Multer.File[];
     },
-  ): Promise<any> {
-    return this.productService.updateProduct(id, updateProductDto, files);
+  ) {
+    return this.productService.update(+id, updateProductDto, files);
   }
 
   @Delete(':id')
-  deleteProduct(@Param('id') id: number): Promise<any> {
-    return this.productService.DeletOne(id);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  remove(@Param('id') id: number) {
+    return this.productService.remove(+id);
   }
 }

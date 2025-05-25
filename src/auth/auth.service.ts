@@ -1,322 +1,175 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Injectable,
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
-  InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 
-import { Auth } from './auth.entity';
-import { AuthUser, LoginDto, RegisterDto, ChangePasswordDto } from './auth.dto';
-import { AuthRepository } from './auth.repository';
+import { Auth } from './entities/auth.entity';
+import {
+  AuthUser,
+  LoginDto,
+  RegisterDto,
+  ChangePasswordDto,
+} from './dto/auth.dto';
+import { AuthRepository } from '../common/Repositories/auth.repository';
+import { ConfigService } from '@nestjs/config';
 
-/**
- * Service for handling authentication and user management
- */
+export type AuthenticatedUser = Omit<Auth, 'password'>;
+
 @Injectable()
 export class AuthService {
-  DeleteOne(id: string) {
-    throw new Error('Method not implemented.');
-  }
-  GetAll() {
-    throw new Error('Method not implemented.');
-  }
   private readonly logger = new Logger(AuthService.name);
 
   constructor(
-    private authRepository: AuthRepository,
-    private jwtService: JwtService,
+    private readonly authRepository: AuthRepository,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
-  /**
-   * Register a new user
-   * @param registerDto Registration data
-   * @returns The created user and access token
-   */
+  // -------------------------
+  // Registration
+  // -------------------------
   async signUp(registerDto: RegisterDto) {
-    try {
-      this.logger.log(`Attempting to register user: ${registerDto.username}`);
-      
-      // Validate that the user doesn't already exist
-      const user = await this.authRepository.findOne(registerDto.username);
-      if (user) {
-        throw new BadRequestException('User with this username already exists');
-      }
-      
-      // Create the user
-      const userCreated = await this.authRepository.save(registerDto as AuthUser);
-      
-      // Generate authentication token
-      const token = this.authRepository.generateToken(userCreated);
-      
-      // Return user and token
-      return {
-        access_token: token.access_token,
-        user: {
-          id: userCreated.id,
-          username: userCreated.username,
-          role: userCreated.role,
-        },
-      };
-    } catch (error) {
-      // Pass through known exceptions
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-      
-      this.logger.error(`Error during user registration: ${error.message}`);
-      throw new InternalServerErrorException('Failed to register user');
-    }
+    this.logger.log(`Registering user: ${registerDto.username}`);
+    const exists = await this.authRepository.findOne(registerDto.username);
+    if (exists) throw new BadRequestException('Username already exists');
+
+    // Create new user
+    const newUser = await this.authRepository.save(registerDto as AuthUser);
+
+    // Build JWT payload and sign
+    const payload = {
+      sub: String(newUser.id),
+      username: newUser.username,
+      role: newUser.role,
+    };
+    const access_token = this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('JWT_SECRET') || 'default_secret',
+    });
+
+    return { access_token, user: this.toSafeUser(newUser) };
   }
 
-  /**
-   * Authenticate a user and generate a JWT token
-   * @param login Login credentials
-   * @returns Access token for the authenticated user
-   */
-  async logIn(login: LoginDto): Promise<{ access_token: string; user: Partial<Auth> }> {
-    try {
-      this.logger.log(`Login attempt for user: ${login.username}`);
-      
-      // Validate user credentials
-      const user = await this.authRepository.validateUser(
-        login.username,
-        login.password,
-      );
-      
-      if (!user) {
-        throw new UnauthorizedException('Invalid username or password');
-      }
-      
-      // Generate JWT token
-      const payload = {
-        username: user.username,
-        sub: String(user.id),
-        role: user.role,
-      };
-      
-      const token = this.jwtService.sign(payload);
-      
-      // Return token and user info
-      return {
-        access_token: token,
-        user: {
-          id: user.id,
-          username: user.username,
-          role: user.role,
-        },
-      };
-    } catch (error) {
-      // Pass through known exceptions
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
-      
-      this.logger.error(`Error during login: ${error.message}`);
-      throw new InternalServerErrorException('Authentication failed');
-    }
+  // -------------------------
+  // Login
+  // -------------------------
+  async logIn(
+    loginDto: LoginDto,
+  ): Promise<{ access_token: string; user: AuthenticatedUser }> {
+    this.logger.log(`Login attempt: ${loginDto.username}`);
+    const user = await this.validateUser(loginDto.username, loginDto.password);
+    if (!user) throw new UnauthorizedException('Invalid username or password');
+
+    const payload = {
+      sub: String(user.id),
+      username: user.username,
+      role: user.role,
+    };
+    const access_token = this.jwtService.sign(payload);
+    return { access_token, user };
   }
 
-  /**
-   * Get a user by ID
-   * @param id User ID
-   * @returns The user if found
-   */
-  async getUser(id: string): Promise<Partial<Auth>> {
-    try {
-      const user = await this.authRepository.findById(id);
-      
-      if (!user) {
-        throw new NotFoundException(`User with ID ${id} not found`);
-      }
-      
-      // Return user without sensitive data
-      return {
-        id: user.id,
-        username: user.username,
-        role: user.role,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      };
-    } catch (error) {
-      // Pass through known exceptions
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      
-      this.logger.error(`Error retrieving user: ${error.message}`);
-      throw new InternalServerErrorException('Failed to retrieve user');
-    }
+  // -------------------------
+  // Credential Validation
+  // -------------------------
+  async validateUser(
+    username: string,
+    password: string,
+  ): Promise<AuthenticatedUser | null> {
+    const user = await this.authRepository.findOne(username);
+    if (!user) return null;
+
+    const matches = await bcrypt.compare(password, user.password);
+    if (!matches) return null;
+
+    return this.toSafeUser(user);
   }
 
-  /**
-   * Check if a user has admin privileges
-   * @param authorization Authorization header containing the JWT token
-   * @returns Boolean indicating if the user is an admin
-   */
+  // -------------------------
+  // Look-ups (for strategies)
+  // -------------------------
+  async findByUsername(username: string): Promise<AuthenticatedUser | null> {
+    const user = await this.authRepository.findOne(username);
+    return user ? this.toSafeUser(user) : null;
+  }
+
+  async findById(id: string): Promise<AuthenticatedUser | null> {
+    const user = await this.authRepository.findById(id);
+    return user ? this.toSafeUser(user) : null;
+  }
+
+  // -------------------------
+  // Change Password
+  // -------------------------
+  async changePassword(
+    userId: string,
+    dto: ChangePasswordDto,
+  ): Promise<{ success: boolean }> {
+    const user = await this.authRepository.findById(userId);
+    if (!user) throw new NotFoundException(`User ${userId} not found`);
+
+    const valid = await this.validateUser(user.username, dto.oldPassword);
+    if (!valid)
+      throw new UnauthorizedException('Current password is incorrect');
+
+    await this.authRepository.updatePassword(userId, dto.newPassword);
+    return { success: true };
+  }
+
+  // -------------------------
+  // Admin helpers
+  // -------------------------
+  async getAllUsers(): Promise<AuthenticatedUser[]> {
+    const users = await this.authRepository.getAll();
+    return users.map((u) => this.toSafeUser(u));
+  }
+
+  async deleteUser(username: string): Promise<void> {
+    // deleteOne now returns DeleteResult and throws if missing
+    await this.authRepository.deleteOne(username);
+  }
+
+  async deleteAllUsers(): Promise<void> {
+    await this.authRepository.deleteAll();
+    this.logger.warn('All users have been deleted');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
   async isAdmin(authorization: string): Promise<boolean> {
+    if (!authorization?.startsWith('Bearer ')) return false;
     try {
-      if (!authorization || !authorization.startsWith('Bearer ')) {
-        return false;
-      }
-
-      const token = authorization.split(' ')[1];
-      if (!token) {
-        return false;
-      }
-
-      const payload = this.jwtService.verify(token) as { role?: string };
-      return payload?.role === 'Admin' || payload?.role === 'SuperAdmin';
-    } catch (error: any) {
-      this.logger.warn(
-        `Invalid token or unauthorized access attempt: ${error.message}`,
-      );
+      const token = authorization.slice(7);
+      const payload = this.jwtService.verify<{ role?: string }>(token);
+      return payload.role === 'Admin' || payload.role === 'SuperAdmin';
+    } catch (err: any) {
+      this.logger.warn(`Invalid token: ${err.message}`);
       return false;
     }
   }
 
-  /**
-   * Delete all users (admin function)
-   * @returns Result of the delete operation
-   */
-  async deleteAll() {
+  getUserIdFromToken(token: string): string | null {
     try {
-      this.logger.warn('Deleting all users from the database');
-      return await this.authRepository.deleteAll();
-    } catch (error: any) {
-      this.logger.error(`Error deleting all users: ${error.message}`);
-      throw new InternalServerErrorException('Failed to delete all users');
-    }
-  }
-
-  /**
-   * Get a user's role by username
-   * @param username The username to look up
-   * @returns The user's role if found
-   */
-  async getRole(username: string): Promise<Auth['role'] | undefined> {
-    try {
-      const user = await this.authRepository.findOne(username);
-      return user?.role;
-    } catch (error: any) {
-      this.logger.error(`Error retrieving user role: ${error.message}`);
-      throw new InternalServerErrorException('Failed to retrieve user role');
-    }
-  }
-
-  /**
-   * Delete a user by username
-   * @param username Username of the user to delete
-   * @returns Result of the delete operation
-   */
-  async deleteUser(username: string) {
-    try {
-      return await this.authRepository.deleteOne(username);
-    } catch (error: any) {
-      // Pass through known exceptions
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-
-      this.logger.error(`Error deleting user: ${error.message}`);
-      throw new InternalServerErrorException('Failed to delete user');
-    }
-  }
-
-  /**
-   * Extract user ID from an access token
-   * @param accessToken JWT access token
-   * @returns The user ID from the token payload
-   */
-  getUserIdFromToken(accessToken: string): string | null {
-    try {
-      if (!accessToken) {
-        return null;
-      }
-
-      // Remove Bearer prefix if present
-      const token = accessToken.startsWith('Bearer ')
-        ? accessToken.slice(7)
-        : accessToken;
-
-      // Decode the token
-      const decoded = this.jwtService.decode(token) as { sub?: string };
+      const raw = token.startsWith('Bearer ') ? token.slice(7) : token;
+      const decoded = this.jwtService.decode(raw) as { sub?: string };
       return decoded?.sub || null;
-    } catch (error: any) {
-      this.logger.error(`Error extracting user ID from token: ${error.message}`);
+    } catch (err: any) {
+      this.logger.error(`Error decoding token: ${err.message}`);
       return null;
     }
   }
-  
-  /**
-   * Change a user's password
-   * @param userId User ID
-   * @param changePasswordDto Old and new password data
-   * @returns Success status
-   */
-  async changePassword(
-    userId: string,
-    changePasswordDto: ChangePasswordDto,
-  ): Promise<{ success: boolean }> {
-    try {
-      // Get the user
-      const user = await this.authRepository.findById(userId);
-      if (!user) {
-        throw new NotFoundException(`User with ID ${userId} not found`);
-      }
 
-      // Verify old password
-      const isPasswordValid = await this.authRepository.validateUser(
-        user.username,
-        changePasswordDto.oldPassword,
-      );
-
-      if (!isPasswordValid) {
-        throw new UnauthorizedException('Current password is incorrect');
-      }
-
-      // Update password
-      await this.authRepository.updatePassword(
-        userId,
-        changePasswordDto.newPassword,
-      );
-
-      return { success: true };
-    } catch (error: any) {
-      // Pass through known exceptions
-      if (
-        error instanceof NotFoundException ||
-        error instanceof UnauthorizedException
-      ) {
-        throw error;
-      }
-
-      this.logger.error(`Error changing password: ${error.message}`);
-      throw new InternalServerErrorException('Failed to change password');
-    }
-  }
-  
-  /**
-   * Get all users (admin function)
-   * @returns Array of all users
-   */
-  async getAllUsers(): Promise<Partial<Auth>[]> {
-    try {
-      const users = await this.authRepository.getAll();
-      
-      // Return users without sensitive data
-      return users.map((user) => ({
-        id: user.id,
-        username: user.username,
-        role: user.role,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      }));
-    } catch (error: any) {
-      this.logger.error(`Error retrieving all users: ${error.message}`);
-      throw new InternalServerErrorException('Failed to retrieve users');
-    }
+  // -------------------------
+  // Utils
+  // -------------------------
+  private toSafeUser(user: Auth): AuthenticatedUser {
+    const { password, ...safe } = user;
+    return safe as AuthenticatedUser;
   }
 }

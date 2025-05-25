@@ -8,195 +8,114 @@ import { Repository, FindOptionsWhere } from 'typeorm';
 import { Order, OrderItem } from './order.entity';
 import { CreateOrderDto } from './order.dto';
 import { Product } from 'src/product/entities/product.entity';
-import * as dotenv from 'dotenv';
-dotenv.config({ path: '.env' });
+import { OrderStatus } from './order.types';
+
 @Injectable()
 export class OrderRepository {
   constructor(
     @InjectRepository(Order)
-    private orderRepository: Repository<Order>,
+    private readonly orderRepo: Repository<Order>,
     @InjectRepository(Product)
-    private productRepository: Repository<Product>,
+    private readonly productRepo: Repository<Product>,
   ) {}
 
-  async createOrder(createOrderData: CreateOrderDto): Promise<Order> {
-    const order = new Order();
+  /** Create and persist a new order */
+  async createOrder(dto: CreateOrderDto): Promise<Order> {
+    const order = this.orderRepo.create(); // empty instance avoids overload confusion
+
+    // static fields
     order.business = 1;
     order.business_address = 1;
+    order.status = OrderStatus.PENDING;
 
-    // Set consignee information
-    order.consignee_name = createOrderData.consignee_name;
-    order.consignee_phone = createOrderData.consignee_phone;
-    order.consignee_city = createOrderData.consignee_city;
-    order.consignee_area = createOrderData.consignee_area;
-    order.consignee_address = createOrderData.consignee_address;
+    // consignee & shipment
+    order.consignee_name = dto.consignee_name;
+    order.consignee_phone = dto.consignee_phone;
+    order.consignee_city = dto.consignee_city;
+    order.consignee_area = dto.consignee_area;
+    order.consignee_address = dto.consignee_address;
 
-    // Set shipment information
-    order.shipment_types = createOrderData.shipment_types;
-    order.quantity = createOrderData.quantity;
-    order.Cod_amount = createOrderData.cod_amount;
-    order.items_description = createOrderData.items_description;
-    order.is_cod = createOrderData.is_cod;
-    order.has_return = createOrderData.has_return;
-    order.return_notes = createOrderData.return_notes;
-    order.notes = createOrderData.notes;
+    order.shipment_types = dto.shipment_types;
+    order.items_description = dto.items_description;
 
-    // Initialize items array
+    order.is_cod = dto.is_cod === '1';
+    order.has_return = dto.has_return === '1';
+    order.Cod_amount = dto.cod_amount;
+
+    order.return_notes = dto.return_notes;
+    order.notes = dto.notes;
+
     order.items = [];
 
-    // Process each ordered item
-    for (const item of createOrderData.items) {
-      await this.addItemToOrder(order, item);
+    // iterate items
+    for (const item of dto.items) {
+      await this.addItem(order, item);
     }
 
-    // Save and return the order
-    return this.orderRepository.save(order);
+    // calculate total quantity
+    order.quantity = order.items.reduce((sum, i) => sum + i.quantity, 0);
+
+    return this.orderRepo.save(order);
   }
 
-  /**
-   * Add an item to an order
-   * @param order The order to add the item to
-   * @param item The item data
-   */
-  private async addItemToOrder(order: Order, item: any): Promise<void> {
-    // Find the product
-    const product = await this.findProductById(item.product_id);
+  /** attach validated item */
+  private async addItem(order: Order, item: CreateOrderDto['items'][number]) {
+    const product = await this.productRepo.findOne({
+      where: { id: item.productId },
+    });
+    if (!product)
+      throw new NotFoundException(`Product ${item.productId} not found`);
 
-    // Verify product availability
-    this.verifyProductAvailability(product, item);
+    // validate size/color
+    const size = product.sizeDetails.find((s) => s.sizeName === item.sizeName);
+    if (!size)
+      throw new BadRequestException(`Size ${item.sizeName} not available`);
+    const color = size.quantities.find((q) => q.colorName === item.colorName);
+    if (!color)
+      throw new BadRequestException(
+        `Color ${item.colorName} not available for size ${item.sizeName}`,
+      );
+    if (color.quantity < item.quantity)
+      throw new BadRequestException('Insufficient stock');
 
-    // Create and configure the order item
-    const orderItem = this.createOrderItem(product, item, order);
+    const orderItem = this.orderRepo.manager.create(OrderItem, {
+      order,
+      product,
+      sizeName: item.sizeName,
+      colorName: item.colorName,
+      quantity: item.quantity,
+    });
 
-    // Add to order
     order.items.push(orderItem);
   }
 
-  /**
-   * Find a product by ID
-   * @param productId The product ID
-   * @returns The product
-   */
-  private async findProductById(productId: number): Promise<Product> {
-    const product = await this.productRepository.findOne({
-      where: { id: productId },
-    });
-
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${productId} not found`);
-    }
-
-    return product;
-  }
-
-  /**
-   * Verify that the product is available in the requested color, size, and quantity
-   * @param product The product
-   * @param item The order item
-   */
-  private verifyProductAvailability(product: Product, item: any): void {
-    // Find the color
-    const color = product.colorsWithSizes.find((c) => c.name === item.color);
-
-    if (!color) {
-      throw new BadRequestException(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        `Color ${item.color} not available for this product`,
-      );
-    }
-
-    // Find the size
-    const size = color.sizes.find((s) => s.size === item.size);
-
-    if (!size) {
-      throw new BadRequestException(
-        `Size ${item.size} not available for this color`,
-      );
-    }
-
-    // Check quantity
-    if (size.quantity < item.quantity) {
-      throw new BadRequestException(
-        `Not enough quantity available. Requested: ${item.quantity}, Available: ${size.quantity}`,
-      );
-    }
-  }
-
-  /**
-   * Create a new order item
-   * @param product The product
-   * @param item The item data
-   * @param order The parent order
-   * @returns The created order item
-   */
-  private createOrderItem(
-    product: Product,
-    item: any,
-    order: Order,
-  ): OrderItem {
-    const orderItem = new OrderItem();
-    orderItem.product = product;
-    orderItem.size = item.size;
-    orderItem.color = item.color;
-    orderItem.quantity = item.quantity;
-    orderItem.order = order;
-
-    return orderItem;
-  }
-
-  /**
-   * Find an order by ID
-   * @param id The order ID
-   * @returns The order
-   */
+  /** find by id */
   async findOrderById(id: string): Promise<Order> {
-    const order = await this.orderRepository.findOne({
+    const order = await this.orderRepo.findOne({
       where: { id },
-      relations: ['items', 'items.product'],
+      relations: ['items', 'items.product', 'readyBy'],
     });
-
-    if (!order) {
-      throw new NotFoundException(`Order with ID ${id} not found`);
-    }
-
+    if (!order) throw new NotFoundException(`Order ${id} not found`);
     return order;
   }
 
-  /**
-   * Find all orders with optional filtering
-   * @param filters Optional filters
-   * @returns List of orders
-   */
+  /** list orders */
   async findAllOrders(filters?: Partial<Order>): Promise<Order[]> {
-    const whereClause: FindOptionsWhere<Order> = {};
+    const where: FindOptionsWhere<Order> = {};
+    if (filters?.status) where.status = filters.status;
+    if (filters?.consignee_name) where.consignee_name = filters.consignee_name;
 
-    // Apply filters if provided
-    if (filters) {
-      if (filters.status) whereClause.status = filters.status;
-      if (filters.consignee_name)
-        whereClause.consignee_name = filters.consignee_name;
-      // Add more filters as needed
-    }
-
-    return this.orderRepository.find({
-      where: Object.keys(whereClause).length ? whereClause : undefined,
-      relations: ['items', 'items.product'],
+    return this.orderRepo.find({
+      where: Object.keys(where).length ? where : undefined,
+      relations: ['items', 'items.product', 'readyBy'],
       order: { createdAt: 'DESC' },
     });
   }
 
-  /**
-   * Update order status
-   * @param id The order ID
-   * @param status The new status
-   * @returns The updated order
-   */
-  async updateOrderStatus(
-    id: string,
-    status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled',
-  ): Promise<Order> {
+  /** update status */
+  async updateOrderStatus(id: string, status: OrderStatus): Promise<Order> {
     const order = await this.findOrderById(id);
     order.status = status;
-    return this.orderRepository.save(order);
+    return this.orderRepo.save(order);
   }
 }

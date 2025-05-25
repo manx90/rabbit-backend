@@ -1,0 +1,122 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+// src/auth/auth.repository.ts
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+  ConflictException,
+  Logger,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+
+import { Auth } from '../../auth/entities/auth.entity';
+import { AuthUser } from '../../auth/dto/auth.dto';
+import { Role } from '../constants/roles.constant';
+
+@Injectable()
+export class AuthRepository {
+  private readonly logger = new Logger(AuthRepository.name);
+
+  constructor(
+    @InjectRepository(Auth)
+    private readonly authRepository: Repository<Auth>,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  /** Find a user by username */
+  async findOne(username: string): Promise<Auth | null> {
+    try {
+      return await this.authRepository.findOne({ where: { username } });
+    } catch (error: any) {
+      this.logger.error(`Error finding user: ${error.message}`, error.stack);
+      throw new InternalServerErrorException('Error finding user');
+    }
+  }
+
+  /** Find a user by ID */
+  async findById(id: string): Promise<Auth | null> {
+    try {
+      return await this.authRepository.findOne({ where: { id } });
+    } catch (error: any) {
+      this.logger.error(
+        `Error finding user by ID: ${error.message}`,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        error.stack,
+      );
+      throw new InternalServerErrorException('Error finding user');
+    }
+  }
+
+  /** Save a new user */
+  async save(user: AuthUser): Promise<Auth> {
+    // Check for existing username
+    const exists = await this.findOne(user.username);
+    if (exists) {
+      throw new ConflictException('Username already taken');
+    }
+
+    // Hash password
+    const saltRounds = Number(process.env.SALT) || 10;
+    const hashed = await bcrypt.hash(user.password, saltRounds);
+
+    // Build entity
+    const entity = new Auth();
+    entity.username = user.username;
+    entity.password = hashed;
+    entity.role = user.role ?? Role.Salesman;
+
+    try {
+      return await this.authRepository.save(entity);
+    } catch (error: any) {
+      this.logger.error(`Error saving user: ${error.message}`, error.stack);
+      throw new InternalServerErrorException('Failed to create user');
+    }
+  }
+
+  /** Validate credentials */
+  async validateUser(username: string, password: string): Promise<Auth | null> {
+    const user = await this.findOne(username);
+    if (!user) return null;
+    const valid = await bcrypt.compare(password, user.password);
+    return valid ? user : null;
+  }
+
+  /** Generate JWT token */
+  generateToken(user: Auth): { access_token: string } {
+    const payload = { username: user.username, sub: user.id, role: user.role };
+    return { access_token: this.jwtService.sign(payload) };
+  }
+
+  /** Update password */
+  async updatePassword(id: string, newPwd: string): Promise<Auth> {
+    const user = await this.findById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const saltRounds = Number(process.env.SALT) || 10;
+    user.password = await bcrypt.hash(newPwd, saltRounds);
+    return this.authRepository.save(user);
+  }
+
+  /** Delete all users */
+  async deleteAll(): Promise<void> {
+    await this.authRepository.clear();
+  }
+
+  /** Get all users */
+  async getAll(): Promise<Auth[]> {
+    return this.authRepository.find();
+  }
+
+  /** Delete one user by username */
+  async deleteOne(username: string): Promise<void> {
+    const user = await this.findOne(username);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    await this.authRepository.delete({ username });
+  }
+}

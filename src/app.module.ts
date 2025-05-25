@@ -1,17 +1,14 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthMiddlewareModule, AuthModule } from './auth/auth.module';
+import { AuthModule } from './auth/auth.module';
 import { ProductModule } from './product/product.module';
-import { ConfigModule } from '@nestjs/config';
+// import { ConfigModule } from '@nestjs/config';
+import { AppConfigModule } from './config/config.module';
 import { OptosModule } from './optos/optos.module';
 import { OrderModule } from './order/order.module';
 import { JwtModule } from '@nestjs/jwt';
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '../.env',
-    }),
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,
@@ -20,9 +17,9 @@ import { JwtModule } from '@nestjs/jwt';
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',
-      port: 4577,
+      port: 5432,
       username: 'postgres',
-      password: '457736',
+      password: 'root',
       database: 'rabbit',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
@@ -31,7 +28,7 @@ import { JwtModule } from '@nestjs/jwt';
     OrderModule,
     ProductModule,
     OptosModule,
-    AuthMiddlewareModule,
+    AppConfigModule,
   ],
 })
 export class AppModule {}
