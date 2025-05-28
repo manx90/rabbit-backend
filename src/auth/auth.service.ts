@@ -6,6 +6,7 @@ import {
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
+  InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -18,6 +19,9 @@ import {
   RegisterDto,
   ChangePasswordDto,
 } from './dto/auth.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { Role } from '../common/constants/roles.constant';
 import { AuthRepository } from '../common/Repositories/auth.repository';
 import { ConfigService } from '@nestjs/config';
 
@@ -57,7 +61,10 @@ export class AuthService {
       secret: this.configService.get<string>('JWT_SECRET') || 'default_secret',
     });
 
-    return { access_token, user: this.toSafeUser(newUser) };
+    const safeUser = this.toSafeUser(newUser);
+    if (!safeUser)
+      throw new InternalServerErrorException('Error creating user');
+    return { access_token, user: safeUser };
   }
 
   // -------------------------
@@ -98,13 +105,42 @@ export class AuthService {
   // -------------------------
   // Look-ups (for strategies)
   // -------------------------
-  async findByUsername(username: string): Promise<AuthenticatedUser | null> {
-    const user = await this.authRepository.findOne(username);
-    return user ? this.toSafeUser(user) : null;
+  async createUser(
+    createUserDto: CreateUserDto,
+    creatorId: string,
+  ): Promise<AuthenticatedUser> {
+    // Verify creator is SuperAdmin
+    const creator = await this.authRepository.findById(creatorId);
+    if (!creator || creator.role !== Role.SuperAdmin) {
+      throw new UnauthorizedException('Only SuperAdmin can create new users');
+    }
+
+    // Check if username already exists
+    const exists = await this.authRepository.findOne(createUserDto.username);
+    if (exists) {
+      throw new BadRequestException('Username already exists');
+    }
+
+    // Create new user
+    const newUser = await this.authRepository.save({
+      username: createUserDto.username,
+      password: createUserDto.password,
+      role: createUserDto.role,
+    } as AuthUser);
+
+    const safeUser = this.toSafeUser(newUser);
+    if (!safeUser)
+      throw new InternalServerErrorException('Error creating user');
+    return safeUser;
   }
 
   async findById(id: string): Promise<AuthenticatedUser | null> {
     const user = await this.authRepository.findById(id);
+    return user ? this.toSafeUser(user) : null;
+  }
+
+  async findByUsername(username: string): Promise<AuthenticatedUser | null> {
+    const user = await this.authRepository.findOne(username);
     return user ? this.toSafeUser(user) : null;
   }
 
@@ -127,11 +163,43 @@ export class AuthService {
   }
 
   // -------------------------
+  // SuperAdmin User Management
+  // -------------------------
+  async updateUserBySuperAdmin(
+    userId: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<AuthenticatedUser> {
+    // Verify admin privileges
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+    if (adminUser.role !== Role.SuperAdmin) {
+      throw new UnauthorizedException(
+        'Only Super Admins can perform this action',
+      );
+    }
+
+    // Find target user
+    const user = await this.authRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Update user details
+    const updatedUser = await this.authRepository.update(userId, updateUserDto);
+    if (!updatedUser) {
+      throw new InternalServerErrorException('Failed to update user');
+    }
+
+    return this.toSafeUser(updatedUser);
+  }
+
+  // -------------------------
   // Admin helpers
   // -------------------------
   async getAllUsers(): Promise<AuthenticatedUser[]> {
     const users = await this.authRepository.getAll();
-    return users.map((u) => this.toSafeUser(u));
+    return users
+      .map((u) => this.toSafeUser(u))
+      .filter((u): u is AuthenticatedUser => u !== null);
   }
 
   async deleteUser(username: string): Promise<void> {
@@ -171,8 +239,12 @@ export class AuthService {
   // -------------------------
   // Utils
   // -------------------------
-  private toSafeUser(user: Auth): AuthenticatedUser {
-    const { password, ...safe } = user;
-    return safe as AuthenticatedUser;
+  private toSafeUser(user: Auth | null): AuthenticatedUser | null {
+    if (!user) return null;
+    return {
+      id: user.id,
+      username: user.username,
+      role: user.role,
+    };
   }
 }

@@ -22,7 +22,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({
         secret: cfg.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: cfg.get<string>('JWT_EXPIRES_IN') },
+        signOptions: { expiresIn: cfg.get<string>('JWT_EXPIRATION_TIME') },
       }),
     }),
   ],

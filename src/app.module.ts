@@ -17,9 +17,9 @@ import { JwtModule } from '@nestjs/jwt';
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',
-      port: 5432,
+      port: 4577,
       username: 'postgres',
-      password: 'root',
+      password: '457736',
       database: 'rabbit',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,

@@ -11,10 +11,13 @@ import {
   UseGuards,
   Req,
   Param,
+  Request,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
+import { CreateUserDto } from './dto/create-user.dto';
 import { LoginDto, RegisterDto, ChangePasswordDto } from './dto/auth.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -26,6 +29,16 @@ interface RequestWithUser extends Request {
 
 @Controller('auth')
 export class AuthController {
+  @Post('create-user')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SuperAdmin)
+  async createUser(
+    @Body() createUserDto: CreateUserDto,
+    @Req() req: RequestWithUser,
+  ) {
+    return this.authService.createUser(createUserDto, req.user.id);
+  }
+
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
@@ -96,5 +109,30 @@ export class AuthController {
   @Delete('user/:username')
   deleteUser(@Param('username') username: string) {
     return this.authService.deleteUser(username);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SuperAdmin)
+  @Post('update-user/:userId')
+  async updateUser(
+    @Param('userId') userId: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    try {
+      const updatedUser = await this.authService.updateUserBySuperAdmin(
+        userId,
+        updateUserDto,
+      );
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'User updated successfully',
+        data: updatedUser,
+      };
+    } catch (err) {
+      throw new HttpException(
+        err.message,
+        err.status || HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 }
