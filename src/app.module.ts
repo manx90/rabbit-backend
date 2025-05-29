@@ -2,33 +2,43 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { ProductModule } from './product/product.module';
-// import { ConfigModule } from '@nestjs/config';
 import { AppConfigModule } from './config/config.module';
+import { AppConfigService } from './config/config.service';
 import { OptosModule } from './optos/optos.module';
 import { OrderModule } from './order/order.module';
 import { JwtModule } from '@nestjs/jwt';
+
 @Module({
   imports: [
-    JwtModule.register({
-      global: true,
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '30d' },
+    AppConfigModule,
+    JwtModule.registerAsync({
+      imports: [AppConfigModule],
+      inject: [AppConfigService],
+      useFactory: (config: AppConfigService) => ({
+        global: true,
+        secret: config.jwtAccessToken,
+        signOptions: { expiresIn: config.jwtExpiration || '30d' },
+      }),
     }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 4577,
-      username: 'postgres',
-      password: '457736',
-      database: 'rabbit',
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true,
+    TypeOrmModule.forRootAsync({
+      imports: [AppConfigModule],
+      inject: [AppConfigService],
+      useFactory: (config: AppConfigService) => ({
+        type: 'mysql',
+        host: config.host,
+        port: config.port,
+        username: config.user,
+        password: config.pass,
+        database: config.db,
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        synchronize: true,
+        dropSchema: true,
+      }),
     }),
     AuthModule,
     OrderModule,
     ProductModule,
     OptosModule,
-    AppConfigModule,
   ],
 })
 export class AppModule {}

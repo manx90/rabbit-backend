@@ -23,13 +23,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Role } from '../common/constants/roles.constant';
 import { AuthRepository } from '../common/Repositories/auth.repository';
-import { ConfigService } from '@nestjs/config';
+import { AppConfigService } from '../config/config.service';
 
 export interface AuthenticatedUser {
   id: string;
   username: string;
   role: string;
 }
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -37,28 +38,27 @@ export class AuthService {
   constructor(
     private readonly authRepository: AuthRepository,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
+    private readonly configService: AppConfigService,
   ) {}
 
-  // -------------------------
-  // Registration
-  // -------------------------
   async signUp(registerDto: RegisterDto) {
     this.logger.log(`Registering user: ${registerDto.username}`);
     const exists = await this.authRepository.findOne(registerDto.username);
     if (exists) throw new BadRequestException('Username already exists');
 
-    // Create new user
-    const newUser = await this.authRepository.save(registerDto as AuthUser);
+    const userToSave = {
+      ...registerDto,
+    };
 
-    // Build JWT payload and sign
+    const newUser = await this.authRepository.save(userToSave as AuthUser);
+
     const payload = {
       sub: String(newUser.id),
       username: newUser.username,
       role: newUser.role,
     };
     const access_token = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('JWT_SECRET') || 'default_secret',
+      secret: this.configService.jwtAccessToken || 'default_secret',
     });
 
     const safeUser = this.toSafeUser(newUser);
@@ -67,9 +67,6 @@ export class AuthService {
     return { access_token, user: safeUser };
   }
 
-  // -------------------------
-  // Login
-  // -------------------------
   async logIn(
     loginDto: LoginDto,
   ): Promise<{ access_token: string; user: AuthenticatedUser }> {
@@ -82,13 +79,12 @@ export class AuthService {
       username: user.username,
       role: user.role,
     };
-    const access_token = this.jwtService.sign(payload);
+    const access_token = this.jwtService.sign(payload, {
+      secret: this.configService.jwtAccessToken || 'default_secret',
+    });
     return { access_token, user };
   }
 
-  // -------------------------
-  // Credential Validation
-  // -------------------------
   async validateUser(
     username: string,
     password: string,
@@ -102,29 +98,25 @@ export class AuthService {
     return this.toSafeUser(user);
   }
 
-  // -------------------------
-  // Look-ups (for strategies)
-  // -------------------------
   async createUser(
     createUserDto: CreateUserDto,
     creatorId: string,
   ): Promise<AuthenticatedUser> {
-    // Verify creator is SuperAdmin
     const creator = await this.authRepository.findById(creatorId);
     if (!creator || creator.role !== Role.SuperAdmin) {
       throw new UnauthorizedException('Only SuperAdmin can create new users');
     }
 
-    // Check if username already exists
     const exists = await this.authRepository.findOne(createUserDto.username);
     if (exists) {
       throw new BadRequestException('Username already exists');
     }
 
-    // Create new user
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
     const newUser = await this.authRepository.save({
       username: createUserDto.username,
-      password: createUserDto.password,
+      password: hashedPassword,
       role: createUserDto.role,
     } as AuthUser);
 
@@ -144,9 +136,6 @@ export class AuthService {
     return user ? this.toSafeUser(user) : null;
   }
 
-  // -------------------------
-  // Change Password
-  // -------------------------
   async changePassword(
     userId: string,
     dto: ChangePasswordDto,
@@ -158,18 +147,17 @@ export class AuthService {
     if (!valid)
       throw new UnauthorizedException('Current password is incorrect');
 
-    await this.authRepository.updatePassword(userId, dto.newPassword);
+    const hashedNewPassword = await bcrypt.hash(dto.newPassword, 10);
+
+    await this.authRepository.updatePassword(userId, hashedNewPassword);
     return { success: true };
   }
 
-  // -------------------------
-  // SuperAdmin User Management
-  // -------------------------
   async updateUserBySuperAdmin(
+    adminUser: AuthenticatedUser,
     userId: string,
     updateUserDto: UpdateUserDto,
   ): Promise<AuthenticatedUser> {
-    // Verify admin privileges
     // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
     if (adminUser.role !== Role.SuperAdmin) {
       throw new UnauthorizedException(
@@ -177,24 +165,23 @@ export class AuthService {
       );
     }
 
-    // Find target user
     const user = await this.authRepository.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    // Update user details
+    if (updateUserDto.password) {
+      updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
+    }
+
     const updatedUser = await this.authRepository.update(userId, updateUserDto);
     if (!updatedUser) {
       throw new InternalServerErrorException('Failed to update user');
     }
 
-    return this.toSafeUser(updatedUser);
+    return this.toSafeUser(updatedUser)!;
   }
 
-  // -------------------------
-  // Admin helpers
-  // -------------------------
   async getAllUsers(): Promise<AuthenticatedUser[]> {
     const users = await this.authRepository.getAll();
     return users
@@ -203,7 +190,6 @@ export class AuthService {
   }
 
   async deleteUser(username: string): Promise<void> {
-    // deleteOne now returns DeleteResult and throws if missing
     await this.authRepository.deleteOne(username);
   }
 
@@ -217,8 +203,10 @@ export class AuthService {
     if (!authorization?.startsWith('Bearer ')) return false;
     try {
       const token = authorization.slice(7);
-      const payload = this.jwtService.verify<{ role?: string }>(token);
-      return payload.role === 'Admin' || payload.role === 'SuperAdmin';
+      const payload = this.jwtService.verify<{ role?: string }>(token, {
+        secret: this.configService.jwtAccessToken || 'default_secret',
+      });
+      return payload.role === Role.Admin || payload.role === Role.SuperAdmin;
     } catch (err: any) {
       this.logger.warn(`Invalid token: ${err.message}`);
       return false;
@@ -236,9 +224,6 @@ export class AuthService {
     }
   }
 
-  // -------------------------
-  // Utils
-  // -------------------------
   private toSafeUser(user: Auth | null): AuthenticatedUser | null {
     if (!user) return null;
     return {

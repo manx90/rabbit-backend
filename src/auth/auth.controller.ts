@@ -115,11 +115,13 @@ export class AuthController {
   @Roles(Role.SuperAdmin)
   @Post('update-user/:userId')
   async updateUser(
+    @Req() req: RequestWithUser,
     @Param('userId') userId: string,
     @Body() updateUserDto: UpdateUserDto,
   ) {
     try {
       const updatedUser = await this.authService.updateUserBySuperAdmin(
+        req.user,
         userId,
         updateUserDto,
       );

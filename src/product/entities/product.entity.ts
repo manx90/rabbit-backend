@@ -38,7 +38,7 @@ export class Product {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: 'json', nullable: true })
   images: string[];
 
   @Column({ type: 'varchar', nullable: true })
@@ -50,7 +50,7 @@ export class Product {
   @Column({ type: 'varchar', nullable: true })
   imgMeasure: string;
 
-  @Column({ type: 'jsonb' })
+  @Column({ type: 'json' })
   sizeDetails: SizeDetail[];
 
   @Column({
@@ -77,7 +77,7 @@ export class Product {
   @JoinColumn({ name: 'posterId' })
   poster: Auth;
 
-  @Column({ type: 'numeric', default: null })
+  @Column({ type: 'decimal', default: null })
   quantity: number;
 
   @Column({ type: 'boolean', default: false })
@@ -101,13 +101,13 @@ export class Product {
   @Column({ type: 'int', default: 0 })
   sales: number;
 
-  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @Column({ type: 'timestamptz', default: null, nullable: true })
+  @Column({ type: 'timestamp', default: null, nullable: true })
   PosterAt: Date;
 
-  @Column({ type: 'timestamptz', default: null, nullable: true })
+  @Column({ type: 'timestamp', default: null, nullable: true })
   updatedAt: Date;
 
   /**

@@ -3,27 +3,33 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AppConfigService {
-  constructor(private ConfigService: ConfigService) {}
+  constructor(private configService: ConfigService) {}
 
   get host() {
-    return this.ConfigService.get<string>('POSTGRES_HOST');
+    return this.configService.get<string>('MYSQL_HOST');
   }
+
   get port() {
-    return this.ConfigService.get<number>('POSTGRES_PORT');
+    return this.configService.get<number>('MYSQL_PORT');
   }
+
   get user() {
-    return this.ConfigService.get<string>('POSTGRES_USER');
+    return this.configService.get<string>('MYSQL_USER');
   }
+
   get pass() {
-    return this.ConfigService.get<string>('POSTGRES_PASSWORD');
+    return this.configService.get<string>('MYSQL_PASSWORD');
   }
+
   get db() {
-    return this.ConfigService.get<string>('POSTGRES_DB');
+    return this.configService.get<string>('MYSQL_DB');
   }
-  get jwtSecret() {
-    return this.ConfigService.get<string>('JWT_SECRET');
+
+  get jwtAccessToken() {
+    return this.configService.get<string>('JWT_ACCESS_SECRET');
   }
-  get jwtExp() {
-    return this.ConfigService.get<string>('JWT_EXPIRATION');
+
+  get jwtExpiration() {
+    return this.configService.get<string>('JWT_EXPIRATION');
   }
 }

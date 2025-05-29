@@ -14,6 +14,7 @@ import * as bcrypt from 'bcrypt';
 import { Auth } from '../../auth/entities/auth.entity';
 import { AuthUser } from '../../auth/dto/auth.dto';
 import { Role } from '../constants/roles.constant';
+import { UpdateUserDto } from 'src/auth/dto/update-user.dto';
 
 @Injectable()
 export class AuthRepository {
@@ -24,6 +25,24 @@ export class AuthRepository {
     private readonly authRepository: Repository<Auth>,
     private readonly jwtService: JwtService,
   ) {}
+
+  /** Update user by ID */
+  async update(userId: string, updateUserDto: UpdateUserDto): Promise<Auth> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // تحديث خصائص المستخدم بالبيانات الجديدة من updateUserDto
+    Object.assign(user, updateUserDto);
+
+    try {
+      return await this.authRepository.save(user);
+    } catch (error: any) {
+      this.logger.error(`Error updating user: ${error.message}`, error.stack);
+      throw new InternalServerErrorException('Failed to update user');
+    }
+  }
 
   /** Find a user by username */
   async findOne(username: string): Promise<Auth | null> {
@@ -42,7 +61,6 @@ export class AuthRepository {
     } catch (error: any) {
       this.logger.error(
         `Error finding user by ID: ${error.message}`,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         error.stack,
       );
       throw new InternalServerErrorException('Error finding user');
@@ -51,17 +69,14 @@ export class AuthRepository {
 
   /** Save a new user */
   async save(user: AuthUser): Promise<Auth> {
-    // Check for existing username
     const exists = await this.findOne(user.username);
     if (exists) {
       throw new ConflictException('Username already taken');
     }
 
-    // Hash password
     const saltRounds = Number(process.env.SALT) || 10;
     const hashed = await bcrypt.hash(user.password, saltRounds);
 
-    // Build entity
     const entity = new Auth();
     entity.username = user.username;
     entity.password = hashed;

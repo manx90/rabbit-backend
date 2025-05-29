@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryColumn, Generated, Column, OneToMany } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Role } from '../../common/constants/roles.constant';
 
@@ -11,7 +11,8 @@ export class Auth {
    * Unique identifier for the user
    * Using UUID format for better security and global uniqueness
    */
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('char', { length: 36 })
+  @Generated('uuid')
   id: string;
 
   /**
