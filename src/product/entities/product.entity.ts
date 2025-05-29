@@ -74,10 +74,10 @@ export class Product {
   })
   isActive: boolean;
 
-  @BeforeInsert()
-  setIsActive() {
-    this.isActive = this.PosterAt === null;
-  }
+  // @BeforeInsert()
+  // setIsActive() {
+  //   this.isActive = this.PosterAt === null;
+  // }
 
   @Column({ type: 'boolean', default: false })
   isDeleted: boolean;
@@ -97,6 +97,6 @@ export class Product {
   @Column({ type: 'numeric', default: 0 })
   Sales: number;
 
-  @ManyToOne()
+  @ManyToOne(() => Auth, (auth) => auth.products)
   Poster: Auth;
 }

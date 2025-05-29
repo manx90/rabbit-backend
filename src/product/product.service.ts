@@ -34,7 +34,9 @@ export class ProductService {
       const product = new Product();
       product.name = createProductDto.name;
       product.description = createProductDto.description;
-      product.priceCover = createProductDto.priceCover || 0;
+      product.isActive =
+        createProductDto.isActive === 'true' ||
+        (createProductDto.isActive === undefined ? true : false);
 
       // Handle file uploads
       if (files.images) {
@@ -285,16 +287,6 @@ export class ProductService {
 
     const updatedProduct = await this.productRepository.save(product);
 
-    // const response: ProductResponse = {
-    //   ...updatedProduct,
-    //   images: updatedProduct.images || undefined,
-    //   imgCover: updatedProduct.imgCover || undefined,
-    //   imgSize: updatedProduct.imgSize || undefined,
-    //   imgMeasure: updatedProduct.imgMeasure || undefined,
-    //   colorsWithSizes: updatedProduct.colorsWithSizes,
-    //   isActive: updatedProduct.isActive,
-    // };
-
     return updatedProduct;
   }
 
@@ -313,15 +305,6 @@ export class ProductService {
     if (!product) {
       throw new NotFoundException('Product not found');
     }
-    // const response: ProductResponse = {
-    //   ...product!,
-    //   images: product!.images || undefined,
-    //   imgCover: product!.imgCover || undefined,
-    //   imgSize: product!.imgSize || undefined,
-    //   imgMeasure: product!.imgMeasure || undefined,
-    //   colorsWithSizes: product!.colorsWithSizes,
-    //   isActive: product!.isActive,
-    // };
     return product;
   }
 
@@ -340,15 +323,6 @@ export class ProductService {
         message: 'Product not found',
       } as ErrorResponse;
     }
-    // const response: ProductResponse = {
-    //   ...product,
-    //   images: product.images || undefined,
-    //   imgCover: product.imgCover || undefined,
-    //   imgSize: product.imgSize || undefined,
-    //   imgMeasure: product.imgMeasure || undefined,
-    //   colorsWithSizes: product.colorsWithSizes,
-    //   isActive: product.isActive,
-    // };
     return product;
   }
 
