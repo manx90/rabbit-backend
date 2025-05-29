@@ -26,7 +26,7 @@ The project is organized into several key modules:
 
 ## Entity Relationships
 
-- The Auth entity uses string UUIDs for IDs (`@PrimaryGeneratedColumn('uuid')`) while much of the application code handles IDs as numbers, requiring `.toString()` conversion.
+- The Auth entity uses string UUIDs for IDs (`@Generated('uuid')`) while much of the application code handles IDs as numbers, requiring `.toString()` conversion.
 - The Auth and Order entities have a bidirectional relationship:
   - The Order entity has a `readyBy` field that references Auth
   - The Auth entity has an `orders` field that references Order using string reference pattern: `@OneToMany('Order', 'readyBy')`
