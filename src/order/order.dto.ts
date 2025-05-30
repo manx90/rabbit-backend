@@ -1,76 +1,76 @@
 // order/order.dto.ts
 import {
   IsArray,
-  IsNotEmpty,
+  IsIn,
+  // IsNotEmpty,
   IsNumber,
   IsString,
   ValidateNested,
-  IsIn,
+  // IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class OrderItemDto {
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @IsNumber()
   productId: number;
 
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @IsString()
   sizeName: string;
 
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @IsString()
   colorName: string;
 
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @IsNumber()
   quantity: number;
 }
 
 export class CreateOrderDto {
-  // Consignee
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @IsString()
   consignee_name: string;
 
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @IsString()
   consignee_phone: string;
 
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @IsNumber()
   consignee_city: number;
 
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @IsNumber()
   consignee_area: number;
 
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @IsString()
   consignee_address: string;
 
   // Shipment
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @IsNumber()
   shipment_types: number;
 
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @IsNumber()
   quantity: number;
 
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @IsString()
   items_description: string;
 
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @IsIn(['1', '0'])
   is_cod: '1' | '0';
 
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @IsNumber()
   cod_amount: number;
 
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @IsIn(['1', '0'])
   has_return: '1' | '0';
 

@@ -4,9 +4,11 @@ import * as bodyParser from 'body-parser';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
+// import dataSource from './data-source';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
+  // await dataSource.initialize();
+  // await dataSource.runMigrations();
   const config = new DocumentBuilder()
     .setTitle('rabbit')
     .setDescription('The rabbit API description')

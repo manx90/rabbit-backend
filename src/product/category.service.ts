@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Product } from './entities/product.entity';
-import { Category, SubCategory } from './entities/Category.entity';
+import { product } from './entities/product.entity';
+import { category, subCategory } from './entities/Category.entity';
 import {
   CreateCategoryDto,
   UpdateCategoryDto,
@@ -13,15 +13,15 @@ import {
 @Injectable()
 export class CategoryService {
   constructor(
-    @InjectRepository(Category)
-    private categoryRepository: Repository<Category>,
-    @InjectRepository(SubCategory)
-    private subCategoryRepository: Repository<SubCategory>,
-    @InjectRepository(Product)
-    private productRepository: Repository<Product>,
+    @InjectRepository(category)
+    private categoryRepository: Repository<category>,
+    @InjectRepository(subCategory)
+    private subCategoryRepository: Repository<subCategory>,
+    @InjectRepository(product)
+    private productRepository: Repository<product>,
   ) {}
 
-  async createCategory(dto: CreateCategoryDto): Promise<Category> {
+  async createCategory(dto: CreateCategoryDto): Promise<category> {
     const existing = await this.categoryRepository.findOne({
       where: { name: dto.name },
     });
@@ -39,7 +39,7 @@ export class CategoryService {
     return this.categoryRepository.save(category);
   }
 
-  async createSubCategory(dto: CreateSubCategoryDto): Promise<SubCategory> {
+  async createSubCategory(dto: CreateSubCategoryDto): Promise<subCategory> {
     const parent = await this.categoryRepository.findOne({
       where: { id: dto.categoryId },
     });
@@ -71,11 +71,11 @@ export class CategoryService {
     return this.subCategoryRepository.save(sub);
   }
 
-  async getAllCategories(): Promise<Category[]> {
+  async getAllCategories(): Promise<category[]> {
     return this.categoryRepository.find({ relations: ['subCategories'] });
   }
 
-  async getCategoryById(id: number): Promise<Category> {
+  async getCategoryById(id: number): Promise<category> {
     const category = await this.categoryRepository.findOne({
       where: { id },
       relations: ['subCategories'],
@@ -85,7 +85,7 @@ export class CategoryService {
     return category;
   }
 
-  async updateCategory(id: number, dto: UpdateCategoryDto): Promise<Category> {
+  async updateCategory(id: number, dto: UpdateCategoryDto): Promise<category> {
     const category = await this.categoryRepository.findOne({ where: { id } });
     if (!category)
       throw new HttpException('Category not found', HttpStatus.NOT_FOUND);
@@ -109,7 +109,7 @@ export class CategoryService {
   async updateSubCategory(
     id: number,
     dto: UpdateSubCategoryDto,
-  ): Promise<SubCategory> {
+  ): Promise<subCategory> {
     const sub = await this.subCategoryRepository.findOne({
       where: { id },
       relations: ['category'],

@@ -1,15 +1,14 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Product } from './entities/product.entity';
-import { Category, SubCategory } from './entities/Category.entity';
+import { product } from './entities/product.entity';
+import { category, subCategory } from './entities/Category.entity';
 import { CreateProductDto, UpdateProductDto } from './dto/Product.dto';
-import { Auth } from 'src/auth/entities/auth.entity';
+import { auth } from 'src/auth/entities/auth.entity';
 import { PublishState } from 'src/common/interfaces/entity.interface';
 
 interface UploadFiles {
@@ -23,66 +22,67 @@ interface UploadFiles {
 @Injectable()
 export class ProductService {
   constructor(
-    @InjectRepository(Product)
-    private readonly productRepo: Repository<Product>,
-    @InjectRepository(Category)
-    private readonly categoryRepo: Repository<Category>,
-    @InjectRepository(SubCategory)
-    private readonly subCategoryRepo: Repository<SubCategory>,
+    @InjectRepository(product)
+    private readonly productRepo: Repository<product>,
+    @InjectRepository(category)
+    private readonly categoryRepo: Repository<category>,
+    @InjectRepository(subCategory)
+    private readonly subCategoryRepo: Repository<subCategory>,
   ) {}
 
   /** Convert uploaded files to Base64 strings */
-  private mapFiles(files: Express.Multer.File[] = []): string[] {
-    return files.map((f) => f.buffer.toString('base64'));
+  private mapFiles(files: Express.Multer.File[] = []) {
+    return files.map((f) => f.buffer.toString('base64').slice(0, 40));
   }
 
   /** ----------  Create  ---------- */
   async create(
     dto: CreateProductDto,
     files: UploadFiles = {},
-    poster: Auth,
-  ): Promise<Product> {
+    poster: auth,
+  ): Promise<any> {
     // 1) بناء الكيان الأساسي
-    const product = new Product();
+    const Product = new product();
     const existingProduct = await this.productRepo.findOne({
       where: { name: dto.name },
     });
     if (existingProduct)
       throw new BadRequestException('Product name already exists');
-    product.name = dto.name;
-    product.description = dto.description;
-    product.category = await this.fetchCategory(dto.categoryId);
-    product.subCategory = await this.fetchSubCategory(
+    Product.name = dto.name;
+    Product.description = dto.description;
+    Product.category = await this.fetchCategory(dto.categoryId);
+    Product.subCategory = await this.fetchSubCategory(
       dto.categoryId,
       dto.subCategoryId,
     );
-    product.publishState = dto.publishState as PublishState;
+    Product.publishState = dto.publishState as PublishState;
 
     // 2) صور مفردة
-    if (files.imgCover) product.imgCover = this.mapFiles(files.imgCover)[0];
+    if (files.imgCover) Product.imgCover = this.mapFiles(files.imgCover)[0];
     if (files.imgSizeChart)
-      product.imgSizeChart = this.mapFiles(files.imgSizeChart)[0];
+      Product.imgSizeChart = this.mapFiles(files.imgSizeChart)[0];
     if (files.imgMeasure)
-      product.imgMeasure = this.mapFiles(files.imgMeasure)[0];
-    if (files.images) product.images = this.mapFiles(files.images);
+      Product.imgMeasure = this.mapFiles(files.imgMeasure)[0];
+    if (files.images) Product.images = this.mapFiles(files.images);
     // 3) الفئات
-    product.category = await this.fetchCategory(dto.categoryId);
-    product.subCategory = await this.fetchSubCategory(
+    Product.category = await this.fetchCategory(dto.categoryId);
+    Product.subCategory = await this.fetchSubCategory(
       dto.categoryId,
       dto.subCategoryId,
     );
     // 4) إجمالي الكمية
 
     // 5) المنشئ
-    product.poster = poster;
+    Product.poster = poster;
 
     // 6) التفاصيل
-    product.sizeDetails = dto.sizes.map((size) => ({
+    Product.sizeDetails = dto.sizes.map((size) => ({
       sizeName: size.sizeName,
       price: size.price,
       quantities: size.quantities.map((colorQty) => ({
         colorName: colorQty.colorName,
         quantity: colorQty.quantity,
+        imgColors: '', // assign empty string to satisfy the required property
       })),
     }));
     if (dto.colors?.length !== files.imgColors?.length) {
@@ -90,16 +90,16 @@ export class ProductService {
         'Number of color images must match number of colors',
       );
     }
-    product.colors = (dto.colors || []).map((color, index) => ({
+    Product.colors = (dto.colors || []).map((color, index) => ({
       name: color.name,
       imgColor: files.imgColors?.[index]
         ? this.mapFiles(files.imgColors)[index]
         : '',
     }));
 
-    product.quantity = product.getTotalQuantity();
+    Product.quantity = Product.getTotalQuantity();
 
-    return this.productRepo.save(product);
+    return this.productRepo.save(Product);
   }
 
   /** ----------  Update  ---------- */
@@ -108,7 +108,7 @@ export class ProductService {
     dto: UpdateProductDto,
     files: UploadFiles = {},
     // poster: Auth,
-  ): Promise<Product> {
+  ): Promise<product> {
     const product = await this.productRepo.findOne({
       where: { id },
       relations: ['category', 'subCategory', 'poster'],
@@ -139,16 +139,28 @@ export class ProductService {
   }
 
   /** ----------  Helpers  ---------- */
-  private async fetchCategory(id: number): Promise<Category> {
-    const cat = await this.categoryRepo.findOneBy({ id });
-    if (!cat) throw new NotFoundException('Category not found');
+  private async fetchCategory(id: number): Promise<category> {
+    const cat = await this.categoryRepo.findOne({
+      where: { id },
+      relations: ['subCategories'],
+    });
+    if (!cat) throw new NotFoundException(`Category ${id} not found`);
+
+    // Update subCategoryIds
+    if (cat.subCategories && cat.subCategories.length > 0) {
+      cat.subCategoryIds = cat.subCategories.map((sub) => sub.id);
+    } else {
+      cat.subCategoryIds = [];
+    }
+    await this.categoryRepo.save(cat);
+
     return cat;
   }
 
   private async fetchSubCategory(
     idCat: number,
     idSub: number,
-  ): Promise<SubCategory> {
+  ): Promise<subCategory> {
     const sub = await this.subCategoryRepo.findOneBy({
       id: idSub,
       category: { id: idCat },
@@ -169,7 +181,7 @@ export class ProductService {
   }
 
   /** ----------  Queries  ---------- */
-  async findOne(id: number): Promise<Product> {
+  async findOne(id: number): Promise<product> {
     const product = await this.productRepo.findOne({
       where: { id },
       relations: ['category', 'subCategory', 'poster'],
@@ -178,7 +190,7 @@ export class ProductService {
     return product;
   }
 
-  async findAll(): Promise<Product[]> {
+  async findAll(): Promise<product[]> {
     return this.productRepo.find({ relations: ['category', 'subCategory'] });
   }
 }

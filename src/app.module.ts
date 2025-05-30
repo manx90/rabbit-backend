@@ -31,7 +31,8 @@ import { JwtModule } from '@nestjs/jwt';
         password: config.pass,
         database: config.db,
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: false, // Changed to false to prevent table creation conflicts
+        synchronize: true,
+        migrationsRun: true,
       }),
     }),
     AuthModule,

@@ -8,13 +8,13 @@ import {
   BeforeUpdate,
   // OneToOne,
 } from 'typeorm';
-import { Category, SubCategory } from './Category.entity';
+import { subCategory, category } from './Category.entity';
 import {
   SizeDetail,
   PublishState,
   ColorDetail,
 } from '../../common/interfaces/entity.interface';
-import { Auth } from 'src/auth/entities/auth.entity';
+import { auth } from 'src/auth/entities/auth.entity';
 
 export interface ProductResponse {
   id: number;
@@ -25,11 +25,10 @@ export interface ProductResponse {
   colors: string[];
   isActive: boolean;
   PosterAt: Date | null;
-  setIsActive?: () => void;
 }
 
-@Entity('Product')
-export class Product {
+@Entity()
+export class product {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -64,22 +63,19 @@ export class Product {
   @Column({ type: 'json', nullable: true })
   colors: ColorDetail[];
 
-  @ManyToOne(() => Category, (category) => category.products, {
-    eager: true,
-  })
+  @ManyToOne(() => category, (category) => category.products)
   @JoinColumn({ name: 'categoryId' })
-  category: Category;
+  category: category;
 
-  @ManyToOne(() => SubCategory, (subCategory) => subCategory.products, {
-    eager: true,
+  @ManyToOne(() => subCategory, (subCategory) => subCategory.products, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'subCategoryId' })
-  subCategory: SubCategory;
+  subCategory: subCategory;
 
-  @ManyToOne(() => Auth, { nullable: true })
+  @ManyToOne(() => auth, { nullable: true })
   @JoinColumn({ name: 'posterId' })
-  poster: Auth;
+  poster: auth;
 
   @Column({ type: 'decimal', default: null })
   quantity: number;
@@ -136,7 +132,7 @@ export class Product {
     this.sizeDetails.forEach((size) => {
       size.quantities.forEach((colorQty) => {
         if (colorQty.quantity > 0) {
-          colorsMap.set(colorQty.colorName, colorQty.imgColor || '');
+          colorsMap.set(colorQty.colorName, colorQty.imgColors || '');
         }
       });
     });

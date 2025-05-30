@@ -1,4 +1,4 @@
-import { Product } from '../../product/entities/product.entity';
+import { product } from '../../product/entities/product.entity';
 
 export interface ErrorResponse {
   statusCode: number;
@@ -6,7 +6,7 @@ export interface ErrorResponse {
 }
 export interface ProductResponse
   extends Omit<
-    Product,
+    product,
     'images' | 'imgCover' | 'imgSize' | 'imgMeasure' | 'colorsWithSizes'
   > {
   images: string[];

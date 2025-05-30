@@ -41,6 +41,15 @@ export class OptosController {
       this.handleError(error);
     }
   }
+
+  @Post('Shipment')
+  async createShipment(@Body() body: any): Promise<any> {
+    try {
+      return await this.optosShipmentService.createShipment(body);
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
   @Get('city')
   async getCities(): Promise<any> {
     try {

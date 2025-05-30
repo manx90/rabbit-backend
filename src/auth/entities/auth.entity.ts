@@ -1,12 +1,13 @@
 import { Entity, PrimaryColumn, Generated, Column, OneToMany } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Role } from '../../common/constants/roles.constant';
+import type { order } from '../../order/order.entity';
 
 /**
  * Auth entity representing a user in the system
  */
-@Entity('auths')
-export class Auth {
+@Entity()
+export class auth {
   /**
    * Unique identifier for the user
    * Using UUID format for better security and global uniqueness
@@ -31,10 +32,19 @@ export class Auth {
 
   /**
    * Relationship with orders - a user can have multiple orders
-   * Using string reference pattern to avoid circular dependencies
+   * Using lazy require pattern to avoid circular dependencies
    */
-  @OneToMany('Order', 'readyBy')
-  orders: { id: number; readyBy: string }[];
+  @OneToMany(
+    () => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const OrderEntity = require('../../order/order.entity').order as {
+        new (): order;
+      };
+      return OrderEntity;
+    },
+    (orderEntity: order) => orderEntity.readyBy,
+  )
+  orders: order[];
 
   /**
    * User role for authorization

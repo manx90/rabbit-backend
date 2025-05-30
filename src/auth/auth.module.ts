@@ -6,7 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthRepository } from '../common/Repositories/auth.repository';
-import { Auth } from './entities/auth.entity';
+import { auth } from './entities/auth.entity';
 import { LocalStrategy } from '../common/strategies/local.strategy';
 import { JwtStrategy } from '../common/strategies/jwt.strategy';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -18,7 +18,7 @@ import { AppConfigService } from '../config/config.service';
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     AppConfigModule,
-    TypeOrmModule.forFeature([Auth]),
+    TypeOrmModule.forFeature([auth]),
     JwtModule.registerAsync({
       imports: [AppConfigModule],
       inject: [AppConfigService],

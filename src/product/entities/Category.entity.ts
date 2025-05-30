@@ -6,25 +6,39 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
-import { Product } from './product.entity';
+import { Exclude } from 'class-transformer';
+import { product } from './product.entity';
 
-@Entity('categories')
-export class Category {
+@Entity()
+export class category {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ type: 'varchar', length: 100, unique: true })
   name: string; // Category title
 
-  @OneToMany(() => SubCategory, (sub) => sub.category, {
+  @OneToMany(() => subCategory, (sub) => sub.category, {
     cascade: true,
-    eager: true,
   })
-  subCategories: SubCategory[];
+  @Exclude()
+  subCategories: subCategory[];
 
-  @OneToMany(() => Product, (product) => product.category)
-  products: Product[];
+  @Column('simple-array', { nullable: true })
+  subCategoryIds: number[];
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  updateSubCategoryIds() {
+    this.subCategoryIds = this.subCategories.map((sub) => sub.id);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  @OneToMany(() => product, (prod) => prod.category)
+  @Exclude()
+  products: product[];
 
   @Column({ default: true })
   isActive: boolean;
@@ -36,22 +50,27 @@ export class Category {
   updatedAt: Date;
 }
 
-@Entity('subcategories')
-export class SubCategory {
+@Entity()
+export class subCategory {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ type: 'varchar', length: 100 })
   name: string; // SubCategory title
 
-  @ManyToOne(() => Category, (category) => category.subCategories, {
+  @ManyToOne(() => category, (category) => category.subCategories, {
     onDelete: 'CASCADE',
-    eager: false,
   })
-  category: Category;
+  @Exclude()
+  category: category;
 
-  @OneToMany(() => Product, (product) => product.subCategory)
-  products: Product[];
+  @Column({ name: 'categoryId' })
+  categoryId: number;
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  @OneToMany(() => product, (prod) => prod.subCategory)
+  @Exclude()
+  products: product[];
 
   @Column({ default: true })
   isActive: boolean;

@@ -3,6 +3,16 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AppConfigService {
+  static MYSQL_HOST: string | undefined;
+  static MYSQL_USER: string | undefined;
+  static MYSQL_PASSWORD: string | undefined;
+  static MYSQL_PORT: number | undefined;
+  static MYSQL_DB: string | undefined;
+  static host: string | undefined;
+  static port: number | undefined;
+  static user: string | undefined;
+  static pass: string | undefined;
+  static db: string | undefined;
   constructor(private configService: ConfigService) {}
 
   get host() {

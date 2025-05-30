@@ -18,7 +18,7 @@ import { ParseFormJsonPipe } from '../common/pipes/parse-form-json.pipe';
 import { ProductService } from './product.service';
 import { CreateProductDto, UpdateProductDto } from './dto/Product.dto';
 import { Request } from 'express';
-import { Auth } from 'src/auth/entities/auth.entity';
+import { auth } from 'src/auth/entities/auth.entity';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { Role } from '../common/constants/roles.constant';
@@ -61,7 +61,8 @@ export class ProductController {
     ) {
       throw new BadRequestException('All required files must be uploaded');
     }
-    const poster = req.user as Auth;
+    const poster = req.user as auth;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.productService.create(createProductDto, files, poster);
   }
 

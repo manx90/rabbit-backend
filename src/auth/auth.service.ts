@@ -12,7 +12,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
-import { Auth } from './entities/auth.entity';
+import { auth } from './entities/auth.entity';
 import {
   AuthUser,
   LoginDto,
@@ -224,7 +224,7 @@ export class AuthService {
     }
   }
 
-  private toSafeUser(user: Auth | null): AuthenticatedUser | null {
+  private toSafeUser(user: auth | null): AuthenticatedUser | null {
     if (!user) return null;
     return {
       id: user.id,
