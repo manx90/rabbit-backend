@@ -1,16 +1,18 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryColumn, Generated, Column, OneToMany } from 'typeorm';
 import { Exclude } from 'class-transformer';
+import { Role } from '../../common/constants/roles.constant';
 
 /**
  * Auth entity representing a user in the system
  */
-@Entity('auth')
+@Entity('auths')
 export class Auth {
   /**
    * Unique identifier for the user
    * Using UUID format for better security and global uniqueness
    */
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('char', { length: 36 })
+  @Generated('uuid')
   id: string;
 
   /**
@@ -37,8 +39,8 @@ export class Auth {
   /**
    * User role for authorization
    */
-  @Column({ default: 'SalerMan' })
-  role: 'SuperAdmin' | 'Admin' | 'SalerMan';
+  @Column({ type: 'enum', enum: Role, default: Role.Salesman })
+  role: Role;
 
   /**
    * When the user was created

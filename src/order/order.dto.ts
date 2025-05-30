@@ -1,20 +1,41 @@
+// order/order.dto.ts
 import {
   IsArray,
   IsNotEmpty,
   IsNumber,
   IsString,
   ValidateNested,
+  IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { OrderItemDto } from './interfaces/order-item.interface';
+
+export class OrderItemDto {
+  @IsNotEmpty()
+  @IsNumber()
+  productId: number;
+
+  @IsNotEmpty()
+  @IsString()
+  sizeName: string;
+
+  @IsNotEmpty()
+  @IsString()
+  colorName: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  quantity: number;
+}
+
 export class CreateOrderDto {
+  // Consignee
   @IsNotEmpty()
   @IsString()
   consignee_name: string;
 
   @IsNotEmpty()
-  @IsNumber()
-  consignee_phone: number;
+  @IsString()
+  consignee_phone: string;
 
   @IsNotEmpty()
   @IsNumber()
@@ -28,6 +49,7 @@ export class CreateOrderDto {
   @IsString()
   consignee_address: string;
 
+  // Shipment
   @IsNotEmpty()
   @IsNumber()
   shipment_types: number;
@@ -41,7 +63,7 @@ export class CreateOrderDto {
   items_description: string;
 
   @IsNotEmpty()
-  @IsString()
+  @IsIn(['1', '0'])
   is_cod: '1' | '0';
 
   @IsNotEmpty()
@@ -49,20 +71,18 @@ export class CreateOrderDto {
   cod_amount: number;
 
   @IsNotEmpty()
-  @IsString()
+  @IsIn(['1', '0'])
   has_return: '1' | '0';
 
-  @IsNotEmpty()
   @IsString()
   return_notes: string;
 
-  @IsNotEmpty()
   @IsString()
   notes: string;
 
-  @IsNotEmpty()
+  // Items
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => OrderItemDto as any)
+  @Type(() => OrderItemDto)
   items: OrderItemDto[];
 }

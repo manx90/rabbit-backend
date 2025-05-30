@@ -1,50 +1,41 @@
-import {
-  MiddlewareConsumer,
-  Module,
-  NestModule,
-  RequestMethod,
-} from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { JwtModule } from '@nestjs/jwt';
+
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { Auth } from './auth.entity';
-import { JwtModule } from '@nestjs/jwt';
-import { AuthRepository } from './auth.repository';
-import { ConfigModule } from '@nestjs/config';
-import * as dotenv from 'dotenv';
-import { AuthMiddleware } from './auth.middleware';
-import { SuperAdminGuard } from './guards';
-dotenv.config({ path: '.env' });
+import { AuthRepository } from '../common/Repositories/auth.repository';
+import { Auth } from './entities/auth.entity';
+import { LocalStrategy } from '../common/strategies/local.strategy';
+import { JwtStrategy } from '../common/strategies/jwt.strategy';
+import { RolesGuard } from '../common/guards/roles.guard';
 
-const jwtSecret = process.env.JWT_SECRET;
-const jwtExpTime = process.env.JWT_EXPIRATION_TIME;
+import { AppConfigModule } from '../config/config.module';
+import { AppConfigService } from '../config/config.service';
 
 @Module({
   imports: [
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    AppConfigModule,
     TypeOrmModule.forFeature([Auth]),
-    JwtModule.register({
-      secret: jwtSecret,
-      signOptions: { expiresIn: jwtExpTime },
+    JwtModule.registerAsync({
+      imports: [AppConfigModule],
+      inject: [AppConfigService],
+      useFactory: (config: AppConfigService) => ({
+        secret: config.jwtAccessToken,
+        signOptions: { expiresIn: config.jwtExpiration },
+      }),
     }),
-    ConfigModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, AuthRepository, SuperAdminGuard],
+  providers: [
+    AuthService,
+    AuthRepository,
+    LocalStrategy,
+    JwtStrategy,
+    RolesGuard,
+  ],
   exports: [AuthService],
 })
-export class AuthMiddlewareModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(AuthMiddleware)
-      .exclude(
-        { path: '/auth', method: RequestMethod.DELETE },
-        { path: '/auth/login', method: RequestMethod.POST },
-      )
-      .forRoutes(
-        { path: '/auth/*', method: RequestMethod.ALL },
-        { path: '/auth', method: RequestMethod.ALL },
-      );
-  }
-}
-
 export class AuthModule {}

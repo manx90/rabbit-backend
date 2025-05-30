@@ -3,6 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { Category, SubCategory } from './entities/Category.entity';
+import {
+  CreateCategoryDto,
+  UpdateCategoryDto,
+  CreateSubCategoryDto,
+  UpdateSubCategoryDto,
+} from './dto/category.dto';
 
 @Injectable()
 export class CategoryService {
@@ -15,69 +21,58 @@ export class CategoryService {
     private productRepository: Repository<Product>,
   ) {}
 
-  async createCategory(categoryName: string): Promise<Category> {
-    const existingCategory = await this.categoryRepository.findOne({
-      where: { category: categoryName },
+  async createCategory(dto: CreateCategoryDto): Promise<Category> {
+    const existing = await this.categoryRepository.findOne({
+      where: { name: dto.name },
     });
-    if (existingCategory) {
-      throw new Error('Category already exists');
-    }
-    const category = new Category();
-    category.category = categoryName;
-    category.isActive = true;
-    return await this.categoryRepository.save(category);
+    if (existing)
+      throw new HttpException(
+        'Category already exists',
+        HttpStatus.BAD_REQUEST,
+      );
+
+    const category = this.categoryRepository.create({
+      name: dto.name,
+      isActive: true,
+    });
+
+    return this.categoryRepository.save(category);
   }
 
-  async createSubCategory(
-    categoryId: number,
-    subCategoryName: string,
-  ): Promise<SubCategory> {
-    const category = await this.categoryRepository.findOne({
-      where: { id: categoryId },
+  async createSubCategory(dto: CreateSubCategoryDto): Promise<SubCategory> {
+    const parent = await this.categoryRepository.findOne({
+      where: { id: dto.categoryId },
     });
-
-    if (!category) {
+    if (!parent)
       throw new HttpException('Category not found', HttpStatus.NOT_FOUND);
-    }
 
-    if (
-      subCategoryName == null ||
-      subCategoryName == undefined ||
-      subCategoryName.trim() === ''
-    ) {
+    if (!dto.name.trim()) {
       throw new HttpException(
         'SubCategory name is required',
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    const existSubOnCategory = await this.categoryRepository.findOne({
-      where: { id: categoryId },
-      relations: ['subCategories']
+    const exists = await this.subCategoryRepository.findOne({
+      where: { name: dto.name, category: { id: dto.categoryId } },
+      relations: ['category'],
     });
-
-    const existingSubCategory = existSubOnCategory?.subCategories?.find(
-      sub => sub.name.toLowerCase() === subCategoryName.toLowerCase()
-    );
-
-    if (existingSubCategory) {
+    if (exists)
       throw new HttpException(
-        'SubCategory already exists in this category',
+        'SubCategory already exists',
         HttpStatus.BAD_REQUEST,
       );
-    }
 
-    const subCategory = new SubCategory();
-    subCategory.name = subCategoryName;
-    subCategory.category = category;
-
-    return await this.subCategoryRepository.save(subCategory);
+    const sub = this.subCategoryRepository.create({
+      name: dto.name,
+      category: parent,
+      isActive: true,
+    });
+    return this.subCategoryRepository.save(sub);
   }
 
-  async getAllCategories(): Promise<any> {
-    return await this.categoryRepository.find({
-      relations: ['subCategories'],
-    });
+  async getAllCategories(): Promise<Category[]> {
+    return this.categoryRepository.find({ relations: ['subCategories'] });
   }
 
   async getCategoryById(id: number): Promise<Category> {
@@ -85,94 +80,75 @@ export class CategoryService {
       where: { id },
       relations: ['subCategories'],
     });
-
-    if (!category) {
-      throw new Error('Category not found');
-    }
-
+    if (!category)
+      throw new HttpException('Category not found', HttpStatus.NOT_FOUND);
     return category;
   }
 
-  async deleteCategory(id: number): Promise<void> {
-    const category = await this.categoryRepository.findOne({
+  async updateCategory(id: number, dto: UpdateCategoryDto): Promise<Category> {
+    const category = await this.categoryRepository.findOne({ where: { id } });
+    if (!category)
+      throw new HttpException('Category not found', HttpStatus.NOT_FOUND);
+
+    if (dto.name && dto.name !== category.name) {
+      const dup = await this.categoryRepository.findOne({
+        where: { name: dto.name },
+      });
+      if (dup)
+        throw new HttpException(
+          'Category name already exists',
+          HttpStatus.BAD_REQUEST,
+        );
+      category.name = dto.name;
+    }
+    if (dto.isActive !== undefined) category.isActive = dto.isActive;
+
+    return this.categoryRepository.save(category);
+  }
+
+  async updateSubCategory(
+    id: number,
+    dto: UpdateSubCategoryDto,
+  ): Promise<SubCategory> {
+    const sub = await this.subCategoryRepository.findOne({
       where: { id },
-      relations: ['subCategories'],
+      relations: ['category'],
     });
+    if (!sub)
+      throw new HttpException('SubCategory not found', HttpStatus.NOT_FOUND);
 
-    if (!category) {
-      throw new Error('Category not found');
+    if (dto.name && dto.name !== sub.name) {
+      const dup = await this.subCategoryRepository.findOne({
+        where: { name: dto.name },
+      });
+      if (dup)
+        throw new HttpException(
+          'SubCategory name already exists',
+          HttpStatus.BAD_REQUEST,
+        );
+      sub.name = dto.name;
     }
+    if (dto.isActive !== undefined) sub.isActive = dto.isActive;
 
-    // Delete all subcategories first
-    if (category.subCategories) {
-      await this.subCategoryRepository.remove(category.subCategories);
-    }
+    return this.subCategoryRepository.save(sub);
+  }
 
-    // Then delete the category
+  async deleteCategory(id: number): Promise<void> {
+    const category = await this.getCategoryById(id);
+    await this.subCategoryRepository.remove(category.subCategories);
     await this.categoryRepository.remove(category);
   }
 
   async deleteSubCategory(id: number): Promise<void> {
-    const subCategory = await this.subCategoryRepository.findOne({
-      where: { id },
-    });
-
-    if (!subCategory) {
-      throw new Error('SubCategory not found');
-    }
-
-    await this.subCategoryRepository.remove(subCategory);
-  }
-
-  async updateCategory(id: number, newName: string): Promise<Category> {
-    const category = await this.categoryRepository.findOne({
-      where: { id },
-    });
-
-    if (!category) {
-      throw new Error('Category not found');
-    }
-
-    const existingCategory = await this.categoryRepository.findOne({
-      where: { category: newName },
-    });
-
-    if (existingCategory && existingCategory.id !== id) {
-      throw new Error('Category name already exists');
-    }
-
-    category.category = newName;
-    return await this.categoryRepository.save(category);
-  }
-
-  async updateSubCategory(id: number, newName: string): Promise<SubCategory> {
-    const subCategory = await this.subCategoryRepository.findOne({
-      where: { id },
-    });
-
-    if (!subCategory) {
-      throw new Error('SubCategory not found');
-    }
-
-    const existingSubCategory = await this.subCategoryRepository.findOne({
-      where: { name: newName },
-    });
-
-    if (existingSubCategory && existingSubCategory.id !== id) {
-      throw new Error('SubCategory name already exists');
-    }
-
-    subCategory.name = newName;
-    return await this.subCategoryRepository.save(subCategory);
+    const sub = await this.subCategoryRepository.findOne({ where: { id } });
+    if (!sub)
+      throw new HttpException('SubCategory not found', HttpStatus.NOT_FOUND);
+    await this.subCategoryRepository.remove(sub);
   }
 
   async deleteAll(): Promise<void> {
-    // 1. حذف جميع المنتجات أولاً
     await this.productRepository.delete({});
-    // 2. ثم حذف جميع الـ SubCategories
     await this.subCategoryRepository.delete({});
-
-    // 3. وأخيراً حذف الـ Categories
     await this.categoryRepository.delete({});
   }
 }

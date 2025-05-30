@@ -1,134 +1,140 @@
-/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   Controller,
   Post,
   Body,
   HttpException,
   HttpStatus,
-  Param,
+  HttpCode,
   Get,
   Delete,
-  Request,
-  HttpCode,
   UseGuards,
+  Req,
+  Param,
+  Request,
 } from '@nestjs/common';
-import { SuperAdminGuard } from './guards/super-admin.guard';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto } from './auth.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { LoginDto, RegisterDto, ChangePasswordDto } from './dto/auth.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Role } from '../common/constants/roles.constant';
+
+interface RequestWithUser extends Request {
+  user: { id: string; username: string; role: Role };
+}
 
 @Controller('auth')
 export class AuthController {
+  @Post('create-user')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SuperAdmin)
+  async createUser(
+    @Body() createUserDto: CreateUserDto,
+    @Req() req: RequestWithUser,
+  ) {
+    return this.authService.createUser(createUserDto, req.user.id);
+  }
+
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  @UseGuards(SuperAdminGuard)
-  async register(@Body() registerDto: RegisterDto) {
+  @ApiOperation({ summary: 'User register' })
+  @ApiResponse({ status: 201, description: 'register successful' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async register(@Body() dto: RegisterDto) {
     try {
-      const result = await this.authService.signUp(registerDto);
+      const result = await this.authService.signUp(dto);
       return {
         statusCode: HttpStatus.CREATED,
         message: 'User registered successfully',
         data: result,
       };
-    } catch (error) {
+    } catch (err) {
       throw new HttpException(
-        {
-          statusCode: HttpStatus.BAD_REQUEST,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-          message: error.message,
-        },
-        HttpStatus.BAD_REQUEST,
+        err.message,
+        err.status || HttpStatus.BAD_REQUEST,
       );
     }
   }
 
   @Post('login')
+  @ApiOperation({ summary: 'User login' })
+  @ApiResponse({ status: 200, description: 'Login successful' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @HttpCode(HttpStatus.OK)
-  async login(@Body() loginDto: LoginDto) {
+  async login(@Body() dto: LoginDto) {
     try {
-      const result = await this.authService.logIn(loginDto);
+      const result = await this.authService.logIn(dto);
       return {
-        HttpException: HttpStatus.OK,
+        statusCode: HttpStatus.OK,
         message: 'User logged in successfully',
         data: result,
       };
-    } catch (error) {
+    } catch (err) {
       throw new HttpException(
-        {
-          statusCode: HttpStatus.UNAUTHORIZED,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-          message: error.message,
-        },
-        HttpStatus.UNAUTHORIZED,
+        err.message,
+        err.status || HttpStatus.UNAUTHORIZED,
       );
     }
   }
 
-  @Get('user/:id')
-  async getUser(@Param('id') id: string) {
-    const result = await this.authService.getUser(id);
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'User fetched successfully',
-      data: result,
-    };
+  @UseGuards(JwtAuthGuard)
+  @Get('user')
+  getProfile(@Req() req: RequestWithUser) {
+    return { statusCode: HttpStatus.OK, data: req.user };
   }
 
-  @Delete()
-  async deleteAll() {
-    const result = await this.authService.deleteAll();
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'All users deleted successfully',
-
-      data: result,
-    };
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  async changePassword(
+    @Req() req: RequestWithUser,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(req.user.id, dto);
   }
 
-  @Delete('user/:id')
-  async deleteUser(@Param('id') id: string) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    const result = this.authService.DeleteOne(id);
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'User deleted successfully',
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      data: result,
-    };
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SuperAdmin)
+  @Get('all')
+  getAllUsers() {
+    return this.authService.getAllUsers();
   }
 
-  @Get('isAdmin')
-  async isAdmin(@Request() req): Promise<any> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const result = await this.authService.isAdmin(req.headers.authorization);
-    return {
-      statusCode: HttpStatus.OK,
-
-      data: result,
-    };
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SuperAdmin, Role.Admin)
+  @Delete('user/:username')
+  deleteUser(@Param('username') username: string) {
+    return this.authService.deleteUser(username);
   }
 
-  @Get()
-  async getAllUsers() {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    const result = this.authService.GetAll();
-    return {
-      statusCode: HttpStatus.OK,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      data: result,
-    };
-  }
-
-  @Delete('user')
-  @HttpCode(HttpStatus.OK)
-  async deleteOne(@Body('username') username: string) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    const result = this.authService.DeleteOne(username);
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'User deleted successfully',
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      data: result,
-    };
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SuperAdmin)
+  @Post('update-user/:userId')
+  async updateUser(
+    @Req() req: RequestWithUser,
+    @Param('userId') userId: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    try {
+      const updatedUser = await this.authService.updateUserBySuperAdmin(
+        req.user,
+        userId,
+        updateUserDto,
+      );
+      return {
+        statusCode: HttpStatus.OK,
+        message: 'User updated successfully',
+        data: updatedUser,
+      };
+    } catch (err) {
+      throw new HttpException(
+        err.message,
+        err.status || HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 }

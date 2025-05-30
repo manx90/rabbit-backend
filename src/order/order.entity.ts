@@ -2,118 +2,106 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
-  OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
-  BeforeInsert,
+  OneToMany,
+  ManyToOne,
 } from 'typeorm';
-import { Exclude, Type } from 'class-transformer';
-import { Auth } from 'src/auth/auth.entity';
-import { Product } from '../product/entities/product.entity';
-import * as dotenv from 'dotenv';
-dotenv.config({ path: '.env' });
-const business_address = process.env.BUSINESS_ADDRESS;
-const buisness = process.env.BUISINESS;
+import { Product } from 'src/product/entities/product.entity';
+import { OrderStatus } from './order.types';
+import { Auth } from 'src/auth/entities/auth.entity';
 
 @Entity()
 export class Order {
   @PrimaryGeneratedColumn('uuid')
   id: string;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  @ManyToOne(() => Auth, (user) => user.orders, { eager: true })
-  @Type(() => Auth)
-  readyBy: Auth;
 
-  @OneToMany(() => OrderItem, (orderItem) => orderItem.order, { cascade: true })
-  @Type(() => OrderItem)
+  /** merchant/company id */
+  @Column('int')
+  business: number;
+
+  /** merchant address id */
+  @Column('int')
+  business_address: number;
+
+  /** user who prepared / owns order */
+  @ManyToOne(() => Auth, (user) => user.orders, { nullable: true, eager: true })
+  readyBy?: Auth;
+
+  // Consignee
+  @Column()
+  consignee_name: string;
+
+  @Column()
+  consignee_phone: string;
+
+  @Column('int')
+  consignee_city: number;
+
+  @Column('int')
+  consignee_area: number;
+
+  @Column()
+  consignee_address: string;
+
+  // Shipment info
+  @Column('int')
+  shipment_types: number;
+
+  @Column('int')
+  quantity: number;
+
+  @Column({ name: 'Cod_amount', type: 'numeric', default: 0 })
+  Cod_amount: number;
+
+  @Column()
+  items_description: string;
+
+  @Column({ type: 'boolean', default: false })
+  is_cod: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  has_return: boolean;
+
+  @Column({ nullable: true })
+  return_notes: string;
+
+  @Column({ nullable: true })
+  notes: string;
+
+  @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
+  status: OrderStatus;
+
+  @OneToMany(() => OrderItem, (item) => item.order, {
+    cascade: true,
+    eager: true,
+  })
   items: OrderItem[];
-
-  @Column({ default: 'pending' })
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
-
-  // optemus
-  @Column('decimal', { precision: 10, scale: 2 })
-  Cod_amount: number;
-  @BeforeInsert()
-  setCod_amount() {
-    // Use the provided Cod_amount instead of calculating from items
-    if (!this.Cod_amount) {
-      this.Cod_amount = 0;
-    }
-  }
-
-  @Column({ default: buisness })
-  business: number;
-
-  @Column({ default: business_address })
-  business_address: number;
-
-  @Column({ nullable: false })
-  consignee_name: string;
-
-  @Column({ nullable: false })
-  consignee_phone: number;
-
-  @Column({ nullable: false })
-  consignee_city: number;
-
-  @Column({ nullable: false })
-  consignee_area: number;
-
-  @Column({ default: null })
-  consignee_address: string;
-
-  @Column({ nullable: false })
-  shipment_types: number;
-
-  @Column({ type: 'text', default: null })
-  items_description: string;
-
-  @Column({ default: '1' })
-  is_cod: '1' | '0';
-
-  @Column({ nullable: false })
-  quantity: number;
-
-  @BeforeInsert()
-  setQuantity() {
-    this.quantity = this.items.reduce((sum, item) => sum + item.quantity, 0);
-  }
-
-  @Column({ default: '0' })
-  has_return: '1' | '0';
-
-  @Column({ default: null })
-  return_notes: string;
-
-  @Column({ default: null })
-  notes: string;
 }
+
 @Entity()
 export class OrderItem {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Product)
+  @ManyToOne(() => Order, (order) => order.items, { onDelete: 'CASCADE' })
+  order: Order;
+
+  @ManyToOne(() => Product, { eager: true })
   product: Product;
 
-  @Column({ type: 'int' })
+  @Column()
+  sizeName: string;
+
+  @Column()
+  colorName: string;
+
+  @Column('int')
   quantity: number;
-
-  @Column({ type: 'text' })
-  size: string;
-
-  @Column({ type: 'text' })
-  color: string;
-
-  @ManyToOne(() => Order, (order) => order.items)
-  @Exclude({ toPlainOnly: true })
-  order: Order;
 }
