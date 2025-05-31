@@ -26,6 +26,10 @@ import { Roles } from '../common/decorators/roles.decorator';
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
+  @Get()
+  async getAllProducts(@Req() req: Request) {
+    return await this.productService.getAllProducts(req.query);
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -66,10 +70,10 @@ export class ProductController {
     return this.productService.create(createProductDto, files, poster);
   }
 
-  @Get()
-  findAll() {
-    return this.productService.findAll();
-  }
+  // @Get()
+  // findAll() {
+  //   return this.productService.findAll();
+  // }
 
   @Get(':id')
   findOne(@Param('id') id: number) {

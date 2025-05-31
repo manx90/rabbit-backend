@@ -10,6 +10,8 @@ import { category, subCategory } from './entities/Category.entity';
 import { CreateProductDto, UpdateProductDto } from './dto/Product.dto';
 import { auth } from 'src/auth/entities/auth.entity';
 import { PublishState } from 'src/common/interfaces/entity.interface';
+import { ApiFeatures } from 'src/common/utils/api-features';
+import { Request } from 'express';
 
 interface UploadFiles {
   images?: Express.Multer.File[];
@@ -36,6 +38,29 @@ export class ProductService {
   }
 
   /** ----------  Create  ---------- */
+  async getAllProducts(query: Request['query']) {
+    const queryBuilder = this.productRepo.createQueryBuilder('product');
+
+    // Use ApiFeatures
+    const features = new ApiFeatures<product>(queryBuilder, query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+
+    // Get results with total count
+    const [products, total] = await features.getManyAndCount();
+
+    return {
+      status: 'success',
+      results: products.length,
+      total,
+      page: Number(query.page) || 1,
+      limit: Number(query.limit) || 10,
+      data: products,
+    };
+  }
+
   async create(
     dto: CreateProductDto,
     files: UploadFiles = {},
