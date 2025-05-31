@@ -23,7 +23,6 @@ export class category {
   @OneToMany(() => subCategory, (sub) => sub.category, {
     cascade: true,
   })
-  @Exclude()
   subCategories: subCategory[];
 
   @Column('simple-array', { nullable: true })
@@ -32,7 +31,7 @@ export class category {
   @BeforeInsert()
   @BeforeUpdate()
   updateSubCategoryIds() {
-    this.subCategoryIds = this.subCategories.map((sub) => sub.id);
+    this.subCategoryIds = this.subCategories?.map((sub) => sub.id) || [];
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
