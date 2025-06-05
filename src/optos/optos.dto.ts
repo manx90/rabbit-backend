@@ -1,13 +1,13 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
 
 export class CreateShipmentDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  business: string;
+  business?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  business_address: string;
+  business_address?: string;
 
   @IsNotEmpty()
   @IsString()
@@ -41,23 +41,23 @@ export class CreateShipmentDto {
   @IsString()
   items_description: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  is_cod: '1' | '0';
+  is_cod?: '1' | '0';
 
   @IsNotEmpty()
   @IsString()
   cod_amount: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  has_return: '1' | '0';
+  has_return?: '1' | '0';
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  return_notes: string;
+  return_notes?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  notes: string;
+  notes?: string;
 }

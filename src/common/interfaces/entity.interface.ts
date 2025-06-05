@@ -4,7 +4,6 @@ export enum PublishState {
 }
 
 export interface ColorQuantity {
-  imgColors: string;
   colorName: string;
   quantity: number;
 }

@@ -13,6 +13,8 @@ export class AppConfigService {
   static user: string | undefined;
   static pass: string | undefined;
   static db: string | undefined;
+  static business: string | undefined;
+  static business_address: string | undefined;
   constructor(private configService: ConfigService) {}
 
   get host() {
@@ -41,5 +43,13 @@ export class AppConfigService {
 
   get jwtExpiration() {
     return this.configService.get<string>('JWT_EXPIRATION');
+  }
+
+  get business() {
+    return this.configService.get<string>('BUSINESS');
+  }
+
+  get business_address() {
+    return this.configService.get<string>('BUSINESS_ADDRESS');
   }
 }

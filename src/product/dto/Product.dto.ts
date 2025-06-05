@@ -27,6 +27,10 @@ export class ColorQuantityDto {
   @IsNumber()
   @Min(0)
   quantity: number;
+
+  @ApiProperty({ example: 'red-color.jpg' })
+  @IsString()
+  imgColors: string;
 }
 
 export class SizeDetailDto {
@@ -130,8 +134,8 @@ export class CreateProductDto {
     description: 'Flat list of colors (redundant, but handy for front-end)',
     type: [ColorDetailDto],
   })
-  @IsOptional()
   @IsArray()
+  @IsOptional()
   // @ValidateNested({ each: true })
   // @Type(() => ColorDetailDto)
   colors?: ColorDetailDto[];
@@ -157,98 +161,62 @@ export class CreateProductDto {
   @IsBoolean()
   @IsOptional()
   isBestSeller?: boolean = false;
+  imgCover: string;
+  imgSizeChart: string;
+  imgMeasure: string;
+  images: string[];
 }
 
 export class UpdateProductDto {
-  /* ——— Basics ——— */
-  @ApiPropertyOptional({ description: 'New product name' })
-  @IsString()
   @IsOptional()
+  @IsString()
   name?: string;
 
-  @ApiPropertyOptional({ description: 'New product description' })
-  @IsString()
   @IsOptional()
+  @IsString()
   description?: string;
 
-  /* ——— Category refs ——— */
-  @ApiPropertyOptional({ description: 'New category ID', example: 1 })
-  @IsNumber()
   @IsOptional()
-  @Type(() => Number)
-  categoryId?: number;
-
-  @ApiPropertyOptional({ description: 'New sub-category ID', example: 2 })
-  @IsNumber()
-  @IsOptional()
-  @Type(() => Number)
-  subCategoryId?: number;
-
-  /* ——— Publish state ——— */
-  @ApiPropertyOptional({ enum: PublishState })
   @IsEnum(PublishState)
-  @IsOptional()
   publishState?: PublishState;
 
-  /* ——— Images ——— */
-  @ApiPropertyOptional({
-    type: [String],
-    description: 'Replace gallery images',
-  })
+  @IsOptional()
+  @IsNumber()
+  categoryId?: number;
+
+  @IsOptional()
+  @IsNumber()
+  subCategoryId?: number;
+
   @IsOptional()
   @IsArray()
-  images?: string[];
-
-  @ApiPropertyOptional({ description: 'New cover image' })
-  @IsOptional()
-  @IsString()
-  imgCover?: string;
-
-  @ApiPropertyOptional({ description: 'New size-chart image' })
-  @IsOptional()
-  @IsString()
-  imgSizeChart?: string;
-
-  @ApiPropertyOptional({ description: 'New measurement guide image' })
-  @IsOptional()
-  @IsString()
-  imgMeasure?: string;
-
-  /* ——— Size / Color matrix ——— */
-  @ApiPropertyOptional({
-    type: [SizeDetailDto],
-    description: 'Replace the size list completely',
-  })
-  @IsOptional()
-  @IsArray()
-  @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => SizeDetailDto)
   sizes?: SizeDetailDto[];
 
-  /* ——— UX flags ——— */
-  @ApiPropertyOptional()
-  @IsBoolean()
   @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ColorDetailDto)
+  colors?: ColorDetailDto[];
+
+  @IsOptional()
+  @IsBoolean()
   isActive?: boolean;
 
-  @ApiPropertyOptional()
-  @IsBoolean()
   @IsOptional()
+  @IsBoolean()
   isFeatured?: boolean;
 
-  @ApiPropertyOptional()
-  @IsBoolean()
   @IsOptional()
+  @IsBoolean()
   isTrending?: boolean;
 
-  @ApiPropertyOptional()
-  @IsBoolean()
   @IsOptional()
+  @IsBoolean()
   isNew?: boolean;
 
-  @ApiPropertyOptional()
-  @IsBoolean()
   @IsOptional()
+  @IsBoolean()
   isBestSeller?: boolean;
 }

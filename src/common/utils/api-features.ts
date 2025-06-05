@@ -2,6 +2,16 @@ import { ObjectLiteral, SelectQueryBuilder } from 'typeorm';
 import { ParsedQs } from 'qs';
 
 export class ApiFeatures<T extends ObjectLiteral> {
+  /**
+   * Returns the current pagination information
+   * @returns Object containing page and limit
+   */
+  getPaginationInfo(): { page: number; limit: number } {
+    return {
+      page: this.page,
+      limit: this.limit,
+    };
+  }
   private page: number;
   private limit: number;
   private skip: number;

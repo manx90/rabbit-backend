@@ -7,6 +7,7 @@ import { AppConfigService } from './config/config.service';
 import { OptosModule } from './optos/optos.module';
 import { OrderModule } from './order/order.module';
 import { JwtModule } from '@nestjs/jwt';
+import { FileStorageModule } from './file-storage/file-storage.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { JwtModule } from '@nestjs/jwt';
     OrderModule,
     ProductModule,
     OptosModule,
+    FileStorageModule,
   ],
 })
 export class AppModule {}

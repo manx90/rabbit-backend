@@ -5,9 +5,21 @@ import { OptosShipmentService } from './optos.shipment.service';
 import { OptosApiService } from './optos.api.services';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
+import { AppConfigService } from '../config/config.service';
 @Module({
   imports: [HttpModule, ConfigModule],
   controllers: [OptosController],
-  providers: [OptosService, OptosShipmentService, OptosApiService],
+  providers: [
+    OptosService,
+    OptosShipmentService,
+    OptosApiService,
+    AppConfigService,
+  ],
+  exports: [
+    OptosService,
+    OptosShipmentService,
+    OptosApiService,
+    AppConfigService,
+  ],
 })
 export class OptosModule {}

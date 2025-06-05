@@ -67,7 +67,7 @@ export class ProductController {
     }
     const poster = req.user as auth;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return this.productService.create(createProductDto, files, poster);
+    return this.productService.create(createProductDto, files, poster, req);
   }
 
   // @Get()
@@ -104,8 +104,9 @@ export class ProductController {
       imgMeasure?: Express.Multer.File[];
       imgColors?: Express.Multer.File[];
     },
+    @Req() req: Request,
   ) {
-    return this.productService.update(+id, updateProductDto, files);
+    return this.productService.update(+id, updateProductDto, files, req);
   }
 
   @Delete(':id')
@@ -113,5 +114,12 @@ export class ProductController {
   @Roles(Role.Admin, Role.SuperAdmin)
   remove(@Param('id') id: number) {
     return this.productService.remove(+id);
+  }
+
+  @Delete()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  deleteall() {
+    return this.productService.deleteAll();
   }
 }

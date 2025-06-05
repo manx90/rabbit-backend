@@ -10,6 +10,7 @@ import {
 import { OptosService } from './optos.token.service';
 import { OptosShipmentService } from './optos.shipment.service';
 import { OptosApiService } from './optos.api.services';
+// import { CreateShipmentDto } from './optos.dto';
 
 @Controller('optos')
 export class OptosController {
@@ -43,9 +44,9 @@ export class OptosController {
   }
 
   @Post('Shipment')
-  async createShipment(@Body() body: any): Promise<any> {
+  async createShipment(@Body() createshipment: any): Promise<any> {
     try {
-      return await this.optosShipmentService.createShipment(body);
+      return await this.optosShipmentService.createShipment(createshipment);
     } catch (error) {
       this.handleError(error);
     }

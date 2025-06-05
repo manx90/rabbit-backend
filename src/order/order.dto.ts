@@ -1,7 +1,6 @@
 // order/order.dto.ts
 import {
   IsArray,
-  IsIn,
   // IsNotEmpty,
   IsNumber,
   IsString,
@@ -38,12 +37,12 @@ export class CreateOrderDto {
   consignee_phone: string;
 
   // @IsNotEmpty()
-  @IsNumber()
-  consignee_city: number;
+  @IsString()
+  consignee_city: string;
 
   // @IsNotEmpty()
-  @IsNumber()
-  consignee_area: number;
+  @IsString()
+  consignee_area: string;
 
   // @IsNotEmpty()
   @IsString()
@@ -51,28 +50,28 @@ export class CreateOrderDto {
 
   // Shipment
   // @IsNotEmpty()
-  @IsNumber()
-  shipment_types: number;
+  @IsString()
+  shipment_types: string;
 
   // @IsNotEmpty()
-  @IsNumber()
-  quantity: number;
+  @IsString()
+  quantity: string;
 
   // @IsNotEmpty()
   @IsString()
   items_description: string;
 
   // @IsNotEmpty()
-  @IsIn(['1', '0'])
-  is_cod: '1' | '0';
+  @IsString()
+  is_cod: string;
 
   // @IsNotEmpty()
-  @IsNumber()
-  cod_amount: number;
+  @IsString()
+  cod_amount: string;
 
   // @IsNotEmpty()
-  @IsIn(['1', '0'])
-  has_return: '1' | '0';
+  @IsString()
+  has_return: string;
 
   @IsString()
   return_notes: string;
@@ -86,3 +85,5 @@ export class CreateOrderDto {
   @Type(() => OrderItemDto)
   items: OrderItemDto[];
 }
+
+export class UpdateOrderDto extends CreateOrderDto {}

@@ -7,7 +7,7 @@ import {
   ManyToOne,
   BeforeInsert,
   BeforeUpdate,
-  JoinColumn,
+  // JoinColumn,
 } from 'typeorm';
 import { OrderStatus } from './order.types';
 import { auth } from 'src/auth/entities/auth.entity';
@@ -20,12 +20,12 @@ export class order {
   id: string;
 
   /** merchant/company id */
-  // @Column('int', { default: 1 })
-  // business: number;
+  @Column({ type: 'varchar', default: '1800' })
+  business: string;
 
-  // /** merchant address id */
-  // @Column('int')
-  // business_address: number;
+  /** merchant address id */
+  @Column({ type: 'varchar', default: '1802' })
+  business_address: string;
 
   /** user who prepared / owns order */
   @ManyToOne(() => auth, (user) => user.orders, { nullable: true })
@@ -37,38 +37,38 @@ export class order {
   @Column({ nullable: true })
   consignee_phone: string;
 
-  @Column('int', { nullable: true })
-  consignee_city: number;
+  @Column({ type: 'varchar', nullable: true })
+  consignee_city: string;
 
-  @Column('int', { nullable: true })
-  consignee_area: number;
+  @Column({ type: 'varchar', nullable: true })
+  consignee_area: string;
 
   @Column({ nullable: true })
   consignee_address: string;
 
   // Shipment info
-  @Column('int', { nullable: true })
-  shipment_types: number;
+  @Column({ type: 'varchar', nullable: true })
+  shipment_types: string;
 
-  @Column('int', { nullable: true })
-  quantity: number;
+  @Column({ type: 'varchar', nullable: true })
+  quantity: string;
 
-  @Column({ name: 'Cod_amount', type: 'numeric', default: 0 })
-  Cod_amount: number;
+  @Column({ name: 'cod_amount', type: 'varchar', nullable: true })
+  cod_amount: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   items_description: string;
 
-  @Column({ type: 'boolean', default: false })
-  is_cod: boolean;
+  @Column({ type: 'varchar', default: '0' })
+  is_cod: string;
 
-  @Column({ type: 'boolean', default: false })
-  has_return: boolean;
+  @Column({ type: 'varchar', default: '0' })
+  has_return: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   return_notes: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   notes: string;
 
   @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
@@ -83,9 +83,8 @@ export class order {
   @ManyToOne(() => auth, {
     nullable: true,
   })
-  @JoinColumn({ name: 'readyBy', referencedColumnName: 'id' })
-  readyBy: auth;
-
+  // @JoinColumn({ name: 'readyBy', referencedColumnName: 'id' })
+  // readyBy: auth;
   @CreateDateColumn()
   createdAt: Date;
 
@@ -96,7 +95,7 @@ export class order {
   calculateAmount() {
     if (this.items && this.items.length > 0) {
       this.amount = this.items.reduce(
-        (total, item) => total + item.price * item.quantity,
+        (total, item) => total + Number(item.price) * Number(item.quantity),
         0,
       );
     } else {
@@ -116,27 +115,30 @@ export class orderitem {
   @PrimaryGeneratedColumn()
   id: string;
 
-  @ManyToOne(() => order, (order) => order.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => order, (order) => order.items)
   @Exclude()
   order: order;
 
-  @ManyToOne(() => product, (product) => product.id)
+  @ManyToOne(() => product, (product) => product.id, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   @Exclude()
   product: product;
 
-  @Column({ name: 'productId' })
+  @Column({ type: 'int', name: 'productId' })
   productId: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   sizeName: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   colorName: string;
 
-  @Column('int')
+  @Column({ type: 'int' })
   quantity: number;
 
-  @Column()
+  @Column({ type: 'numeric', default: '0' })
   price: number;
 
   @BeforeInsert()

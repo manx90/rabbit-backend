@@ -41,13 +41,13 @@ export class product {
   @Column({ type: 'json', nullable: true })
   images: string[];
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'longtext', nullable: true })
   imgCover: string;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'longtext', nullable: true })
   imgSizeChart: string;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'longtext', nullable: true })
   imgMeasure: string;
 
   @Column({ type: 'json' })
@@ -132,7 +132,7 @@ export class product {
     this.sizeDetails.forEach((size) => {
       size.quantities.forEach((colorQty) => {
         if (colorQty.quantity > 0) {
-          colorsMap.set(colorQty.colorName, colorQty.imgColors || '');
+          colorsMap.set(colorQty.colorName, '');
         }
       });
     });
@@ -190,5 +190,23 @@ export class product {
         }
       });
     });
+  }
+
+  /**
+   * Before insert hook - validate size details
+   */
+  @BeforeInsert()
+  @BeforeUpdate()
+  validateTotalQuantity() {
+    if (!this.sizeDetails) return;
+
+    const totalQuantity = this.sizeDetails.reduce(
+      (total, size) =>
+        total +
+        size.quantities.reduce((sum, colorQty) => sum + colorQty.quantity, 0),
+      0,
+    );
+
+    this.quantity = totalQuantity;
   }
 }
