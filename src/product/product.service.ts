@@ -67,6 +67,57 @@ export class ProductService {
     return await this.fileStorageService.saveFile(file, productPath);
   }
 
+  private async uploadFiles(
+    files: UploadFiles,
+    productName: string,
+  ): Promise<{
+    images?: string[];
+    imgCover?: string;
+    imgSizeChart?: string;
+    imgMeasure?: string;
+    imgColors?: string[];
+  }> {
+    const result: any = {};
+
+    if (files.images && files.images.length > 0) {
+      result.images = await this.saveFiles(files.images, productName, 'images');
+    }
+
+    if (files.imgCover && files.imgCover.length > 0) {
+      result.imgCover = await this.saveFile(
+        files.imgCover[0],
+        productName,
+        'cover',
+      );
+    }
+
+    if (files.imgSizeChart && files.imgSizeChart.length > 0) {
+      result.imgSizeChart = await this.saveFile(
+        files.imgSizeChart[0],
+        productName,
+        'size-chart',
+      );
+    }
+
+    if (files.imgMeasure && files.imgMeasure.length > 0) {
+      result.imgMeasure = await this.saveFile(
+        files.imgMeasure[0],
+        productName,
+        'measure',
+      );
+    }
+
+    if (files.imgColors && files.imgColors.length > 0) {
+      result.imgColors = await this.saveFiles(
+        files.imgColors,
+        productName,
+        'colors',
+      );
+    }
+
+    return result;
+  }
+
   /**
    * Transform product file paths to full URLs
    * @param products Array of product entities
@@ -180,7 +231,7 @@ export class ProductService {
       throw new BadRequestException('Product name already exists');
     Product.name = dto.name;
     Product.description = dto.description;
-    Product.poster = poster;
+    Product.poster = { id: poster.id, username: poster.username };
     Product.category = await this.fetchCategory(dto.categoryId);
     Product.subCategory = await this.fetchSubCategory(
       dto.categoryId,
@@ -281,13 +332,57 @@ export class ProductService {
     // Poster is already assigned in the initial setup
 
     // 6) Size Details
+    // Validate that color names in quantities match the defined colors
+    if (
+      dto.sizes &&
+      Array.isArray(dto.sizes) &&
+      dto.colors &&
+      Array.isArray(dto.colors)
+    ) {
+      const colorNames = dto.colors.map((color) => color.name);
+      const sizeColorNames = new Set<string>();
+
+      // Collect all color names used in sizes
+      for (const size of dto.sizes) {
+        for (const colorQty of size.quantities) {
+          sizeColorNames.add(colorQty.colorName);
+        }
+      }
+
+      // Convert set to array for comparison
+      const uniqueSizeColorNames = Array.from(sizeColorNames);
+
+      // Check if the count and names match exactly
+      if (uniqueSizeColorNames.length !== colorNames.length) {
+        throw new BadRequestException(
+          'Number of colors in sizes does not match the number of colors defined in the colors list',
+        );
+      }
+
+      // Check if all colors in sizes exist in colors array and vice versa
+      for (const colorName of uniqueSizeColorNames) {
+        if (!colorNames.includes(colorName)) {
+          throw new BadRequestException(
+            `Color "${colorName}" used in sizes is not defined in the colors list`,
+          );
+        }
+      }
+
+      for (const colorName of colorNames) {
+        if (!uniqueSizeColorNames.includes(colorName)) {
+          throw new BadRequestException(
+            `Color "${colorName}" defined in colors list is not used in any size`,
+          );
+        }
+      }
+    }
+
     Product.sizeDetails = dto.sizes.map((size) => ({
       sizeName: size.sizeName,
       price: size.price,
       quantities: size.quantities.map((colorQty) => ({
         colorName: colorQty.colorName,
         quantity: colorQty.quantity,
-        imgColors: colorQty.imgColors || '', // Use provided imgColors or empty string
       })),
     }));
 
@@ -337,37 +432,66 @@ export class ProductService {
       );
     if (dto.publishState) product.publishState = dto.publishState;
 
-    // Update files if provided - save to file system
-    if (files.images && files.images.length > 0) {
-      product.images = await this.saveFiles(
-        files.images,
-        product.name,
-        'images',
-      );
-    }
+    // Update files if provided - save to file system and handle old files properly
+    try {
+      // Handle product images (multiple files)
+      if (files.images && files.images.length > 0) {
+        // Delete old images if they exist
+        if (product.images && product.images.length > 0) {
+          this.fileStorageService.deleteFiles(product.images);
+        }
+        // Save new images
+        product.images = await this.saveFiles(
+          files.images,
+          product.name,
+          'images',
+        );
+      }
 
-    if (files.imgCover && files.imgCover[0]) {
-      product.imgCover = await this.saveFile(
-        files.imgCover[0],
-        product.name,
-        'cover',
-      );
-    }
+      // Handle product cover image (single file)
+      if (files.imgCover && files.imgCover[0]) {
+        // Delete old cover image if it exists
+        if (product.imgCover) {
+          this.fileStorageService.deleteFile(product.imgCover);
+        }
+        // Save new cover image
+        product.imgCover = await this.saveFile(
+          files.imgCover[0],
+          product.name,
+          'cover',
+        );
+      }
 
-    if (files.imgSizeChart && files.imgSizeChart[0]) {
-      product.imgSizeChart = await this.saveFile(
-        files.imgSizeChart[0],
-        product.name,
-        'sizechart',
-      );
-    }
+      // Handle size chart image (single file)
+      if (files.imgSizeChart && files.imgSizeChart[0]) {
+        // Delete old size chart image if it exists
+        if (product.imgSizeChart) {
+          this.fileStorageService.deleteFile(product.imgSizeChart);
+        }
+        // Save new size chart image
+        product.imgSizeChart = await this.saveFile(
+          files.imgSizeChart[0],
+          product.name,
+          'sizechart',
+        );
+      }
 
-    if (files.imgMeasure && files.imgMeasure[0]) {
-      product.imgMeasure = await this.saveFile(
-        files.imgMeasure[0],
-        product.name,
-        'measure',
-      );
+      // Handle measure image (single file)
+      if (files.imgMeasure && files.imgMeasure[0]) {
+        // Delete old measure image if it exists
+        if (product.imgMeasure) {
+          this.fileStorageService.deleteFile(product.imgMeasure);
+        }
+        // Save new measure image
+        product.imgMeasure = await this.saveFile(
+          files.imgMeasure[0],
+          product.name,
+          'measure',
+        );
+      }
+    } catch (error) {
+      console.error('Error handling product files:', error);
+      throw new Error(`Failed to process product files: ${error.message}`);
     }
 
     // Update category and subcategory if provided
@@ -399,39 +523,81 @@ export class ProductService {
     }
 
     // Update colors if provided
-    if (
-      dto.colors &&
-      dto.colors.length > 0 &&
-      files.imgColors &&
-      files.imgColors.length > 0
-    ) {
-      // Save new color images to file system
-      const colorImagePaths = await this.saveFiles(
-        files.imgColors,
-        product.name,
-        'colors',
+    try {
+      if (
+        dto.colors &&
+        dto.colors.length > 0 &&
+        files.imgColors &&
+        files.imgColors.length > 0
+      ) {
+        // Delete old color images if they exist
+        if (product.colors && product.colors.length > 0) {
+          const oldColorImages = product.colors
+            .map((color) => color.imgColor)
+            .filter(
+              (imgPath): imgPath is string => !!imgPath && imgPath.length > 0,
+            );
+
+          if (oldColorImages.length > 0) {
+            this.fileStorageService.deleteFiles(oldColorImages);
+          }
+        }
+
+        // Save new color images to file system
+        const colorImagePaths = await this.saveFiles(
+          files.imgColors,
+          product.name,
+          'colors',
+        );
+
+        product.colors = dto.colors.map((color, index) => ({
+          name:
+            color.name ||
+            (product.colors && product.colors[index]
+              ? product.colors[index].name
+              : ''),
+          imgColor:
+            colorImagePaths[index] ||
+            (product.colors && product.colors[index]
+              ? product.colors[index].imgColor
+              : ''),
+        }));
+      } else if (dto.colors && dto.colors.length > 0) {
+        // Update color names but keep existing image paths
+        product.colors = dto.colors.map((color, index) => ({
+          name:
+            color.name ||
+            (product.colors && product.colors[index]
+              ? product.colors[index].name
+              : ''),
+          imgColor:
+            product.colors && product.colors[index]
+              ? product.colors[index].imgColor
+              : '',
+        }));
+      }
+    } catch (error) {
+      console.error('Error handling product color images:', error);
+      throw new Error(
+        `Failed to process product color images: ${error.message}`,
       );
-
-      product.colors = dto.colors.map((color, index) => ({
-        name:
-          color.name ||
-          (product.colors[index] ? product.colors[index].name : ''),
-        imgColor:
-          colorImagePaths[index] ||
-          (product.colors[index] ? product.colors[index].imgColor : ''),
-      }));
-    } else if (dto.colors && dto.colors.length > 0) {
-      // Update color names but keep existing image paths
-      product.colors = dto.colors.map((color, index) => ({
-        name:
-          color.name ||
-          (product.colors[index] ? product.colors[index].name : ''),
-        imgColor: product.colors[index] ? product.colors[index].imgColor : '',
-      }));
     }
+    product.updatedAt = new Date();
 
-    // The BeforeUpdate hook will automatically update the total quantity
-    const updatedProduct = await this.productRepo.save(product);
+    // Use update method for better efficiency (doesn't load entity, doesn't trigger hooks)
+    await this.productRepo.update(id, product);
+
+    // Fetch the updated product to return it
+    const updatedProduct = await this.productRepo.findOne({
+      where: { id },
+      relations: ['category', 'subCategory', 'poster'],
+    });
+
+    if (!updatedProduct) {
+      throw new NotFoundException(
+        `Product with ID ${id} not found after update`,
+      );
+    }
 
     // Transform file paths to full URLs if request object is provided
     if (req) {
@@ -446,28 +612,17 @@ export class ProductService {
   }
 
   /** ----------  Helpers  ---------- */
-  private async fetchCategory(id: number): Promise<category> {
+  private async fetchCategory(id: number): Promise<any> {
     const cat = await this.categoryRepo.findOne({
       where: { id },
       relations: ['subCategories'],
     });
     if (!cat) throw new NotFoundException(`Category ${id} not found`);
 
-    // Update subCategoryIds
-    if (cat.subCategories && cat.subCategories.length > 0) {
-      cat.subCategoryIds = cat.subCategories.map((sub) => sub.id);
-    } else {
-      cat.subCategoryIds = [];
-    }
-    await this.categoryRepo.save(cat);
-
-    return cat;
+    return { id: cat.id, name: cat.name };
   }
 
-  private async fetchSubCategory(
-    idCat: number,
-    idSub: number,
-  ): Promise<subCategory> {
+  private async fetchSubCategory(idCat: number, idSub: number): Promise<any> {
     const sub = await this.subCategoryRepo.findOneBy({
       id: idSub,
       category: { id: idCat },
@@ -476,7 +631,7 @@ export class ProductService {
       throw new NotFoundException(
         'SubCategory not found or not exist in this category',
       );
-    return sub;
+    return { id: sub.id, name: sub.name };
   }
 
   async remove(id: number): Promise<void> {
@@ -489,7 +644,7 @@ export class ProductService {
     this.fileStorageService.deleteDirectory(productPath);
   }
 
-  async findOne(id: number): Promise<product> {
+  async findOne(id: number): Promise<any> {
     const product = await this.productRepo.findOne({
       where: { id },
       relations: ['category', 'subCategory'],

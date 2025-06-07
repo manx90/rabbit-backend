@@ -57,13 +57,6 @@ _ts_decorate([
     (0, _classvalidator.Min)(0),
     _ts_metadata("design:type", Number)
 ], ColorQuantityDto.prototype, "quantity", void 0);
-_ts_decorate([
-    (0, _swagger.ApiProperty)({
-        example: 'red-color.jpg'
-    }),
-    (0, _classvalidator.IsString)(),
-    _ts_metadata("design:type", String)
-], ColorQuantityDto.prototype, "imgColors", void 0);
 let SizeDetailDto = class SizeDetailDto {
 };
 _ts_decorate([
@@ -174,6 +167,11 @@ _ts_decorate([
         minItems: 1
     }),
     (0, _classvalidator.IsArray)(),
+    (0, _classvalidator.ArrayMinSize)(1),
+    (0, _classvalidator.ValidateNested)({
+        each: true
+    }),
+    (0, _classtransformer.Type)(()=>SizeDetailDto),
     _ts_metadata("design:type", Array)
 ], CreateProductDto.prototype, "sizes", void 0);
 _ts_decorate([
@@ -185,6 +183,10 @@ _ts_decorate([
     }),
     (0, _classvalidator.IsArray)(),
     (0, _classvalidator.IsOptional)(),
+    (0, _classvalidator.ValidateNested)({
+        each: true
+    }),
+    (0, _classtransformer.Type)(()=>ColorDetailDto),
     _ts_metadata("design:type", Array)
 ], CreateProductDto.prototype, "colors", void 0);
 _ts_decorate([

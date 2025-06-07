@@ -163,7 +163,7 @@ _ts_decorate([
     (0, _typeorm.JoinColumn)({
         name: 'categoryId'
     }),
-    _ts_metadata("design:type", typeof _Categoryentity.category === "undefined" ? Object : _Categoryentity.category)
+    _ts_metadata("design:type", Object)
 ], product.prototype, "category", void 0);
 _ts_decorate([
     (0, _typeorm.ManyToOne)(()=>_Categoryentity.subCategory, (subCategory)=>subCategory.products, {
@@ -181,7 +181,7 @@ _ts_decorate([
     (0, _typeorm.JoinColumn)({
         name: 'posterId'
     }),
-    _ts_metadata("design:type", typeof _authentity.auth === "undefined" ? Object : _authentity.auth)
+    _ts_metadata("design:type", Object)
 ], product.prototype, "poster", void 0);
 _ts_decorate([
     (0, _typeorm.Column)({

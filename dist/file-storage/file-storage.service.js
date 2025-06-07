@@ -59,6 +59,14 @@ let FileStorageService = class FileStorageService {
         return (0, _fs.readFileSync)(fullPath);
     }
     /**
+   * Update a file in storage and return the new file path
+   */ async updateFile(file, oldFilePath, subDirectory = 'products') {
+        // Delete the old file if it exists
+        this.deleteFile(oldFilePath);
+        // Save and return the new file
+        return await this.saveFile(file, subDirectory);
+    }
+    /**
    * Delete a file from storage
    */ deleteFile(filePath) {
         if (!filePath) return false;

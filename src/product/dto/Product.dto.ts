@@ -27,10 +27,6 @@ export class ColorQuantityDto {
   @IsNumber()
   @Min(0)
   quantity: number;
-
-  @ApiProperty({ example: 'red-color.jpg' })
-  @IsString()
-  imgColors: string;
 }
 
 export class SizeDetailDto {
@@ -94,29 +90,6 @@ export class CreateProductDto {
   @IsOptional()
   publishState?: PublishState = PublishState.DRAFT;
 
-  // @ApiProperty({
-  //   description: 'Gallery images (file names or URLs)',
-  //   example: ['gallery1.jpg', 'gallery2.jpg'],
-  //   type: [String],
-  // })
-  // @IsArray()
-  // @ArrayMinSize(1)
-  // images: string[];
-
-  // @ApiProperty({ example: 'cover.jpg' })
-  // @IsString()
-  // imgCover: string;
-
-  // @ApiPropertyOptional({ example: 'size-chart.png' })
-  // @IsOptional()
-  // @IsString()
-  // imgSizeChart?: string;
-
-  // @ApiPropertyOptional({ example: 'measure.png' })
-  // @IsOptional()
-  // @IsString()
-  // imgMeasure?: string;
-
   /* sizes & colors */
   @ApiProperty({
     description: 'List of sizes with their prices and color quantities',
@@ -124,9 +97,9 @@ export class CreateProductDto {
     minItems: 1,
   })
   @IsArray()
-  // @ArrayMinSize(1)
-  // @ValidateNested({ each: true })
-  // @Type(() => SizeDetailDto)
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => SizeDetailDto)
   sizes: SizeDetailDto[];
 
   /** optional convenience list if you want to expose colors separately */
@@ -136,8 +109,8 @@ export class CreateProductDto {
   })
   @IsArray()
   @IsOptional()
-  // @ValidateNested({ each: true })
-  // @Type(() => ColorDetailDto)
+  @ValidateNested({ each: true })
+  @Type(() => ColorDetailDto)
   colors?: ColorDetailDto[];
 
   /* UX flags */
@@ -203,7 +176,6 @@ export class UpdateProductDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
-
   @IsOptional()
   @IsBoolean()
   isFeatured?: boolean;

@@ -74,6 +74,21 @@ export class FileStorageService {
   }
 
   /**
+   * Update a file in storage and return the new file path
+   */
+  async updateFile(
+    file: Express.Multer.File,
+    oldFilePath: string,
+    subDirectory = 'products',
+  ): Promise<string> {
+    // Delete the old file if it exists
+    this.deleteFile(oldFilePath);
+
+    // Save and return the new file
+    return await this.saveFile(file, subDirectory);
+  }
+
+  /**
    * Delete a file from storage
    */
   deleteFile(filePath: string | null | undefined): boolean {

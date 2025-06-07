@@ -65,7 +65,7 @@ export class product {
 
   @ManyToOne(() => category, (category) => category.products)
   @JoinColumn({ name: 'categoryId' })
-  category: category;
+  category: { id: number; name: string };
 
   @ManyToOne(() => subCategory, (subCategory) => subCategory.products, {
     onDelete: 'CASCADE',
@@ -75,7 +75,7 @@ export class product {
 
   @ManyToOne(() => auth, { nullable: true })
   @JoinColumn({ name: 'posterId' })
-  poster: auth;
+  poster: { id: string; username: string };
 
   @Column({ type: 'decimal', default: null })
   quantity: number;
@@ -106,6 +106,7 @@ export class product {
 
   @Column({ type: 'timestamp', default: null, nullable: true })
   updatedAt: Date;
+  Product: { id: string; username: string };
 
   /**
    * Calculate total quantity from all sizes and colors
