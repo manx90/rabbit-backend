@@ -137,4 +137,14 @@ export class AuthController {
       );
     }
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('isLoggedIn')
+  isLoggedIn(@Req() req: Request) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const authHeader = req.headers['authorization'];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const token = authHeader && authHeader.split(' ')[1];
+    return this.authService.isLoggedIn(token);
+  }
 }

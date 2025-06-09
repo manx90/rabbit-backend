@@ -33,6 +33,13 @@ export class OrderController {
     return this.orderService.createOrder(createOrderDto);
   }
 
+  @Get('numberOfOrders')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  numberOfOrders(): Promise<number> {
+    return this.orderService.numberOfOrders();
+  }
+
   @Put('update/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.SuperAdmin)
@@ -75,6 +82,13 @@ export class OrderController {
     return this.orderService.addReadyBy(id, userId);
   }
 
+  @Delete()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  deleteAllOrders(): Promise<void> {
+    return this.orderService.deleteAllOrders();
+  }
+
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.SuperAdmin)
@@ -109,4 +123,6 @@ export class OrderController {
   updateOrderStatusToCancelled(@Param('id') id: string): Promise<void> {
     return this.orderService.updateOrderStatusToCancelled(id);
   }
+
+  
 }

@@ -237,6 +237,16 @@ let AuthService = class AuthService {
             role: user.role
         };
     }
+    isLoggedIn(token) {
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const decoded = this.jwtService.decode(token);
+            return !!decoded;
+        } catch (err) {
+            this.logger.error(`Error decoding token: ${err.message}`);
+            return false;
+        }
+    }
     constructor(authRepository, jwtService, configService){
         this.authRepository = authRepository;
         this.jwtService = jwtService;

@@ -151,4 +151,8 @@ export class CategoryService {
     await this.subCategoryRepository.delete({});
     await this.categoryRepository.delete({});
   }
+
+  async getSubCategories() {
+    return this.subCategoryRepository.find();
+  }
 }

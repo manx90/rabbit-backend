@@ -149,6 +149,9 @@ let CategoryService = class CategoryService {
         await this.subCategoryRepository.delete({});
         await this.categoryRepository.delete({});
     }
+    async getSubCategories() {
+        return this.subCategoryRepository.find();
+    }
     constructor(categoryRepository, subCategoryRepository, productRepository){
         this.categoryRepository = categoryRepository;
         this.subCategoryRepository = subCategoryRepository;

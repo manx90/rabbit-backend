@@ -232,4 +232,15 @@ export class AuthService {
       role: user.role,
     };
   }
+
+  isLoggedIn(token: string): boolean {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const decoded = this.jwtService.decode(token);
+      return !!decoded;
+    } catch (err: any) {
+      this.logger.error(`Error decoding token: ${err.message}`);
+      return false;
+    }
+  }
 }

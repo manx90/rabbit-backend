@@ -35,6 +35,9 @@ let OrderController = class OrderController {
     createOrder(createOrderDto) {
         return this.orderService.createOrder(createOrderDto);
     }
+    numberOfOrders() {
+        return this.orderService.numberOfOrders();
+    }
     updateOrder(id, updateOrderDto) {
         return this.orderService.updateOrder(id, updateOrderDto);
     }
@@ -53,6 +56,9 @@ let OrderController = class OrderController {
         }
         const userId = req.user.id;
         return this.orderService.addReadyBy(id, userId);
+    }
+    deleteAllOrders() {
+        return this.orderService.deleteAllOrders();
     }
     deleteOrder(id) {
         return this.orderService.deleteOrder(id);
@@ -82,6 +88,14 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", typeof Promise === "undefined" ? Object : Promise)
 ], OrderController.prototype, "createOrder", null);
+_ts_decorate([
+    (0, _common.Get)('numberOfOrders'),
+    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
+    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:returntype", typeof Promise === "undefined" ? Object : Promise)
+], OrderController.prototype, "numberOfOrders", null);
 _ts_decorate([
     (0, _common.Put)('update/:id'),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
@@ -138,6 +152,14 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", typeof Promise === "undefined" ? Object : Promise)
 ], OrderController.prototype, "addReadyBy", null);
+_ts_decorate([
+    (0, _common.Delete)(),
+    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
+    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:returntype", typeof Promise === "undefined" ? Object : Promise)
+], OrderController.prototype, "deleteAllOrders", null);
 _ts_decorate([
     (0, _common.Delete)(':id'),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),

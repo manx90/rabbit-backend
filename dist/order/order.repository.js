@@ -334,6 +334,12 @@ let OrderRepository = class OrderRepository {
         await this.optosService.createShipment(optos);
         return this.orderRepo.save(order);
     }
+    async deleteAllOrders() {
+        await this.orderRepo.createQueryBuilder().delete().execute();
+    }
+    async length() {
+        return this.orderRepo.count();
+    }
     constructor(orderRepo, productRepo, authRepo, optosService){
         this.orderRepo = orderRepo;
         this.productRepo = productRepo;

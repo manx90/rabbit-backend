@@ -6,6 +6,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+
 // import dataSource from './data-source';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -24,14 +25,13 @@ async function bootstrap() {
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
-
   app.use(bodyParser.json({ limit: '50mb' }));
   app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
   app.use(LoggerMiddleware);
   app.enableCors({
     origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
+    credentials: false,
   });
   app.useGlobalPipes(
     new ValidationPipe({

@@ -30,6 +30,12 @@ function _ts_param(paramIndex, decorator) {
     };
 }
 let CategoryController = class CategoryController {
+    async getSubCategories() {
+        return this.categoryService.getSubCategories();
+    }
+    async getAllCategories() {
+        return this.categoryService.getAllCategories();
+    }
     async createCategory(dto) {
         try {
             const result = await this.categoryService.createCategory(dto);
@@ -41,20 +47,6 @@ let CategoryController = class CategoryController {
             throw new _common.HttpException(error.message, _common.HttpStatus.BAD_REQUEST);
         }
     }
-    async createSubCategory(dto) {
-        try {
-            const result = await this.categoryService.createSubCategory(dto);
-            return {
-                message: 'SubCategory created successfully',
-                data: result
-            };
-        } catch (error) {
-            throw new _common.HttpException(error.message, _common.HttpStatus.BAD_REQUEST);
-        }
-    }
-    async getAllCategories() {
-        return this.categoryService.getAllCategories();
-    }
     async getCategoryById(id) {
         try {
             return await this.categoryService.getCategoryById(Number(id));
@@ -65,6 +57,17 @@ let CategoryController = class CategoryController {
     async updateCategory(id, dto) {
         try {
             return await this.categoryService.updateCategory(Number(id), dto);
+        } catch (error) {
+            throw new _common.HttpException(error.message, _common.HttpStatus.BAD_REQUEST);
+        }
+    }
+    async createSubCategory(dto) {
+        try {
+            const result = await this.categoryService.createSubCategory(dto);
+            return {
+                message: 'SubCategory created successfully',
+                data: result
+            };
         } catch (error) {
             throw new _common.HttpException(error.message, _common.HttpStatus.BAD_REQUEST);
         }
@@ -107,6 +110,20 @@ let CategoryController = class CategoryController {
     }
 };
 _ts_decorate([
+    (0, _common.Get)('subcategory'),
+    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
+    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:returntype", Promise)
+], CategoryController.prototype, "getSubCategories", null);
+_ts_decorate([
+    (0, _common.Get)(),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:returntype", Promise)
+], CategoryController.prototype, "getAllCategories", null);
+_ts_decorate([
     (0, _common.Post)(),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
     (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
@@ -118,24 +135,6 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], CategoryController.prototype, "createCategory", null);
-_ts_decorate([
-    (0, _common.Post)('subcategory'),
-    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
-    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
-    (0, _common.HttpCode)(_common.HttpStatus.CREATED),
-    _ts_param(0, (0, _common.Body)()),
-    _ts_metadata("design:type", Function),
-    _ts_metadata("design:paramtypes", [
-        typeof _categorydto.CreateSubCategoryDto === "undefined" ? Object : _categorydto.CreateSubCategoryDto
-    ]),
-    _ts_metadata("design:returntype", Promise)
-], CategoryController.prototype, "createSubCategory", null);
-_ts_decorate([
-    (0, _common.Get)(),
-    _ts_metadata("design:type", Function),
-    _ts_metadata("design:paramtypes", []),
-    _ts_metadata("design:returntype", Promise)
-], CategoryController.prototype, "getAllCategories", null);
 _ts_decorate([
     (0, _common.Get)(':id'),
     _ts_param(0, (0, _common.Param)('id')),
@@ -158,6 +157,18 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], CategoryController.prototype, "updateCategory", null);
+_ts_decorate([
+    (0, _common.Post)('subcategory'),
+    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
+    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    (0, _common.HttpCode)(_common.HttpStatus.CREATED),
+    _ts_param(0, (0, _common.Body)()),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        typeof _categorydto.CreateSubCategoryDto === "undefined" ? Object : _categorydto.CreateSubCategoryDto
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], CategoryController.prototype, "createSubCategory", null);
 _ts_decorate([
     (0, _common.Put)('subcategory/:id'),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),

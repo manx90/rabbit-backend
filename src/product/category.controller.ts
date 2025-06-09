@@ -29,6 +29,17 @@ import {
 @Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
+  @Get('subcategory')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  async getSubCategories() {
+    return this.categoryService.getSubCategories();
+  }
+
+  @Get()
+  async getAllCategories(): Promise<CategoryResponseDto[]> {
+    return this.categoryService.getAllCategories();
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -43,26 +54,6 @@ export class CategoryController {
     } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
-  }
-
-  @Post('subcategory')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.SuperAdmin)
-  @HttpCode(HttpStatus.CREATED)
-  async createSubCategory(
-    @Body() dto: CreateSubCategoryDto,
-  ): Promise<{ message: string; data: SubCategoryResponseDto }> {
-    try {
-      const result = await this.categoryService.createSubCategory(dto);
-      return { message: 'SubCategory created successfully', data: result };
-    } catch (error: any) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-    }
-  }
-
-  @Get()
-  async getAllCategories(): Promise<CategoryResponseDto[]> {
-    return this.categoryService.getAllCategories();
   }
 
   @Get(':id')
@@ -83,6 +74,21 @@ export class CategoryController {
   ): Promise<CategoryResponseDto> {
     try {
       return await this.categoryService.updateCategory(Number(id), dto);
+    } catch (error: any) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Post('subcategory')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  @HttpCode(HttpStatus.CREATED)
+  async createSubCategory(
+    @Body() dto: CreateSubCategoryDto,
+  ): Promise<{ message: string; data: SubCategoryResponseDto }> {
+    try {
+      const result = await this.categoryService.createSubCategory(dto);
+      return { message: 'SubCategory created successfully', data: result };
     } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }

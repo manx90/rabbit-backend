@@ -36,7 +36,7 @@ export class auth {
    */
   @OneToMany(
     () => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access
       const OrderEntity = require('../../order/order.entity').order as {
         new (): order;
       };
@@ -49,7 +49,7 @@ export class auth {
   /**
    * User role for authorization
    */
-  @Column({ type: 'enum', enum: Role, default: Role.Salesman })
+  @Column({ type: 'enum', enum: Role, default: Role.Admin })
   role: Role;
 
   /**

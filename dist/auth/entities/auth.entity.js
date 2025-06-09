@@ -44,7 +44,7 @@ _ts_decorate([
 ], auth.prototype, "password", void 0);
 _ts_decorate([
     (0, _typeorm.OneToMany)(()=>{
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access
         const OrderEntity = require('../../order/order.entity').order;
         return OrderEntity;
     }, (orderEntity)=>orderEntity.readyBy),
@@ -54,7 +54,7 @@ _ts_decorate([
     (0, _typeorm.Column)({
         type: 'enum',
         enum: _rolesconstant.Role,
-        default: _rolesconstant.Role.Salesman
+        default: _rolesconstant.Role.Admin
     }),
     _ts_metadata("design:type", typeof _rolesconstant.Role === "undefined" ? Object : _rolesconstant.Role)
 ], auth.prototype, "role", void 0);

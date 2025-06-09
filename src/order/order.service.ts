@@ -51,4 +51,12 @@ export class OrderService {
   addReadyBy(id: string, readyById: string): Promise<order> {
     return this.orderRepository.addReadyBy(id, readyById);
   }
+
+  deleteAllOrders(): Promise<any> {
+    return this.orderRepository.deleteAllOrders();
+  }
+
+  numberOfOrders(): Promise<number> {
+    return this.orderRepository.length();
+  }
 }

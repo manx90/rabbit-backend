@@ -53,6 +53,12 @@ let OrderService = class OrderService {
     addReadyBy(id, readyById) {
         return this.orderRepository.addReadyBy(id, readyById);
     }
+    deleteAllOrders() {
+        return this.orderRepository.deleteAllOrders();
+    }
+    numberOfOrders() {
+        return this.orderRepository.length();
+    }
     constructor(orderRepository){
         this.orderRepository = orderRepository;
     }

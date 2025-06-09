@@ -87,6 +87,13 @@ let AuthController = class AuthController {
             throw new _common.HttpException(err.message, err.status || _common.HttpStatus.BAD_REQUEST);
         }
     }
+    isLoggedIn(req) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const authHeader = req.headers['authorization'];
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+        const token = authHeader && authHeader.split(' ')[1];
+        return this.authService.isLoggedIn(token);
+    }
     constructor(authService){
         this.authService = authService;
     }
@@ -201,6 +208,16 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], AuthController.prototype, "updateUser", null);
+_ts_decorate([
+    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard),
+    (0, _common.Get)('isLoggedIn'),
+    _ts_param(0, (0, _common.Req)()),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        typeof _common.Request === "undefined" ? Object : _common.Request
+    ]),
+    _ts_metadata("design:returntype", void 0)
+], AuthController.prototype, "isLoggedIn", null);
 AuthController = _ts_decorate([
     (0, _common.Controller)('auth'),
     _ts_metadata("design:type", Function),

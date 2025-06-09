@@ -348,4 +348,12 @@ export class OrderRepository {
     await this.optosService.createShipment(optos);
     return this.orderRepo.save(order);
   }
+
+  async deleteAllOrders(): Promise<void> {
+    await this.orderRepo.createQueryBuilder().delete().execute();
+  }
+
+  async length(): Promise<number> {
+    return this.orderRepo.count();
+  }
 }
