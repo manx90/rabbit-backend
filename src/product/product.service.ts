@@ -190,8 +190,7 @@ export class ProductService {
     const queryBuilder = this.productRepo
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.category', 'category')
-      .leftJoinAndSelect('product.subCategory', 'subCategory')
-      .where('product.isDeleted = :isDeleted', { isDeleted: false });
+      .leftJoinAndSelect('product.subCategory', 'subCategory');
 
     const features = new ApiFeatures(queryBuilder, query || {})
       .filter()
