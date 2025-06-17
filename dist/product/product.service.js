@@ -459,11 +459,28 @@ let ProductService = class ProductService {
             id
         });
         if (!product) throw new _common.NotFoundException('Product not found');
-        product.isDeleted = true;
+        const productInfo = {
+            id: product.id,
+            name: product.name
+        };
         await this.productRepo.save(product);
         // Delete the entire product directory
         const productPath = `products/${product.name.replace(/\s+/g, '_').toLowerCase()}`;
         this.fileStorageService.deleteDirectory(productPath);
+        try {
+            await this.productRepo.remove(product);
+            return {
+                success: true,
+                product: productInfo,
+                message: 'Product deleted successfully'
+            };
+        } catch (error) {
+            console.error('Error deleting product:', error);
+            return {
+                success: false,
+                message: `Error deleting product: ${error.message}`
+            };
+        }
     }
     async findOne(id) {
         const product = await this.productRepo.findOne({

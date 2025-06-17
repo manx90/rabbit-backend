@@ -634,14 +634,34 @@ export class ProductService {
     return { id: sub.id, name: sub.name };
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(
+    id: number,
+  ): Promise<{ success: boolean; product?: any; message?: string }> {
     const product = await this.productRepo.findOneBy({ id });
     if (!product) throw new NotFoundException('Product not found');
-    product.isDeleted = true;
+
+    const productInfo = {
+      id: product.id,
+      name: product.name,
+    };
     await this.productRepo.save(product);
     // Delete the entire product directory
     const productPath = `products/${product.name.replace(/\s+/g, '_').toLowerCase()}`;
     this.fileStorageService.deleteDirectory(productPath);
+    try {
+      await this.productRepo.remove(product);
+      return {
+        success: true,
+        product: productInfo,
+        message: 'Product deleted successfully',
+      };
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      return {
+        success: false,
+        message: `Error deleting product: ${error.message}`,
+      };
+    }
   }
 
   async findOne(id: number): Promise<any> {
