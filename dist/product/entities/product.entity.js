@@ -147,7 +147,7 @@ _ts_decorate([
     (0, _typeorm.Column)({
         type: 'enum',
         enum: _entityinterface.PublishState,
-        default: _entityinterface.PublishState.DRAFT
+        default: _entityinterface.PublishState.PUBLISHED
     }),
     _ts_metadata("design:type", typeof _entityinterface.PublishState === "undefined" ? Object : _entityinterface.PublishState)
 ], product.prototype, "publishState", void 0);

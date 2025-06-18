@@ -56,7 +56,7 @@ export class product {
   @Column({
     type: 'enum',
     enum: PublishState,
-    default: PublishState.DRAFT,
+    default: PublishState.PUBLISHED,
   })
   publishState: PublishState;
 
