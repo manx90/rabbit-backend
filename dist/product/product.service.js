@@ -157,6 +157,8 @@ let ProductService = class ProductService {
         const queryBuilder = this.productRepo.createQueryBuilder('product').leftJoinAndSelect('product.category', 'category').leftJoinAndSelect('product.subCategory', 'subCategory').leftJoinAndSelect('product.poster', 'auth').select([
             'product',
             'category.id',
+            'category.name',
+            'subCategory.name',
             'subCategory.id',
             'auth.username'
         ]);

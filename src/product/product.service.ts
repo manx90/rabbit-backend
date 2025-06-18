@@ -192,7 +192,7 @@ export class ProductService {
       .leftJoinAndSelect('product.category', 'category')
       .leftJoinAndSelect('product.subCategory', 'subCategory')
       .leftJoinAndSelect('product.poster', 'auth')
-      .select(['product', 'category.id', 'subCategory.id', 'auth.username']);
+      .select(['product', 'category.id','category.name','subCategory.name', 'subCategory.id', 'auth.username']);
 
     const features = new ApiFeatures(queryBuilder, query || {})
       .filter()
