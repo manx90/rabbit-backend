@@ -18,7 +18,7 @@ import { FileStorageModule } from './file-storage/file-storage.module';
       useFactory: (config: AppConfigService) => ({
         global: true,
         secret: config.jwtAccessToken,
-        signOptions: { expiresIn: config.jwtExpiration || '30d' },
+        signOptions: { expiresIn:config.jwtExpiration },
       }),
     }),
     TypeOrmModule.forRootAsync({

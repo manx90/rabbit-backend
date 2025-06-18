@@ -41,7 +41,7 @@ AppModule = _ts_decorate([
                         global: true,
                         secret: config.jwtAccessToken,
                         signOptions: {
-                            expiresIn: config.jwtExpiration || '30d'
+                            expiresIn: config.jwtExpiration
                         }
                     })
             }),

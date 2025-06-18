@@ -21,14 +21,10 @@ function _ts_metadata(k, v) {
 }
 let JwtAuthGuard = class JwtAuthGuard extends (0, _passport.AuthGuard)('jwt') {
     async canActivate(context) {
-        // Try to authenticate with JWT
         try {
             return await super.canActivate(context);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (_) {
-            // If JWT authentication fails, just return true for now
-            // We'll handle guest tokens in a different way
-            return true;
+        } catch (error) {
+            throw new _common.UnauthorizedException('Invalid token');
         }
     }
     constructor(){
