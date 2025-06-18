@@ -154,7 +154,12 @@ let ProductService = class ProductService {
         });
     }
     /** ----------  Get All Products  ---------- */ async getAllProducts(query, req) {
-        const queryBuilder = this.productRepo.createQueryBuilder('product').leftJoinAndSelect('product.category', 'category').leftJoinAndSelect('product.subCategory', 'subCategory');
+        const queryBuilder = this.productRepo.createQueryBuilder('product').leftJoinAndSelect('product.category', 'category').leftJoinAndSelect('product.subCategory', 'subCategory').leftJoinAndSelect('product.poster', 'auth').select([
+            'product',
+            'category.id',
+            'subCategory.id',
+            'auth.username'
+        ]);
         const features = new _apifeatures.ApiFeatures(queryBuilder, query || {}).filter().sort().paginate();
         const [data, total] = await features.getManyAndCount();
         // Transform file paths to full URLs if request object is provided

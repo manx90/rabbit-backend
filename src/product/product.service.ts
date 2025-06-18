@@ -190,18 +190,17 @@ export class ProductService {
     const queryBuilder = this.productRepo
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.category', 'category')
-      .leftJoinAndSelect('product.subCategory', 'subCategory');
+      .leftJoinAndSelect('product.subCategory', 'subCategory')
+      .leftJoinAndSelect('product.poster', 'auth')
+      .select(['product', 'category.id', 'subCategory.id', 'auth.username']);
 
     const features = new ApiFeatures(queryBuilder, query || {})
       .filter()
       .sort()
       .paginate();
-
     const [data, total] = await features.getManyAndCount();
-
     // Transform file paths to full URLs if request object is provided
     const transformedData = req ? this.transformProductUrls(data, req) : data;
-
     // Get pagination info from features
     const pagination = features.getPaginationInfo();
 
