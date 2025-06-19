@@ -57,13 +57,10 @@ export class ProductController {
     @Req() req: Request,
   ) {
     if (
-      !files.images ||
       !files.imgCover ||
-      !files.imgSizeChart ||
-      !files.imgMeasure ||
       !files.imgColors
     ) {
-      throw new BadRequestException('All required files must be uploaded');
+      throw new BadRequestException('imgCover and ImgColors must be upload!');
     }
     const poster = req.user as auth;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return

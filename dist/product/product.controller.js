@@ -37,8 +37,8 @@ let ProductController = class ProductController {
         return await this.productService.getAllProducts(req.query);
     }
     async createProduct(createProductDto, files, req) {
-        if (!files.images || !files.imgCover || !files.imgSizeChart || !files.imgMeasure || !files.imgColors) {
-            throw new _common.BadRequestException('All required files must be uploaded');
+        if (!files.imgCover || !files.imgColors) {
+            throw new _common.BadRequestException('imgCover and ImgColors must be upload!');
         }
         const poster = req.user;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
