@@ -172,8 +172,10 @@ let ProductService = class ProductService {
             status: 'success',
             results: transformedData.length,
             total,
-            page: pagination.page,
+            currentPage: pagination.page,
             limit: pagination.limit,
+            totalPages: Math.ceil(total / pagination.limit),
+            lastPage: Math.ceil(total / pagination.limit),
             data: transformedData
         };
     }

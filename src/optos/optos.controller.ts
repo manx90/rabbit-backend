@@ -6,6 +6,7 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  Query,
 } from '@nestjs/common';
 import { OptosService } from './optos.token.service';
 import { OptosShipmentService } from './optos.shipment.service';
@@ -84,9 +85,9 @@ export class OptosController {
     }
   }
   @Get('shipment')
-  async getShipment(): Promise<any> {
+  async getShipment(@Query() query: Record<string, any>): Promise<any> {
     try {
-      return this.optosShipmentService.getShipment();
+      return this.optosShipmentService.getShipment(query);
     } catch (error) {
       this.handleError(error);
     }

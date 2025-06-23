@@ -65,28 +65,26 @@ export class OptosShipmentService {
       );
     }
   }
-  async getShipment() {
+  async getShipment(query: Record<string, any> = {}) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const access_token = await this.OptosService.Login();
-      const response = await this.httpService.axiosRef.get(
-        `https://opost.ps/api/resources/shipments?col.notes=true&col.is_cod=true&col.consignee.address=true&sort=area&filter=picked_up&limit=150resources/shipments?col.notes=true&col.is_cod=true&col.consignee.address=true&sort=area&filter=picked_up&limit=5`,
-        {
-          headers: {
-            Authorization: `Bearer ${access_token}`,
-            Accept: 'application/json',
-          },
-          maxBodyLength: Infinity,
+
+      // Build query string from the query object
+      const params = new URLSearchParams(query).toString();
+      const url = `https://opost.ps/api/resources/shipments${params ? '?' + params : ''}`;
+
+      const response = await this.httpService.axiosRef.get(url, {
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+          Accept: 'application/json',
         },
-      );
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+        maxBodyLength: Infinity,
+      });
       return response.data;
     } catch (error) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       console.error('Error fetching shipments:', error.message);
       throw new HttpException(
         'Failed to fetch shipments',
-        //@typescript-eslint/no-unsafe-member-access
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

@@ -183,8 +183,10 @@ export class ProductService {
     status: string;
     results: number;
     total: number;
-    page: number;
+    currentPage: number;
     limit: number;
+    totalPages: number;
+    lastPage: number;
     data: product[];
   }> {
     const queryBuilder = this.productRepo
@@ -208,8 +210,10 @@ export class ProductService {
       status: 'success',
       results: transformedData.length,
       total,
-      page: pagination.page,
+      currentPage: pagination.page,
       limit: pagination.limit,
+      totalPages: Math.ceil(total / pagination.limit),
+      lastPage: Math.ceil(total / pagination.limit),
       data: transformedData,
     };
   }

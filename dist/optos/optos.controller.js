@@ -79,9 +79,9 @@ let OptosController = class OptosController {
             this.handleError(error);
         }
     }
-    async getShipment() {
+    async getShipment(query) {
         try {
-            return this.optosShipmentService.getShipment();
+            return this.optosShipmentService.getShipment(query);
         } catch (error) {
             this.handleError(error);
         }
@@ -170,8 +170,11 @@ _ts_decorate([
 ], OptosController.prototype, "getArea", null);
 _ts_decorate([
     (0, _common.Get)('shipment'),
+    _ts_param(0, (0, _common.Query)()),
     _ts_metadata("design:type", Function),
-    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:paramtypes", [
+        typeof Record === "undefined" ? Object : Record
+    ]),
     _ts_metadata("design:returntype", Promise)
 ], OptosController.prototype, "getShipment", null);
 _ts_decorate([

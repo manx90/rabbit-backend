@@ -26,8 +26,38 @@ export class ApiFeatures<T extends ObjectLiteral> {
   }
 
   filter(): this {
+    if (this.queryString.q) {
+      const q = (this.queryString.q as string).toLowerCase();
+      const words = q.split(/\s+/).filter(word => word.length >= 3);
+      if (words.length > 0) {
+        const orConditions: string[] = [];
+        const params: Record<string, string> = {};
+        words.forEach((word, idx) => {
+          const param = `qword${idx}`;
+          orConditions.push(`LOWER(product.name) LIKE :${param}`);
+          orConditions.push(`LOWER(product.description) LIKE :${param}`);
+          orConditions.push(`JSON_UNQUOTE(LOWER(JSON_EXTRACT(product.sizeDetails, '$[*].sizeName'))) LIKE :${param}`);
+          orConditions.push(`LOWER(category.name) LIKE :${param}`);
+          orConditions.push(`LOWER(subCategory.name) LIKE :${param}`);
+          params[param] = `%${word}%`;
+        });
+        this.queryBuilder.andWhere(`(${orConditions.join(' OR ')})`, params);
+      }
+    }
+
+    // Special query for category name
+    if (this.queryString.category) {
+      const category = (this.queryString.category as string).toLowerCase();
+      this.queryBuilder.andWhere('LOWER(category.name) = :category', { category });
+    }
+    // Special query for subCategory name
+    if (this.queryString.subCategory) {
+      const subCategory = (this.queryString.subCategory as string).toLowerCase();
+      this.queryBuilder.andWhere('LOWER(subCategory.name) = :subCategory', { subCategory });
+    }
+
     const queryObj = { ...this.queryString };
-    const excludedFields = ['page', 'sort', 'limit', 'fields'];
+    const excludedFields = ['page', 'sort', 'limit', 'fields', 'q', 'category', 'subCategory'];
     excludedFields.forEach((el) => delete queryObj[el]);
 
     // Advanced filtering

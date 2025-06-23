@@ -114,24 +114,23 @@ let OptosShipmentService = class OptosShipmentService {
             throw new _common.HttpException((_error_response = error.response) === null || _error_response === void 0 ? void 0 : (_error_response_data = _error_response.data) === null || _error_response_data === void 0 ? void 0 : _error_response_data.message, (_error_response1 = error.response) === null || _error_response1 === void 0 ? void 0 : _error_response1.status);
         }
     }
-    async getShipment() {
+    async getShipment(query = {}) {
         try {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const access_token = await this.OptosService.Login();
-            const response = await this.httpService.axiosRef.get(`https://opost.ps/api/resources/shipments?col.notes=true&col.is_cod=true&col.consignee.address=true&sort=area&filter=picked_up&limit=150resources/shipments?col.notes=true&col.is_cod=true&col.consignee.address=true&sort=area&filter=picked_up&limit=5`, {
+            // Build query string from the query object
+            const params = new URLSearchParams(query).toString();
+            const url = `https://opost.ps/api/resources/shipments${params ? '?' + params : ''}`;
+            const response = await this.httpService.axiosRef.get(url, {
                 headers: {
                     Authorization: `Bearer ${access_token}`,
                     Accept: 'application/json'
                 },
                 maxBodyLength: Infinity
             });
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
             return response.data;
         } catch (error) {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             console.error('Error fetching shipments:', error.message);
-            throw new _common.HttpException('Failed to fetch shipments', //@typescript-eslint/no-unsafe-member-access
-            _common.HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new _common.HttpException('Failed to fetch shipments', _common.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
     async getPendingTypes() {
