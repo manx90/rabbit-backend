@@ -92,8 +92,16 @@ export class ApiFeatures<T extends ObjectLiteral> {
       }
     }
 
+    // Special query for product id
+    if (this.queryString.id) {
+      const productId = Number(this.queryString.id);
+      if (!isNaN(productId)) {
+        this.queryBuilder.andWhere('product.id = :productId', { productId });
+      }
+    }
+
     const queryObj = { ...this.queryString };
-    const excludedFields = ['page', 'sort', 'limit', 'fields', 'q', 'category', 'subCategory'];
+    const excludedFields = ['page', 'sort', 'limit', 'fields', 'q', 'category', 'subCategory', 'categoryId', 'subCategoryId', 'id'];
     excludedFields.forEach((el) => delete queryObj[el]);
 
     // Advanced filtering
@@ -114,34 +122,34 @@ export class ApiFeatures<T extends ObjectLiteral> {
           const operatorValue = value[operator] as Record<string, any>;
           switch (operator) {
             case '$gte':
-              this.queryBuilder.andWhere(`${column.propertyPath} >= :${key}Gte`, {
+              this.queryBuilder.andWhere(`product.${column.propertyName} >= :${key}Gte`, {
                 [`${key}Gte`]: operatorValue,
               });
               break;
             case '$gt':
-              this.queryBuilder.andWhere(`${column.propertyPath} > :${key}Gt`, {
+              this.queryBuilder.andWhere(`product.${column.propertyName} > :${key}Gt`, {
                 [`${key}Gt`]: operatorValue,
               });
               break;
             case '$lte':
-              this.queryBuilder.andWhere(`${column.propertyPath} <= :${key}Lte`, {
+              this.queryBuilder.andWhere(`product.${column.propertyName} <= :${key}Lte`, {
                 [`${key}Lte`]: operatorValue,
               });
               break;
             case '$lt':
-              this.queryBuilder.andWhere(`${column.propertyPath} < :${key}Lt`, {
+              this.queryBuilder.andWhere(`product.${column.propertyName} < :${key}Lt`, {
                 [`${key}Lt`]: operatorValue,
               });
               break;
             case '$ne':
-              this.queryBuilder.andWhere(`${column.propertyPath} != :${key}Ne`, {
+              this.queryBuilder.andWhere(`product.${column.propertyName} != :${key}Ne`, {
                 [`${key}Ne`]: operatorValue,
               });
               break;
           }
         });
       } else {
-        this.queryBuilder.andWhere(`${column.propertyPath} = :${key}`, { [key]: value });
+        this.queryBuilder.andWhere(`product.${column.propertyName} = :${key}`, { [key]: value });
       }
     });
 
