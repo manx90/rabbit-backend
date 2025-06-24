@@ -1,4 +1,4 @@
-import { ObjectLiteral, SelectQueryBuilder } from 'typeorm';
+import { ObjectLiteral, SelectQueryBuilder, EntityMetadata } from 'typeorm';
 import { ParsedQs } from 'qs';
 
 export class ApiFeatures<T extends ObjectLiteral> {
@@ -15,45 +15,81 @@ export class ApiFeatures<T extends ObjectLiteral> {
   private page: number;
   private limit: number;
   private skip: number;
+  private entityMetadata: EntityMetadata;
 
   constructor(
     private queryBuilder: SelectQueryBuilder<T>,
     private queryString: ParsedQs,
+    entityMetadata: EntityMetadata,
   ) {
     this.page = 1;
     this.limit = 10;
     this.skip = 0;
+    this.entityMetadata = entityMetadata;
   }
 
   filter(): this {
+    // Dynamic search across all string fields
     if (this.queryString.q) {
       const q = (this.queryString.q as string).toLowerCase();
       const words = q.split(/\s+/).filter(word => word.length >= 3);
       if (words.length > 0) {
         const orConditions: string[] = [];
         const params: Record<string, string> = {};
+        // Get all string columns from entity metadata
+        const stringColumns = this.entityMetadata.columns.filter(col =>
+          ['varchar', 'text', 'nvarchar', 'char', 'longtext', 'mediumtext', 'tinytext'].includes(col.type as string)
+        );
         words.forEach((word, idx) => {
           const param = `qword${idx}`;
-          orConditions.push(`LOWER(product.name) LIKE :${param}`);
-          orConditions.push(`LOWER(product.description) LIKE :${param}`);
-          orConditions.push(`JSON_UNQUOTE(LOWER(JSON_EXTRACT(product.sizeDetails, '$[*].sizeName'))) LIKE :${param}`);
-          orConditions.push(`LOWER(category.name) LIKE :${param}`);
-          orConditions.push(`LOWER(subCategory.name) LIKE :${param}`);
+          stringColumns.forEach(col => {
+            orConditions.push(`LOWER(${col.propertyPath}) LIKE :${param}`);
+          });
           params[param] = `%${word}%`;
         });
-        this.queryBuilder.andWhere(`(${orConditions.join(' OR ')})`, params);
+        if (orConditions.length > 0) {
+          this.queryBuilder.andWhere(`(${orConditions.join(' OR ')})`, params);
+        }
       }
     }
 
-    // Special query for category name
+    // Special query for category name or id
     if (this.queryString.category) {
-      const category = (this.queryString.category as string).toLowerCase();
-      this.queryBuilder.andWhere('LOWER(category.name) = :category', { category });
+      const categoryValue = this.queryString.category as string;
+      if (!isNaN(Number(categoryValue))) {
+        // If category is a number, filter by categoryId
+        this.queryBuilder.andWhere('product.categoryId = :categoryId', { categoryId: Number(categoryValue) });
+      } else {
+        // Otherwise, filter by name
+        const category = categoryValue.toLowerCase();
+        this.queryBuilder.andWhere('LOWER(category.name) = :category', { category });
+      }
     }
-    // Special query for subCategory name
+    // Special query for subCategory name or id
     if (this.queryString.subCategory) {
-      const subCategory = (this.queryString.subCategory as string).toLowerCase();
-      this.queryBuilder.andWhere('LOWER(subCategory.name) = :subCategory', { subCategory });
+      const subCategoryValue = this.queryString.subCategory as string;
+      if (!isNaN(Number(subCategoryValue))) {
+        // If subCategory is a number, filter by subCategoryId
+        this.queryBuilder.andWhere('product.subCategoryId = :subCategoryId', { subCategoryId: Number(subCategoryValue) });
+      } else {
+        // Otherwise, filter by name
+        const subCategory = subCategoryValue.toLowerCase();
+        this.queryBuilder.andWhere('LOWER(subCategory.name) = :subCategory', { subCategory });
+      }
+    }
+    // Special query for category id
+    if (this.queryString.categoryId) {
+      const categoryId = Number(this.queryString.categoryId);
+      if (!isNaN(categoryId)) {
+        this.queryBuilder.andWhere('product.categoryId = :categoryId', { categoryId });
+      }
+    }
+    // Special query for subCategory id
+    if (this.queryString.subCategoryId) {
+      const subCategoryId = Number(this.queryString.subCategoryId);
+      if (!isNaN(subCategoryId)) {
+        this.queryBuilder.andWhere('product.subCategoryId = :subCategoryId', { subCategoryId });
+      }
     }
 
     const queryObj = { ...this.queryString };
@@ -69,40 +105,43 @@ export class ApiFeatures<T extends ObjectLiteral> {
     const parsedQuery = JSON.parse(queryStr) as Record<string, any>;
 
     Object.keys(parsedQuery).forEach((key) => {
+      // Only allow filtering on valid entity columns
+      const column = this.entityMetadata.columns.find(col => col.propertyName === key);
+      if (!column) return;
       const value = parsedQuery[key] as Record<string, any>;
       if (typeof value === 'object' && value !== null) {
         Object.keys(value).forEach((operator) => {
           const operatorValue = value[operator] as Record<string, any>;
           switch (operator) {
             case '$gte':
-              this.queryBuilder.andWhere(`${key} >= :${key}Gte`, {
+              this.queryBuilder.andWhere(`${column.propertyPath} >= :${key}Gte`, {
                 [`${key}Gte`]: operatorValue,
               });
               break;
             case '$gt':
-              this.queryBuilder.andWhere(`${key} > :${key}Gt`, {
+              this.queryBuilder.andWhere(`${column.propertyPath} > :${key}Gt`, {
                 [`${key}Gt`]: operatorValue,
               });
               break;
             case '$lte':
-              this.queryBuilder.andWhere(`${key} <= :${key}Lte`, {
+              this.queryBuilder.andWhere(`${column.propertyPath} <= :${key}Lte`, {
                 [`${key}Lte`]: operatorValue,
               });
               break;
             case '$lt':
-              this.queryBuilder.andWhere(`${key} < :${key}Lt`, {
+              this.queryBuilder.andWhere(`${column.propertyPath} < :${key}Lt`, {
                 [`${key}Lt`]: operatorValue,
               });
               break;
             case '$ne':
-              this.queryBuilder.andWhere(`${key} != :${key}Ne`, {
+              this.queryBuilder.andWhere(`${column.propertyPath} != :${key}Ne`, {
                 [`${key}Ne`]: operatorValue,
               });
               break;
           }
         });
       } else {
-        this.queryBuilder.andWhere(`${key} = :${key}`, { [key]: value });
+        this.queryBuilder.andWhere(`${column.propertyPath} = :${key}`, { [key]: value });
       }
     });
 
@@ -118,14 +157,25 @@ export class ApiFeatures<T extends ObjectLiteral> {
           const actualField = field.startsWith('-')
             ? field.substring(1)
             : field;
-          return `product.${actualField} ${direction}`;
+          // Only allow sorting by valid entity columns
+          const column = this.entityMetadata.columns.find(col => col.propertyName === actualField);
+          if (column) {
+            return `${column.propertyPath} ${direction}`;
+          }
+          return null;
         })
+        .filter(Boolean)
         .join(', ');
 
-      this.queryBuilder.orderBy(sortBy);
+      if (sortBy) {
+        this.queryBuilder.orderBy(sortBy);
+      }
     } else {
-      // Default sort by creation date
-      this.queryBuilder.orderBy('product.createdAt', 'DESC');
+      // Default sort by creation date if exists
+      const createdAtCol = this.entityMetadata.columns.find(col => col.propertyName === 'createdAt');
+      if (createdAtCol) {
+        this.queryBuilder.orderBy('product.createdAt', 'DESC');
+      }
     }
 
     return this;
@@ -135,14 +185,19 @@ export class ApiFeatures<T extends ObjectLiteral> {
     if (this.queryString.fields) {
       const fields = (this.queryString.fields as string)
         .split(',')
-        .map((field) => `product.${field}`);
+        .map((field) => {
+          // Only allow selecting valid entity columns
+          const column = this.entityMetadata.columns.find(col => col.propertyName === field);
+          return column ? column.propertyPath : null;
+        })
+        .filter(Boolean);
 
       // Always include id
-      if (!fields.includes('product.id')) {
-        fields.unshift('product.id');
+      if (!fields.includes(`${this.entityMetadata.name}.id`)) {
+        fields.unshift(`${this.entityMetadata.name}.id`);
       }
 
-      this.queryBuilder.select(fields);
+      this.queryBuilder.select(fields as string[]);
     }
 
     return this;

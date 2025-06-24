@@ -196,7 +196,7 @@ export class ProductService {
       .leftJoinAndSelect('product.poster', 'auth')
       .select(['product', 'category.id','category.name','subCategory.name', 'subCategory.id', 'auth.username']);
 
-    const features = new ApiFeatures(queryBuilder, query || {})
+    const features = new ApiFeatures(queryBuilder, query || {}, this.productRepo.metadata)
       .filter()
       .sort()
       .paginate();

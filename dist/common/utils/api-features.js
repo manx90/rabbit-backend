@@ -47,37 +47,84 @@ let ApiFeatures = class ApiFeatures {
         };
     }
     filter() {
+        // Dynamic search across all string fields
         if (this.queryString.q) {
             const q = this.queryString.q.toLowerCase();
             const words = q.split(/\s+/).filter((word)=>word.length >= 3);
             if (words.length > 0) {
                 const orConditions = [];
                 const params = {};
+                // Get all string columns from entity metadata
+                const stringColumns = this.entityMetadata.columns.filter((col)=>[
+                        'varchar',
+                        'text',
+                        'nvarchar',
+                        'char',
+                        'longtext',
+                        'mediumtext',
+                        'tinytext'
+                    ].includes(col.type));
                 words.forEach((word, idx)=>{
                     const param = `qword${idx}`;
-                    orConditions.push(`LOWER(product.name) LIKE :${param}`);
-                    orConditions.push(`LOWER(product.description) LIKE :${param}`);
-                    orConditions.push(`JSON_UNQUOTE(LOWER(JSON_EXTRACT(product.sizeDetails, '$[*].sizeName'))) LIKE :${param}`);
-                    orConditions.push(`LOWER(category.name) LIKE :${param}`);
-                    orConditions.push(`LOWER(subCategory.name) LIKE :${param}`);
+                    stringColumns.forEach((col)=>{
+                        orConditions.push(`LOWER(${col.propertyPath}) LIKE :${param}`);
+                    });
                     params[param] = `%${word}%`;
                 });
-                this.queryBuilder.andWhere(`(${orConditions.join(' OR ')})`, params);
+                if (orConditions.length > 0) {
+                    this.queryBuilder.andWhere(`(${orConditions.join(' OR ')})`, params);
+                }
             }
         }
-        // Special query for category name
+        // Special query for category name or id
         if (this.queryString.category) {
-            const category = this.queryString.category.toLowerCase();
-            this.queryBuilder.andWhere('LOWER(category.name) = :category', {
-                category
-            });
+            const categoryValue = this.queryString.category;
+            if (!isNaN(Number(categoryValue))) {
+                // If category is a number, filter by categoryId
+                this.queryBuilder.andWhere('product.categoryId = :categoryId', {
+                    categoryId: Number(categoryValue)
+                });
+            } else {
+                // Otherwise, filter by name
+                const category = categoryValue.toLowerCase();
+                this.queryBuilder.andWhere('LOWER(category.name) = :category', {
+                    category
+                });
+            }
         }
-        // Special query for subCategory name
+        // Special query for subCategory name or id
         if (this.queryString.subCategory) {
-            const subCategory = this.queryString.subCategory.toLowerCase();
-            this.queryBuilder.andWhere('LOWER(subCategory.name) = :subCategory', {
-                subCategory
-            });
+            const subCategoryValue = this.queryString.subCategory;
+            if (!isNaN(Number(subCategoryValue))) {
+                // If subCategory is a number, filter by subCategoryId
+                this.queryBuilder.andWhere('product.subCategoryId = :subCategoryId', {
+                    subCategoryId: Number(subCategoryValue)
+                });
+            } else {
+                // Otherwise, filter by name
+                const subCategory = subCategoryValue.toLowerCase();
+                this.queryBuilder.andWhere('LOWER(subCategory.name) = :subCategory', {
+                    subCategory
+                });
+            }
+        }
+        // Special query for category id
+        if (this.queryString.categoryId) {
+            const categoryId = Number(this.queryString.categoryId);
+            if (!isNaN(categoryId)) {
+                this.queryBuilder.andWhere('product.categoryId = :categoryId', {
+                    categoryId
+                });
+            }
+        }
+        // Special query for subCategory id
+        if (this.queryString.subCategoryId) {
+            const subCategoryId = Number(this.queryString.subCategoryId);
+            if (!isNaN(subCategoryId)) {
+                this.queryBuilder.andWhere('product.subCategoryId = :subCategoryId', {
+                    subCategoryId
+                });
+            }
         }
         const queryObj = _object_spread({}, this.queryString);
         const excludedFields = [
@@ -95,40 +142,43 @@ let ApiFeatures = class ApiFeatures {
         queryStr = queryStr.replace(/\b(gte|gt|lte|lt|ne)\b/g, (match)=>`$${match}`);
         const parsedQuery = JSON.parse(queryStr);
         Object.keys(parsedQuery).forEach((key)=>{
+            // Only allow filtering on valid entity columns
+            const column = this.entityMetadata.columns.find((col)=>col.propertyName === key);
+            if (!column) return;
             const value = parsedQuery[key];
             if (typeof value === 'object' && value !== null) {
                 Object.keys(value).forEach((operator)=>{
                     const operatorValue = value[operator];
                     switch(operator){
                         case '$gte':
-                            this.queryBuilder.andWhere(`${key} >= :${key}Gte`, {
+                            this.queryBuilder.andWhere(`${column.propertyPath} >= :${key}Gte`, {
                                 [`${key}Gte`]: operatorValue
                             });
                             break;
                         case '$gt':
-                            this.queryBuilder.andWhere(`${key} > :${key}Gt`, {
+                            this.queryBuilder.andWhere(`${column.propertyPath} > :${key}Gt`, {
                                 [`${key}Gt`]: operatorValue
                             });
                             break;
                         case '$lte':
-                            this.queryBuilder.andWhere(`${key} <= :${key}Lte`, {
+                            this.queryBuilder.andWhere(`${column.propertyPath} <= :${key}Lte`, {
                                 [`${key}Lte`]: operatorValue
                             });
                             break;
                         case '$lt':
-                            this.queryBuilder.andWhere(`${key} < :${key}Lt`, {
+                            this.queryBuilder.andWhere(`${column.propertyPath} < :${key}Lt`, {
                                 [`${key}Lt`]: operatorValue
                             });
                             break;
                         case '$ne':
-                            this.queryBuilder.andWhere(`${key} != :${key}Ne`, {
+                            this.queryBuilder.andWhere(`${column.propertyPath} != :${key}Ne`, {
                                 [`${key}Ne`]: operatorValue
                             });
                             break;
                     }
                 });
             } else {
-                this.queryBuilder.andWhere(`${key} = :${key}`, {
+                this.queryBuilder.andWhere(`${column.propertyPath} = :${key}`, {
                     [key]: value
                 });
             }
@@ -140,21 +190,35 @@ let ApiFeatures = class ApiFeatures {
             const sortBy = this.queryString.sort.split(',').map((field)=>{
                 const direction = field.startsWith('-') ? 'DESC' : 'ASC';
                 const actualField = field.startsWith('-') ? field.substring(1) : field;
-                return `product.${actualField} ${direction}`;
-            }).join(', ');
-            this.queryBuilder.orderBy(sortBy);
+                // Only allow sorting by valid entity columns
+                const column = this.entityMetadata.columns.find((col)=>col.propertyName === actualField);
+                if (column) {
+                    return `${column.propertyPath} ${direction}`;
+                }
+                return null;
+            }).filter(Boolean).join(', ');
+            if (sortBy) {
+                this.queryBuilder.orderBy(sortBy);
+            }
         } else {
-            // Default sort by creation date
-            this.queryBuilder.orderBy('product.createdAt', 'DESC');
+            // Default sort by creation date if exists
+            const createdAtCol = this.entityMetadata.columns.find((col)=>col.propertyName === 'createdAt');
+            if (createdAtCol) {
+                this.queryBuilder.orderBy('product.createdAt', 'DESC');
+            }
         }
         return this;
     }
     limitFields() {
         if (this.queryString.fields) {
-            const fields = this.queryString.fields.split(',').map((field)=>`product.${field}`);
+            const fields = this.queryString.fields.split(',').map((field)=>{
+                // Only allow selecting valid entity columns
+                const column = this.entityMetadata.columns.find((col)=>col.propertyName === field);
+                return column ? column.propertyPath : null;
+            }).filter(Boolean);
             // Always include id
-            if (!fields.includes('product.id')) {
-                fields.unshift('product.id');
+            if (!fields.includes(`${this.entityMetadata.name}.id`)) {
+                fields.unshift(`${this.entityMetadata.name}.id`);
             }
             this.queryBuilder.select(fields);
         }
@@ -173,12 +237,13 @@ let ApiFeatures = class ApiFeatures {
     async getMany() {
         return await this.queryBuilder.getMany();
     }
-    constructor(queryBuilder, queryString){
+    constructor(queryBuilder, queryString, entityMetadata){
         this.queryBuilder = queryBuilder;
         this.queryString = queryString;
         this.page = 1;
         this.limit = 10;
         this.skip = 0;
+        this.entityMetadata = entityMetadata;
     }
 };
 

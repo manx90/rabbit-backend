@@ -162,7 +162,7 @@ let ProductService = class ProductService {
             'subCategory.id',
             'auth.username'
         ]);
-        const features = new _apifeatures.ApiFeatures(queryBuilder, query || {}).filter().sort().paginate();
+        const features = new _apifeatures.ApiFeatures(queryBuilder, query || {}, this.productRepo.metadata).filter().sort().paginate();
         const [data, total] = await features.getManyAndCount();
         // Transform file paths to full URLs if request object is provided
         const transformedData = req ? this.transformProductUrls(data, req) : data;
