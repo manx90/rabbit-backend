@@ -194,9 +194,20 @@ export class ProductService {
       .leftJoinAndSelect('product.category', 'category')
       .leftJoinAndSelect('product.subCategory', 'subCategory')
       .leftJoinAndSelect('product.poster', 'auth')
-      .select(['product', 'category.id','category.name','subCategory.name', 'subCategory.id', 'auth.username']);
+      .select([
+        'product',
+        'category.id',
+        'category.name',
+        'subCategory.name',
+        'subCategory.id',
+        'auth.username',
+      ]);
 
-    const features = new ApiFeatures(queryBuilder, query || {}, this.productRepo.metadata)
+    const features = new ApiFeatures(
+      queryBuilder,
+      query || {},
+      this.productRepo.metadata,
+    )
       .filter()
       .sort()
       .paginate();
@@ -514,8 +525,9 @@ export class ProductService {
           ? size.quantities.map((q, index) => ({
               colorName: q.colorName,
               quantity:
-                q.quantity ||
-                product.sizeDetails[index].quantities[index].quantity,
+                q?.quantity !== undefined
+                  ? q.quantity
+                  : product.sizeDetails[index].quantities[index].quantity,
               // imgColors:
               //   q.imgColors ||
               //   product.sizeDetails[index].quantities[index].imgColors,

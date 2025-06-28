@@ -376,7 +376,7 @@ let ProductService = class ProductService {
                     price: (size === null || size === void 0 ? void 0 : size.price) || product.sizeDetails[index].price,
                     quantities: (size === null || size === void 0 ? void 0 : size.quantities) ? size.quantities.map((q, index)=>({
                             colorName: q.colorName,
-                            quantity: q.quantity || product.sizeDetails[index].quantities[index].quantity
+                            quantity: (q === null || q === void 0 ? void 0 : q.quantity) !== undefined ? q.quantity : product.sizeDetails[index].quantities[index].quantity
                         })) : product.sizeDetails[index].quantities
                 }));
         }
