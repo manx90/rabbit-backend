@@ -54,21 +54,18 @@ let ApiFeatures = class ApiFeatures {
             if (words.length > 0) {
                 const orConditions = [];
                 const params = {};
-                // Get all string columns from entity metadata
-                const stringColumns = this.entityMetadata.columns.filter((col)=>[
-                        'varchar',
-                        'text',
-                        'nvarchar',
-                        'char',
-                        'longtext',
-                        'mediumtext',
-                        'tinytext'
-                    ].includes(col.type));
+                // Search 'name' in product, category, and subCategory tables
                 words.forEach((word, idx)=>{
                     const param = `qword${idx}`;
-                    stringColumns.forEach((col)=>{
-                        orConditions.push(`LOWER(${col.propertyPath}) LIKE :${param}`);
-                    });
+                    orConditions.push(`LOWER(product.name) LIKE :${param}`);
+                    orConditions.push(`LOWER(category.name) LIKE :${param}`);
+                    orConditions.push(`LOWER(subCategory.name) LIKE :${param}`);
+                    // Also search other string columns in product
+                    orConditions.push(`LOWER(product.description) LIKE :${param}`);
+                    orConditions.push(`LOWER(product.imgCover) LIKE :${param}`);
+                    orConditions.push(`LOWER(product.imgSizeChart) LIKE :${param}`);
+                    orConditions.push(`LOWER(product.imgMeasure) LIKE :${param}`);
+                    orConditions.push(`LOWER(auth.id) LIKE :${param}`);
                     params[param] = `%${word}%`;
                 });
                 if (orConditions.length > 0) {
@@ -134,6 +131,13 @@ let ApiFeatures = class ApiFeatures {
                     productId
                 });
             }
+        }
+        // Add this for productName search
+        if (this.queryString.productName) {
+            const productName = this.queryString.productName.toLowerCase();
+            this.queryBuilder.andWhere('LOWER(product.name) LIKE :productName', {
+                productName: `%${productName}%`
+            });
         }
         const queryObj = _object_spread({}, this.queryString);
         const excludedFields = [
