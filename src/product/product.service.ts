@@ -52,7 +52,11 @@ export class ProductService {
     subDirectory: string,
   ): Promise<string[]> {
     const productPath = `products/${productName.replace(/\s+/g, '_').toLowerCase()}/${subDirectory}`;
-    return await this.fileStorageService.saveFiles(files, productPath);
+    return await this.fileStorageService.saveFiles(files, productPath, {
+      quality: 20, // Only compress, don't resize
+      format: 'jpeg',
+      progressive: true,
+    });
   }
 
   /**
@@ -64,7 +68,11 @@ export class ProductService {
     subDirectory: string,
   ): Promise<string> {
     const productPath = `products/${productName.replace(/\s+/g, '_').toLowerCase()}/${subDirectory}`;
-    return await this.fileStorageService.saveFile(file, productPath);
+    return await this.fileStorageService.saveFile(file, productPath, {
+      quality: 20, // Only compress, don't resize
+      format: 'jpeg',
+      progressive: true,
+    });
   }
 
   private async uploadFiles(

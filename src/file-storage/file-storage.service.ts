@@ -9,13 +9,19 @@ import {
 } from 'fs';
 import { join, extname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  ImageOptimizationService,
+  OptimizationOptions,
+} from './image-optimization.service';
 
 @Injectable()
 export class FileStorageService {
   private readonly uploadDir = 'uploads';
   private readonly productImagesDir = join(this.uploadDir, 'products');
 
-  constructor() {
+  constructor(
+    private readonly imageOptimizationService: ImageOptimizationService,
+  ) {
     // Ensure upload directories exist
     this.ensureDirectoryExists(this.uploadDir);
     this.ensureDirectoryExists(this.productImagesDir);
@@ -33,6 +39,7 @@ export class FileStorageService {
   async saveFile(
     file: Express.Multer.File,
     subDirectory = 'products',
+    optimizeOptions?: OptimizationOptions,
   ): Promise<string> {
     const dir = join(this.uploadDir, subDirectory);
     this.ensureDirectoryExists(dir);
@@ -40,9 +47,27 @@ export class FileStorageService {
     const uniqueFilename = `${uuidv4()}${extname(file.originalname)}`;
     const filePath = join(dir, uniqueFilename);
 
+    let bufferToSave = file.buffer;
+
+    // Optimize image if it's a supported image format
+    if (this.imageOptimizationService.isSupportedImage(file.originalname)) {
+      try {
+        bufferToSave = await this.imageOptimizationService.optimizeBuffer(
+          file.buffer,
+          optimizeOptions,
+        );
+      } catch (error) {
+        console.warn(
+          `Failed to optimize image ${file.originalname}, saving original:`,
+          error.message,
+        );
+        // Continue with original buffer if optimization fails
+      }
+    }
+
     // Use promisified version of writeFile
     await new Promise<void>((resolve) => {
-      writeFileSync(filePath, file.buffer);
+      writeFileSync(filePath, bufferToSave);
       resolve();
     });
 
@@ -56,8 +81,11 @@ export class FileStorageService {
   async saveFiles(
     files: Express.Multer.File[],
     subDirectory = 'products',
+    optimizeOptions?: OptimizationOptions,
   ): Promise<string[]> {
-    return Promise.all(files.map((file) => this.saveFile(file, subDirectory)));
+    return Promise.all(
+      files.map((file) => this.saveFile(file, subDirectory, optimizeOptions)),
+    );
   }
 
   /**

@@ -11,6 +11,7 @@ Object.defineProperty(exports, "FileStorageModule", {
 const _common = require("@nestjs/common");
 const _filestorageservice = require("./file-storage.service");
 const _filestoragecontroller = require("./file-storage.controller");
+const _imageoptimizationservice = require("./image-optimization.service");
 const _platformexpress = require("@nestjs/platform-express");
 const _multer = require("multer");
 const _path = require("path");
@@ -89,10 +90,12 @@ FileStorageModule = _ts_decorate([
             _filestoragecontroller.FileStorageController
         ],
         providers: [
-            _filestorageservice.FileStorageService
+            _filestorageservice.FileStorageService,
+            _imageoptimizationservice.ImageOptimizationService
         ],
         exports: [
-            _filestorageservice.FileStorageService
+            _filestorageservice.FileStorageService,
+            _imageoptimizationservice.ImageOptimizationService
         ]
     })
 ], FileStorageModule);

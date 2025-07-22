@@ -88,13 +88,21 @@ let ProductService = class ProductService {
    * This replaces the old mapFiles method that converted to base64
    */ async saveFiles(files = [], productName, subDirectory) {
         const productPath = `products/${productName.replace(/\s+/g, '_').toLowerCase()}/${subDirectory}`;
-        return await this.fileStorageService.saveFiles(files, productPath);
+        return await this.fileStorageService.saveFiles(files, productPath, {
+            quality: 20,
+            format: 'jpeg',
+            progressive: true
+        });
     }
     /**
    * Save a single file to storage and return its path
    */ async saveFile(file, productName, subDirectory) {
         const productPath = `products/${productName.replace(/\s+/g, '_').toLowerCase()}/${subDirectory}`;
-        return await this.fileStorageService.saveFile(file, productPath);
+        return await this.fileStorageService.saveFile(file, productPath, {
+            quality: 20,
+            format: 'jpeg',
+            progressive: true
+        });
     }
     async uploadFiles(files, productName) {
         const result = {};

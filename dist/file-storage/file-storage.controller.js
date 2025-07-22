@@ -12,6 +12,7 @@ const _common = require("@nestjs/common");
 const _express = require("express");
 const _path = require("path");
 const _filestorageservice = require("./file-storage.service");
+const _imageoptimizationservice = require("./image-optimization.service");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -47,8 +48,31 @@ let FileStorageController = class FileStorageController {
             res.status(404).send('File not found');
         }
     }
-    constructor(fileStorageService){
+    async optimizeAllImages(options) {
+        const results = await this.imageOptimizationService.optimizeAllUploads(options);
+        const successful = results.filter((r)=>r.success);
+        const failed = results.filter((r)=>!r.success);
+        const totalOriginalSize = successful.reduce((sum, r)=>sum + r.originalSize, 0);
+        const totalOptimizedSize = successful.reduce((sum, r)=>sum + r.optimizedSize, 0);
+        const totalSaved = totalOriginalSize - totalOptimizedSize;
+        const averageReduction = successful.length > 0 ? successful.reduce((sum, r)=>sum + r.reductionPercentage, 0) / successful.length : 0;
+        return {
+            message: 'Image optimization completed',
+            summary: {
+                totalProcessed: results.length,
+                successful: successful.length,
+                failed: failed.length,
+                totalOriginalSizeMB: (totalOriginalSize / 1024 / 1024).toFixed(2),
+                totalOptimizedSizeMB: (totalOptimizedSize / 1024 / 1024).toFixed(2),
+                totalSavedMB: (totalSaved / 1024 / 1024).toFixed(2),
+                averageReduction: averageReduction.toFixed(1) + '%'
+            },
+            results: results.slice(0, 10)
+        };
+    }
+    constructor(fileStorageService, imageOptimizationService){
         this.fileStorageService = fileStorageService;
+        this.imageOptimizationService = imageOptimizationService;
     }
 };
 _ts_decorate([
@@ -64,11 +88,21 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", void 0)
 ], FileStorageController.prototype, "getFile", null);
+_ts_decorate([
+    (0, _common.Post)('optimize'),
+    _ts_param(0, (0, _common.Body)()),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        typeof _imageoptimizationservice.OptimizationOptions === "undefined" ? Object : _imageoptimizationservice.OptimizationOptions
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], FileStorageController.prototype, "optimizeAllImages", null);
 FileStorageController = _ts_decorate([
     (0, _common.Controller)('uploads'),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
-        typeof _filestorageservice.FileStorageService === "undefined" ? Object : _filestorageservice.FileStorageService
+        typeof _filestorageservice.FileStorageService === "undefined" ? Object : _filestorageservice.FileStorageService,
+        typeof _imageoptimizationservice.ImageOptimizationService === "undefined" ? Object : _imageoptimizationservice.ImageOptimizationService
     ])
 ], FileStorageController);
 

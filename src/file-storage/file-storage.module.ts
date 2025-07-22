@@ -2,6 +2,7 @@
 import { Module } from '@nestjs/common';
 import { FileStorageService } from './file-storage.service';
 import { FileStorageController } from './file-storage.controller';
+import { ImageOptimizationService } from './image-optimization.service';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
@@ -15,9 +16,11 @@ import { existsSync, mkdirSync } from 'fs';
       storage: diskStorage({
         destination: (req, file, cb) => {
           // Get product name from the request body
-          const productName = req.body?.createProductDto ? 
-            JSON.parse(req.body.createProductDto).name.replace(/\s+/g, '_').toLowerCase() : 
-            'temp';
+          const productName = req.body?.createProductDto
+            ? JSON.parse(req.body.createProductDto)
+                .name.replace(/\s+/g, '_')
+                .toLowerCase()
+            : 'temp';
 
           // Create base uploads directory if it doesn't exist
           const baseDir = './uploads';
@@ -70,7 +73,7 @@ import { existsSync, mkdirSync } from 'fs';
     }),
   ],
   controllers: [FileStorageController],
-  providers: [FileStorageService],
-  exports: [FileStorageService],
+  providers: [FileStorageService, ImageOptimizationService],
+  exports: [FileStorageService, ImageOptimizationService],
 })
 export class FileStorageModule {}

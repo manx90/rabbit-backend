@@ -18,7 +18,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js --dataSource src/data-source.ts"
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js --dataSource src/data-source.ts",
+    "optimize-images": "ts-node -r tsconfig-paths/register scripts/optimize-images.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.0",
@@ -37,6 +38,8 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "dotenv": "^16.5.0",
+    "fs-extra": "^11.3.0",
+    "glob": "^11.0.3",
     "multer": "^1.4.5-lts.2",
     "mysql2": "^3.14.1",
     "passport": "^0.7.0",
@@ -46,6 +49,7 @@
     "reflect-metadata": "^0.2.2",
     "request": "^2.88.2",
     "rxjs": "^7.8.1",
+    "sharp": "^0.34.3",
     "typeorm": "^0.3.24",
     "uuid": "^11.1.0"
   },
@@ -60,6 +64,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
+    "@types/fs-extra": "^11.0.4",
     "@types/jest": "^29.5.14",
     "@types/multer": "^1.4.12",
     "@types/node": "^22.10.7",

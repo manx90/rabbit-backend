@@ -12,6 +12,7 @@ const _common = require("@nestjs/common");
 const _fs = require("fs");
 const _path = require("path");
 const _uuid = require("uuid");
+const _imageoptimizationservice = require("./image-optimization.service");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -31,14 +32,24 @@ let FileStorageService = class FileStorageService {
     }
     /**
    * Save a file to storage and return the file path
-   */ async saveFile(file, subDirectory = 'products') {
+   */ async saveFile(file, subDirectory = 'products', optimizeOptions) {
         const dir = (0, _path.join)(this.uploadDir, subDirectory);
         this.ensureDirectoryExists(dir);
         const uniqueFilename = `${(0, _uuid.v4)()}${(0, _path.extname)(file.originalname)}`;
         const filePath = (0, _path.join)(dir, uniqueFilename);
+        let bufferToSave = file.buffer;
+        // Optimize image if it's a supported image format
+        if (this.imageOptimizationService.isSupportedImage(file.originalname)) {
+            try {
+                bufferToSave = await this.imageOptimizationService.optimizeBuffer(file.buffer, optimizeOptions);
+            } catch (error) {
+                console.warn(`Failed to optimize image ${file.originalname}, saving original:`, error.message);
+            // Continue with original buffer if optimization fails
+            }
+        }
         // Use promisified version of writeFile
         await new Promise((resolve)=>{
-            (0, _fs.writeFileSync)(filePath, file.buffer);
+            (0, _fs.writeFileSync)(filePath, bufferToSave);
             resolve();
         });
         // Return relative path that can be used in URLs
@@ -46,8 +57,8 @@ let FileStorageService = class FileStorageService {
     }
     /**
    * Save multiple files to storage and return their paths
-   */ async saveFiles(files, subDirectory = 'products') {
-        return Promise.all(files.map((file)=>this.saveFile(file, subDirectory)));
+   */ async saveFiles(files, subDirectory = 'products', optimizeOptions) {
+        return Promise.all(files.map((file)=>this.saveFile(file, subDirectory, optimizeOptions)));
     }
     /**
    * Get a file from storage
@@ -131,7 +142,8 @@ let FileStorageService = class FileStorageService {
         // Otherwise return relative path
         return `/${this.uploadDir}/${filePath}`;
     }
-    constructor(){
+    constructor(imageOptimizationService){
+        this.imageOptimizationService = imageOptimizationService;
         this.uploadDir = 'uploads';
         this.productImagesDir = (0, _path.join)(this.uploadDir, 'products');
         // Ensure upload directories exist
@@ -142,7 +154,9 @@ let FileStorageService = class FileStorageService {
 FileStorageService = _ts_decorate([
     (0, _common.Injectable)(),
     _ts_metadata("design:type", Function),
-    _ts_metadata("design:paramtypes", [])
+    _ts_metadata("design:paramtypes", [
+        typeof _imageoptimizationservice.ImageOptimizationService === "undefined" ? Object : _imageoptimizationservice.ImageOptimizationService
+    ])
 ], FileStorageService);
 
 //# sourceMappingURL=file-storage.service.js.map
