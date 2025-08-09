@@ -14,8 +14,11 @@ const _productcontroller = require("./product.controller");
 const _productservice = require("./product.service");
 const _categorycontroller = require("./category.controller");
 const _categoryservice = require("./category.service");
+const _productcollectioncontroller = require("./product-collection.controller");
+const _productcollectionservice = require("./product-collection.service");
 const _productentity = require("./entities/product.entity");
 const _Categoryentity = require("./entities/Category.entity");
+const _productcollectionentity = require("./entities/product-collection.entity");
 const _filestoragemodule = require("../file-storage/file-storage.module");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -31,21 +34,25 @@ ProductModule = _ts_decorate([
             _typeorm.TypeOrmModule.forFeature([
                 _productentity.product,
                 _Categoryentity.category,
-                _Categoryentity.subCategory
+                _Categoryentity.subCategory,
+                _productcollectionentity.ProductCollection
             ]),
             _filestoragemodule.FileStorageModule
         ],
         controllers: [
             _productcontroller.ProductController,
-            _categorycontroller.CategoryController
+            _categorycontroller.CategoryController,
+            _productcollectioncontroller.ProductCollectionController
         ],
         providers: [
             _productservice.ProductService,
-            _categoryservice.CategoryService
+            _categoryservice.CategoryService,
+            _productcollectionservice.ProductCollectionService
         ],
         exports: [
             _productservice.ProductService,
-            _categoryservice.CategoryService
+            _categoryservice.CategoryService,
+            _productcollectionservice.ProductCollectionService
         ]
     })
 ], ProductModule);

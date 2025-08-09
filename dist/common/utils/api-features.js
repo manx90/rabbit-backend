@@ -47,25 +47,18 @@ let ApiFeatures = class ApiFeatures {
         };
     }
     filter() {
-        // Dynamic search across all string fields
         if (this.queryString.q) {
             const q = this.queryString.q.toLowerCase();
             const words = q.split(/\s+/).filter((word)=>word.length >= 3);
             if (words.length > 0) {
                 const orConditions = [];
                 const params = {};
-                // Search 'name' in product, category, and subCategory tables
                 words.forEach((word, idx)=>{
                     const param = `qword${idx}`;
                     orConditions.push(`LOWER(product.name) LIKE :${param}`);
                     orConditions.push(`LOWER(category.name) LIKE :${param}`);
                     orConditions.push(`LOWER(subCategory.name) LIKE :${param}`);
-                    // Also search other string columns in product
                     orConditions.push(`LOWER(product.description) LIKE :${param}`);
-                    orConditions.push(`LOWER(product.imgCover) LIKE :${param}`);
-                    orConditions.push(`LOWER(product.imgSizeChart) LIKE :${param}`);
-                    orConditions.push(`LOWER(product.imgMeasure) LIKE :${param}`);
-                    orConditions.push(`LOWER(auth.id) LIKE :${param}`);
                     params[param] = `%${word}%`;
                 });
                 if (orConditions.length > 0) {
@@ -89,41 +82,26 @@ let ApiFeatures = class ApiFeatures {
                 });
             }
         }
-        // Special query for subCategory name or id
         if (this.queryString.subCategory) {
             const subCategoryValue = this.queryString.subCategory;
             if (!isNaN(Number(subCategoryValue))) {
-                // If subCategory is a number, filter by subCategoryId
                 this.queryBuilder.andWhere('product.subCategoryId = :subCategoryId', {
                     subCategoryId: Number(subCategoryValue)
                 });
             } else {
-                // Otherwise, filter by name
                 const subCategory = subCategoryValue.toLowerCase();
                 this.queryBuilder.andWhere('LOWER(subCategory.name) = :subCategory', {
                     subCategory
                 });
             }
         }
-        // Special query for category id
-        if (this.queryString.categoryId) {
-            const categoryId = Number(this.queryString.categoryId);
-            if (!isNaN(categoryId)) {
-                this.queryBuilder.andWhere('product.categoryId = :categoryId', {
-                    categoryId
-                });
-            }
+        // Fetch products that belong to a specific category and a specific subcategory under that category
+        if (this.queryString.category && this.queryString.subcategory && !isNaN(Number(this.queryString.category)) && !isNaN(Number(this.queryString.subcategory))) {
+            this.queryBuilder.andWhere('product.categoryId = :categoryId AND product.subcategoryId = :subcategoryId AND subcategory.categoryId = :categoryId', {
+                categoryId: Number(this.queryString.category),
+                subcategoryId: Number(this.queryString.subcategory)
+            });
         }
-        // Special query for subCategory id
-        if (this.queryString.subCategoryId) {
-            const subCategoryId = Number(this.queryString.subCategoryId);
-            if (!isNaN(subCategoryId)) {
-                this.queryBuilder.andWhere('product.subCategoryId = :subCategoryId', {
-                    subCategoryId
-                });
-            }
-        }
-        // Special query for product id
         if (this.queryString.id) {
             const productId = Number(this.queryString.id);
             if (!isNaN(productId)) {
@@ -132,7 +110,6 @@ let ApiFeatures = class ApiFeatures {
                 });
             }
         }
-        // Add this for productName search
         if (this.queryString.productName) {
             const productName = this.queryString.productName.toLowerCase();
             this.queryBuilder.andWhere('LOWER(product.name) LIKE :productName', {
@@ -153,12 +130,10 @@ let ApiFeatures = class ApiFeatures {
             'id'
         ];
         excludedFields.forEach((el)=>delete queryObj[el]);
-        // Advanced filtering
         let queryStr = JSON.stringify(queryObj);
         queryStr = queryStr.replace(/\b(gte|gt|lte|lt|ne)\b/g, (match)=>`$${match}`);
         const parsedQuery = JSON.parse(queryStr);
         Object.keys(parsedQuery).forEach((key)=>{
-            // Only allow filtering on valid entity columns
             const column = this.entityMetadata.columns.find((col)=>col.propertyName === key);
             if (!column) return;
             const value = parsedQuery[key];
@@ -206,7 +181,6 @@ let ApiFeatures = class ApiFeatures {
             const sortBy = this.queryString.sort.split(',').map((field)=>{
                 const direction = field.startsWith('-') ? 'DESC' : 'ASC';
                 const actualField = field.startsWith('-') ? field.substring(1) : field;
-                // Only allow sorting by valid entity columns
                 const column = this.entityMetadata.columns.find((col)=>col.propertyName === actualField);
                 if (column) {
                     return `${column.propertyPath} ${direction}`;
@@ -217,7 +191,6 @@ let ApiFeatures = class ApiFeatures {
                 this.queryBuilder.orderBy(sortBy);
             }
         } else {
-            // Default sort by creation date if exists
             const createdAtCol = this.entityMetadata.columns.find((col)=>col.propertyName === 'createdAt');
             if (createdAtCol) {
                 this.queryBuilder.orderBy('product.createdAt', 'DESC');
@@ -228,11 +201,9 @@ let ApiFeatures = class ApiFeatures {
     limitFields() {
         if (this.queryString.fields) {
             const fields = this.queryString.fields.split(',').map((field)=>{
-                // Only allow selecting valid entity columns
                 const column = this.entityMetadata.columns.find((col)=>col.propertyName === field);
                 return column ? column.propertyPath : null;
             }).filter(Boolean);
-            // Always include id
             if (!fields.includes(`${this.entityMetadata.name}.id`)) {
                 fields.unshift(`${this.entityMetadata.name}.id`);
             }

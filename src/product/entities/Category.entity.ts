@@ -20,6 +20,9 @@ export class category {
   @Column({ type: 'varchar', length: 100, unique: true })
   name: string; // Category title
 
+  @Column({ type: 'longtext', nullable: true })
+  icon: string; // SVG icon for the category
+
   @OneToMany(() => subCategory, (sub) => sub.category, {
     cascade: true,
   })
@@ -56,6 +59,9 @@ export class subCategory {
 
   @Column({ type: 'varchar', length: 100 })
   name: string; // SubCategory title
+
+  @Column({ type: 'longtext', nullable: true })
+  icon: string; // SVG icon for the subcategory
 
   @ManyToOne(() => category, (category) => category.subCategories, {
     onDelete: 'CASCADE',

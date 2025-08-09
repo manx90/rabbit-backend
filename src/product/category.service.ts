@@ -3,11 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { product } from './entities/product.entity';
 import { category, subCategory } from './entities/Category.entity';
+import { FileStorageService } from 'src/file-storage/file-storage.service';
 import {
   CreateCategoryDto,
   UpdateCategoryDto,
   CreateSubCategoryDto,
   UpdateSubCategoryDto,
+  UploadIcon,
 } from './dto/category.dto';
 
 @Injectable()
@@ -19,9 +21,32 @@ export class CategoryService {
     private subCategoryRepository: Repository<subCategory>,
     @InjectRepository(product)
     private productRepository: Repository<product>,
+    private readonly fileStorageService: FileStorageService,
   ) {}
 
-  async createCategory(dto: CreateCategoryDto): Promise<category> {
+  private async saveFiles(
+    files: Express.Multer.File[] = [],
+    mainDirectory: string,
+    categoryName: string,
+    subDirectory?: string,
+  ): Promise<string[]> {
+    const categoryPath = `${mainDirectory}/${categoryName.replace(/\s+/g, '_').toLowerCase()}/${subDirectory}`;
+    console.log('categoryPath', categoryPath);
+    return await this.fileStorageService.saveFiles(files, categoryPath);
+  }
+
+  /**
+   * Creates a new category.
+   * @param file - UploadIcon object containing the icon file for the category.
+   * @param dto - Data transfer object containing category details.
+   * @returns The created category entity.
+   * @throws HttpException if the category already exists.
+   */
+  async createCategory(
+    file: UploadIcon,
+    dto: CreateCategoryDto,
+  ): Promise<category> {
+    // Check if a category with the same name already exists
     const existing = await this.categoryRepository.findOne({
       where: { name: dto.name },
     });
@@ -30,16 +55,41 @@ export class CategoryService {
         'Category already exists',
         HttpStatus.BAD_REQUEST,
       );
-
+    let icon: string | undefined = undefined;
+    console.log('icon file uploaded', file);
+    // If an icon file is provided, save it and get its path
+    if (file.iconCat) {
+      icon = (
+        await this.saveFiles(
+          [file.iconCat],
+          'categoriesIcons',
+          dto.name,
+          'iconCat',
+        )
+      )[0];
+    }
+    // Create a new category entity
     const category = this.categoryRepository.create({
       name: dto.name,
+      icon: icon,
       isActive: true,
     });
-
+    // Save the new category to the database and return it
     return this.categoryRepository.save(category);
   }
 
-  async createSubCategory(dto: CreateSubCategoryDto): Promise<subCategory> {
+  async createSubCategory(
+    file: UploadIcon,
+    dto: CreateSubCategoryDto,
+  ): Promise<subCategory> {
+    const subCategory = await this.subCategoryRepository.findOne({
+      where: { name: dto.name, category: { id: dto.categoryId } },
+    });
+    if (subCategory)
+      throw new HttpException(
+        'SubCategory already exists',
+        HttpStatus.BAD_REQUEST,
+      );
     const parent = await this.categoryRepository.findOne({
       where: { id: dto.categoryId },
     });
@@ -55,7 +105,6 @@ export class CategoryService {
 
     const exists = await this.subCategoryRepository.findOne({
       where: { name: dto.name, category: { id: dto.categoryId } },
-      relations: ['category'],
     });
     if (exists)
       throw new HttpException(
@@ -63,16 +112,33 @@ export class CategoryService {
         HttpStatus.BAD_REQUEST,
       );
 
+    let icon: string | undefined = undefined;
+    if (file.iconSubCat) {
+      icon = (
+        await this.saveFiles(
+          [file.iconSubCat],
+          'subCategoriesIcons',
+          parent.name,
+          dto.name,
+        )
+      )[0];
+    }
     const sub = this.subCategoryRepository.create({
       name: dto.name,
-      category: parent,
+      category: { id: parent.id, name: parent.name },
       isActive: true,
+      icon: icon,
     });
     return this.subCategoryRepository.save(sub);
   }
 
   async getAllCategories(): Promise<category[]> {
-    return this.categoryRepository.find({ relations: ['subCategories'] });
+    const categories = await this.categoryRepository.find({
+      select: ['id', 'name', 'icon', 'subCategories'],
+      relations: ['subCategories'],
+      loadEagerRelations: false,
+    });
+    return categories;
   }
 
   async getCategoryById(id: number): Promise<category> {
@@ -85,7 +151,11 @@ export class CategoryService {
     return category;
   }
 
-  async updateCategory(id: number, dto: UpdateCategoryDto): Promise<category> {
+  async updateCategory(
+    id: number,
+    dto: UpdateCategoryDto,
+    file?: UploadIcon,
+  ): Promise<category> {
     const category = await this.categoryRepository.findOne({ where: { id } });
     if (!category)
       throw new HttpException('Category not found', HttpStatus.NOT_FOUND);
@@ -102,16 +172,27 @@ export class CategoryService {
       category.name = dto.name;
     }
     if (dto.isActive !== undefined) category.isActive = dto.isActive;
-
+    if (file?.iconCat) {
+      category.icon = (
+        await this.saveFiles(
+          [file.iconCat],
+          'categoriesIcons',
+          category.name,
+          'iconCat',
+        )
+      )[0];
+    }
     return this.categoryRepository.save(category);
   }
 
   async updateSubCategory(
+    categoryId: number,
     id: number,
     dto: UpdateSubCategoryDto,
+    file?: UploadIcon,
   ): Promise<subCategory> {
     const sub = await this.subCategoryRepository.findOne({
-      where: { id },
+      where: { id, categoryId: categoryId },
       relations: ['category'],
     });
     if (!sub)
@@ -129,20 +210,59 @@ export class CategoryService {
       sub.name = dto.name;
     }
     if (dto.isActive !== undefined) sub.isActive = dto.isActive;
-
+    if (file?.iconSubCat) {
+      sub.icon = (
+        await this.saveFiles(
+          [file.iconSubCat],
+          'subCategoriesIcons',
+          sub.category.name,
+          dto.name ?? sub.name,
+        )
+      )[0];
+    }
     return this.subCategoryRepository.save(sub);
   }
 
   async deleteCategory(id: number): Promise<void> {
     const category = await this.getCategoryById(id);
+    if (!category) {
+      throw new HttpException('Category not found', HttpStatus.NOT_FOUND);
+    }
+    if (category.icon && category.icon !== '') {
+      // Icons are stored under categoriesIcons/<categoryName>
+      this.fileStorageService.deleteDirectory(
+        `categoriesIcons/${category.name.replace(/\s+/g, '_').toLowerCase()}`,
+      );
+    }
+    if (category.subCategories && category.subCategories.length > 0) {
+      for (const sub of category.subCategories) {
+        if (sub.icon && sub.icon !== '') {
+          // Use parent category name from outer scope to avoid missing relation on sub
+          this.fileStorageService.deleteDirectory(
+            `subCategoriesIcons/${category.name
+              .replace(/\s+/g, '_')
+              .toLowerCase()}/${sub.name.replace(/\s+/g, '_').toLowerCase()}`,
+          );
+        }
+      }
+    }
     await this.subCategoryRepository.remove(category.subCategories);
     await this.categoryRepository.remove(category);
   }
-
   async deleteSubCategory(id: number): Promise<void> {
-    const sub = await this.subCategoryRepository.findOne({ where: { id } });
+    const sub = await this.subCategoryRepository.findOne({
+      where: { id },
+      relations: ['category'],
+    });
     if (!sub)
       throw new HttpException('SubCategory not found', HttpStatus.NOT_FOUND);
+    if (sub.icon && sub.icon !== '' && sub.category) {
+      this.fileStorageService.deleteDirectory(
+        `subCategoriesIcons/${sub.category.name
+          .replace(/\s+/g, '_')
+          .toLowerCase()}/${sub.name.replace(/\s+/g, '_').toLowerCase()}`,
+      );
+    }
     await this.subCategoryRepository.remove(sub);
   }
 
@@ -154,5 +274,13 @@ export class CategoryService {
 
   async getSubCategories() {
     return this.subCategoryRepository.find();
+  }
+  async getSubCategoryById(id: number): Promise<subCategory> {
+    const subCategory = await this.subCategoryRepository.findOne({
+      where: { id },
+    });
+    if (!subCategory)
+      throw new HttpException('SubCategory not found', HttpStatus.NOT_FOUND);
+    return subCategory;
   }
 }

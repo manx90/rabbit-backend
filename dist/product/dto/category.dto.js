@@ -26,6 +26,9 @@ _export(exports, {
     },
     UpdateSubCategoryDto: function() {
         return UpdateSubCategoryDto;
+    },
+    UploadIcon: function() {
+        return UploadIcon;
     }
 });
 const _classvalidator = require("class-validator");
@@ -40,6 +43,24 @@ function _ts_decorate(decorators, target, key, desc) {
 function _ts_metadata(k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 }
+let UploadIcon = class UploadIcon {
+};
+_ts_decorate([
+    (0, _swagger.ApiPropertyOptional)({
+        type: 'string',
+        format: 'binary'
+    }),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", typeof Express === "undefined" || typeof Express.Multer === "undefined" || typeof Express.Multer.File === "undefined" ? Object : Express.Multer.File)
+], UploadIcon.prototype, "iconCat", void 0);
+_ts_decorate([
+    (0, _swagger.ApiPropertyOptional)({
+        type: 'string',
+        format: 'binary'
+    }),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", typeof Express === "undefined" || typeof Express.Multer === "undefined" || typeof Express.Multer.File === "undefined" ? Object : Express.Multer.File)
+], UploadIcon.prototype, "iconSubCat", void 0);
 let SubCategoryResponseDto = class SubCategoryResponseDto {
 };
 _ts_decorate([
@@ -131,11 +152,19 @@ _ts_decorate([
     (0, _classvalidator.IsNumber)(),
     _ts_metadata("design:type", Number)
 ], CreateSubCategoryDto.prototype, "categoryId", void 0);
+_ts_decorate([
+    (0, _swagger.ApiPropertyOptional)({
+        type: 'string',
+        format: 'binary'
+    }),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", Object)
+], CreateSubCategoryDto.prototype, "iconSubCat", void 0);
 let UpdateSubCategoryDto = class UpdateSubCategoryDto {
 };
 _ts_decorate([
     (0, _swagger.ApiPropertyOptional)({
-        example: 'Men’s T-Shirts'
+        example: "Men's T-Shirts"
     }),
     (0, _classvalidator.IsOptional)(),
     (0, _classvalidator.IsString)(),
@@ -150,6 +179,14 @@ _ts_decorate([
     (0, _classvalidator.IsBoolean)(),
     _ts_metadata("design:type", Boolean)
 ], UpdateSubCategoryDto.prototype, "isActive", void 0);
+_ts_decorate([
+    (0, _swagger.ApiPropertyOptional)({
+        type: 'string',
+        format: 'binary'
+    }),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", Object)
+], UpdateSubCategoryDto.prototype, "iconSubCat", void 0);
 let CreateCategoryDto = class CreateCategoryDto {
 };
 _ts_decorate([
@@ -194,5 +231,13 @@ _ts_decorate([
     (0, _classvalidator.IsBoolean)(),
     _ts_metadata("design:type", Boolean)
 ], UpdateCategoryDto.prototype, "isActive", void 0);
+_ts_decorate([
+    (0, _swagger.ApiPropertyOptional)({
+        type: 'string',
+        format: 'binary'
+    }),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", Object)
+], UpdateCategoryDto.prototype, "iconCat", void 0);
 
 //# sourceMappingURL=category.dto.js.map

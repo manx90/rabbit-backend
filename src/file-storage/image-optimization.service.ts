@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import * as sharp from 'sharp';
+import sharp from 'sharp';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as glob from 'glob';
@@ -8,7 +8,7 @@ export interface OptimizationOptions {
   quality?: number; // 1-100, default 70
   maxWidth?: number; // default 1920
   maxHeight?: number; // default 1080
-  format?: 'jpeg' | 'png' | 'webp' | 'avif'; // default 'jpeg'
+  format?: 'jpeg' | 'png' | 'webp' | 'avif' | 'svg'; // default 'jpeg'
   progressive?: boolean; // default true
 }
 
@@ -27,7 +27,7 @@ export interface OptimizationResult {
 export class ImageOptimizationService {
   private readonly logger = new Logger(ImageOptimizationService.name);
   private readonly defaultOptions: OptimizationOptions = {
-    quality: 70, // This is the main setting for file size reduction
+    quality: 50, // Default quality (will be overridden based on file size)
     format: 'jpeg',
     progressive: true,
   };
@@ -40,6 +40,7 @@ export class ImageOptimizationService {
     outputPath?: string,
     options: OptimizationOptions = {},
   ): Promise<OptimizationResult> {
+    // Start with default options
     const opts = { ...this.defaultOptions, ...options };
 
     // Create backup path - preserve directory structure
@@ -58,6 +59,31 @@ export class ImageOptimizationService {
       // Get original file stats
       const originalStats = await fs.stat(inputPath);
       const originalSize = originalStats.size;
+
+      // Check if this is a sizechart or measure image - skip compression for these
+      const isSizechartOrMeasure =
+        inputPath.includes('sizechart') || inputPath.includes('measure');
+
+      if (isSizechartOrMeasure) {
+        // Don't compress sizechart or measure images - keep original quality
+        opts.quality = 100;
+        this.logger.log(
+          `Skipping compression for ${path.basename(inputPath)} (sizechart/measure)`,
+        );
+      } else {
+        // Dynamically set quality based on file size
+        // If file is less than 150KB, use 50% quality
+        // If file is 150KB or larger, use 30% quality
+        const sizeInKB = originalSize / 1024;
+        if (!options.quality) {
+          // Only override if not explicitly set
+          if (sizeInKB < 150) {
+            opts.quality = 50; // Moderate compression for smaller files
+          } else {
+            opts.quality = 30; // Higher compression for larger files
+          }
+        }
+      }
 
       // Read the image
       const image = sharp(inputPath);
@@ -99,6 +125,7 @@ export class ImageOptimizationService {
             effort: 6,
           });
           break;
+        // Note: Sharp does not support SVG output. Skipping 'svg' case.
       }
 
       // Ensure output directory exists

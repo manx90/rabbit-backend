@@ -4,12 +4,21 @@ import {
   IsOptional,
   IsBoolean,
   ValidateNested,
-  //   ArrayMinSize,
   IsNumber,
   IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+export class UploadIcon {
+  @ApiPropertyOptional({ type: 'string', format: 'binary' })
+  @IsOptional()
+  iconCat?: Express.Multer.File;
+
+  @ApiPropertyOptional({ type: 'string', format: 'binary' })
+  @IsOptional()
+  iconSubCat?: Express.Multer.File;
+}
 
 export class SubCategoryResponseDto {
   @ApiProperty({ example: 5 })
@@ -58,10 +67,14 @@ export class CreateSubCategoryDto {
   @IsOptional()
   @IsNumber()
   categoryId: number;
+
+  @ApiPropertyOptional({ type: 'string', format: 'binary' })
+  @IsOptional()
+  iconSubCat?: any; // Allow iconSubCat to pass validation
 }
 
 export class UpdateSubCategoryDto {
-  @ApiPropertyOptional({ example: 'Men’s T-Shirts' })
+  @ApiPropertyOptional({ example: "Men's T-Shirts" })
   @IsOptional()
   @IsString()
   @IsNotEmpty()
@@ -72,6 +85,10 @@ export class UpdateSubCategoryDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiPropertyOptional({ type: 'string', format: 'binary' })
+  @IsOptional()
+  iconSubCat?: any; // Allow iconSubCat to pass validation
 }
 
 export class CreateCategoryDto {
@@ -102,4 +119,8 @@ export class UpdateCategoryDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiPropertyOptional({ type: 'string', format: 'binary' })
+  @IsOptional()
+  iconCat?: any; // Allow iconCat to pass validation
 }

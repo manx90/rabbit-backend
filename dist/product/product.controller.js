@@ -44,10 +44,6 @@ let ProductController = class ProductController {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return this.productService.create(createProductDto, files, poster, req);
     }
-    // @Get()
-    // findAll() {
-    //   return this.productService.findAll();
-    // }
     findOne(id) {
         return this.productService.findOne(+id);
     }

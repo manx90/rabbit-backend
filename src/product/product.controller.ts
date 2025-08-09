@@ -56,21 +56,13 @@ export class ProductController {
     },
     @Req() req: Request,
   ) {
-    if (
-      !files.imgCover ||
-      !files.imgColors
-    ) {
+    if (!files.imgCover || !files.imgColors) {
       throw new BadRequestException('imgCover and ImgColors must be upload!');
     }
     const poster = req.user as auth;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.productService.create(createProductDto, files, poster, req);
   }
-
-  // @Get()
-  // findAll() {
-  //   return this.productService.findAll();
-  // }
 
   @Get(':id')
   findOne(@Param('id') id: number) {

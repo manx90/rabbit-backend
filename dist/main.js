@@ -9,6 +9,8 @@ const _swagger = require("@nestjs/swagger");
 const _common = require("@nestjs/common");
 const _loggermiddleware = require("./common/middleware/logger.middleware");
 const _path = require("path");
+const _validationexceptionfilter = require("./common/filters/validation-exception.filter");
+const _notfoundexceptionfilter = require("./common/filters/not-found-exception.filter");
 function _getRequireWildcardCache(nodeInterop) {
     if (typeof WeakMap !== "function") return null;
     var cacheBabelInterop = new WeakMap();
@@ -80,8 +82,12 @@ async function bootstrap() {
         transform: true,
         transformOptions: {
             enableImplicitConversion: true
-        }
+        },
+        whitelist: true,
+        forbidNonWhitelisted: true
     }));
+    // Apply global exception filters
+    app.useGlobalFilters(new _validationexceptionfilter.ValidationExceptionFilter(), new _notfoundexceptionfilter.NotFoundExceptionFilter());
     var _process_env_PORT;
     await app.listen((_process_env_PORT = process.env.PORT) !== null && _process_env_PORT !== void 0 ? _process_env_PORT : 3000);
 }

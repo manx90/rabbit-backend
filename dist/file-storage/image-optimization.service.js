@@ -9,7 +9,7 @@ Object.defineProperty(exports, "ImageOptimizationService", {
     }
 });
 const _common = require("@nestjs/common");
-const _sharp = /*#__PURE__*/ _interop_require_wildcard(require("sharp"));
+const _sharp = /*#__PURE__*/ _interop_require_default(require("sharp"));
 const _fsextra = /*#__PURE__*/ _interop_require_wildcard(require("fs-extra"));
 const _path = /*#__PURE__*/ _interop_require_wildcard(require("path"));
 function _define_property(obj, key, value) {
@@ -24,6 +24,11 @@ function _define_property(obj, key, value) {
         obj[key] = value;
     }
     return obj;
+}
+function _interop_require_default(obj) {
+    return obj && obj.__esModule ? obj : {
+        default: obj
+    };
 }
 function _getRequireWildcardCache(nodeInterop) {
     if (typeof WeakMap !== "function") return null;
@@ -91,6 +96,7 @@ let ImageOptimizationService = class ImageOptimizationService {
     /**
    * Optimize a single image file
    */ async optimizeImage(inputPath, outputPath, options = {}) {
+        // Start with default options
         const opts = _object_spread({}, this.defaultOptions, options);
         // Create backup path - preserve directory structure
         const relativePath = _path.relative('uploads', inputPath);
@@ -105,8 +111,28 @@ let ImageOptimizationService = class ImageOptimizationService {
             // Get original file stats
             const originalStats = await _fsextra.stat(inputPath);
             const originalSize = originalStats.size;
+            // Check if this is a sizechart or measure image - skip compression for these
+            const isSizechartOrMeasure = inputPath.includes('sizechart') || inputPath.includes('measure');
+            if (isSizechartOrMeasure) {
+                // Don't compress sizechart or measure images - keep original quality
+                opts.quality = 100;
+                this.logger.log(`Skipping compression for ${_path.basename(inputPath)} (sizechart/measure)`);
+            } else {
+                // Dynamically set quality based on file size
+                // If file is less than 150KB, use 50% quality
+                // If file is 150KB or larger, use 30% quality
+                const sizeInKB = originalSize / 1024;
+                if (!options.quality) {
+                    // Only override if not explicitly set
+                    if (sizeInKB < 150) {
+                        opts.quality = 50; // Moderate compression for smaller files
+                    } else {
+                        opts.quality = 30; // Higher compression for larger files
+                    }
+                }
+            }
             // Read the image
-            const image = _sharp(inputPath);
+            const image = (0, _sharp.default)(inputPath);
             // Get image metadata
             const metadata = await image.metadata();
             // Keep original dimensions - only compress, don't resize
@@ -181,7 +207,7 @@ let ImageOptimizationService = class ImageOptimizationService {
    */ async optimizeBuffer(buffer, options = {}) {
         const opts = _object_spread({}, this.defaultOptions, options);
         try {
-            let processedImage = _sharp(buffer);
+            let processedImage = (0, _sharp.default)(buffer);
             // Get image metadata
             const metadata = await processedImage.metadata();
             // Keep original dimensions - only compress, don't resize
@@ -304,7 +330,7 @@ let ImageOptimizationService = class ImageOptimizationService {
     constructor(){
         this.logger = new _common.Logger(ImageOptimizationService.name);
         this.defaultOptions = {
-            quality: 70,
+            quality: 50,
             format: 'jpeg',
             progressive: true
         };

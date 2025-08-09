@@ -15,6 +15,7 @@ const _rolesguard = require("../common/guards/roles.guard");
 const _rolesdecorator = require("../common/decorators/roles.decorator");
 const _rolesconstant = require("../common/constants/roles.constant");
 const _categorydto = require("./dto/category.dto");
+const _platformexpress = require("@nestjs/platform-express");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -33,12 +34,20 @@ let CategoryController = class CategoryController {
     async getSubCategories() {
         return this.categoryService.getSubCategories();
     }
+    async getSubCategoryById(id) {
+        return this.categoryService.getSubCategoryById(Number(id));
+    }
     async getAllCategories() {
         return this.categoryService.getAllCategories();
     }
-    async createCategory(dto) {
+    async createCategory(files, dto) {
         try {
-            const result = await this.categoryService.createCategory(dto);
+            var _files_iconCat;
+            // Build UploadIcon object from uploaded files
+            const uploadIcon = {
+                iconCat: (_files_iconCat = files.iconCat) === null || _files_iconCat === void 0 ? void 0 : _files_iconCat[0]
+            };
+            const result = await this.categoryService.createCategory(uploadIcon, dto);
             return {
                 message: 'Category created successfully',
                 data: result
@@ -54,16 +63,25 @@ let CategoryController = class CategoryController {
             throw new _common.HttpException(error.message, _common.HttpStatus.NOT_FOUND);
         }
     }
-    async updateCategory(id, dto) {
+    async updateCategory(id, dto, files) {
+        const category = await this.categoryService.getCategoryById(Number(id));
         try {
-            return await this.categoryService.updateCategory(Number(id), dto);
+            const uploadIcon = files && files.iconCat && files.iconCat[0] ? {
+                iconCat: files.iconCat[0]
+            } : undefined;
+            // If no icon file is provided, don't update the icon (pass undefined)
+            return await this.categoryService.updateCategory(Number(id), dto, uploadIcon);
         } catch (error) {
             throw new _common.HttpException(error.message, _common.HttpStatus.BAD_REQUEST);
         }
     }
-    async createSubCategory(dto) {
+    async createSubCategory(files, dto) {
         try {
-            const result = await this.categoryService.createSubCategory(dto);
+            var _files_iconSubCat;
+            const uploadIcon = {
+                iconSubCat: (_files_iconSubCat = files.iconSubCat) === null || _files_iconSubCat === void 0 ? void 0 : _files_iconSubCat[0]
+            };
+            const result = await this.categoryService.createSubCategory(uploadIcon, dto);
             return {
                 message: 'SubCategory created successfully',
                 data: result
@@ -72,9 +90,12 @@ let CategoryController = class CategoryController {
             throw new _common.HttpException(error.message, _common.HttpStatus.BAD_REQUEST);
         }
     }
-    async updateSubCategory(id, dto) {
+    async updateSubCategory(categoryId, id, files, dto) {
         try {
-            return await this.categoryService.updateSubCategory(Number(id), dto);
+            const uploadIcon = files && files.iconSubCat && files.iconSubCat[0] ? {
+                iconSubCat: files.iconSubCat[0]
+            } : undefined;
+            return await this.categoryService.updateSubCategory(Number(categoryId), Number(id), dto, uploadIcon);
         } catch (error) {
             throw new _common.HttpException(error.message, _common.HttpStatus.BAD_REQUEST);
         }
@@ -118,6 +139,17 @@ _ts_decorate([
     _ts_metadata("design:returntype", Promise)
 ], CategoryController.prototype, "getSubCategories", null);
 _ts_decorate([
+    (0, _common.Get)('subcategory/:id'),
+    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
+    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    _ts_param(0, (0, _common.Param)('id')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], CategoryController.prototype, "getSubCategoryById", null);
+_ts_decorate([
     (0, _common.Get)(),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", []),
@@ -128,9 +160,17 @@ _ts_decorate([
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
     (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
     (0, _common.HttpCode)(_common.HttpStatus.CREATED),
-    _ts_param(0, (0, _common.Body)()),
+    (0, _common.UseInterceptors)((0, _platformexpress.FileFieldsInterceptor)([
+        {
+            name: 'iconCat',
+            maxCount: 1
+        }
+    ])),
+    _ts_param(0, (0, _common.UploadedFiles)()),
+    _ts_param(1, (0, _common.Body)()),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
+        Object,
         typeof _categorydto.CreateCategoryDto === "undefined" ? Object : _categorydto.CreateCategoryDto
     ]),
     _ts_metadata("design:returntype", Promise)
@@ -148,12 +188,20 @@ _ts_decorate([
     (0, _common.Put)(':id'),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
     (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    (0, _common.UseInterceptors)((0, _platformexpress.FileFieldsInterceptor)([
+        {
+            name: 'iconCat',
+            maxCount: 1
+        }
+    ])),
     _ts_param(0, (0, _common.Param)('id')),
     _ts_param(1, (0, _common.Body)()),
+    _ts_param(2, (0, _common.UploadedFiles)()),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
         String,
-        typeof _categorydto.UpdateCategoryDto === "undefined" ? Object : _categorydto.UpdateCategoryDto
+        typeof _categorydto.UpdateCategoryDto === "undefined" ? Object : _categorydto.UpdateCategoryDto,
+        Object
     ]),
     _ts_metadata("design:returntype", Promise)
 ], CategoryController.prototype, "updateCategory", null);
@@ -162,22 +210,40 @@ _ts_decorate([
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
     (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
     (0, _common.HttpCode)(_common.HttpStatus.CREATED),
-    _ts_param(0, (0, _common.Body)()),
+    (0, _common.UseInterceptors)((0, _platformexpress.FileFieldsInterceptor)([
+        {
+            name: 'iconSubCat',
+            maxCount: 1
+        }
+    ])),
+    _ts_param(0, (0, _common.UploadedFiles)()),
+    _ts_param(1, (0, _common.Body)()),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
+        Object,
         typeof _categorydto.CreateSubCategoryDto === "undefined" ? Object : _categorydto.CreateSubCategoryDto
     ]),
     _ts_metadata("design:returntype", Promise)
 ], CategoryController.prototype, "createSubCategory", null);
 _ts_decorate([
-    (0, _common.Put)('subcategory/:id'),
+    (0, _common.Put)(':categoryId/subCategory/:id'),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
     (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
-    _ts_param(0, (0, _common.Param)('id')),
-    _ts_param(1, (0, _common.Body)()),
+    (0, _common.UseInterceptors)((0, _platformexpress.FileFieldsInterceptor)([
+        {
+            name: 'iconSubCat',
+            maxCount: 1
+        }
+    ])),
+    _ts_param(0, (0, _common.Param)('categoryId')),
+    _ts_param(1, (0, _common.Param)('id')),
+    _ts_param(2, (0, _common.UploadedFiles)()),
+    _ts_param(3, (0, _common.Body)()),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
         String,
+        String,
+        Object,
         typeof _categorydto.UpdateSubCategoryDto === "undefined" ? Object : _categorydto.UpdateSubCategoryDto
     ]),
     _ts_metadata("design:returntype", Promise)

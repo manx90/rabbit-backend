@@ -47,6 +47,13 @@ _ts_decorate([
     _ts_metadata("design:type", String)
 ], category.prototype, "name", void 0);
 _ts_decorate([
+    (0, _typeorm.Column)({
+        type: 'longtext',
+        nullable: true
+    }),
+    _ts_metadata("design:type", String)
+], category.prototype, "icon", void 0);
+_ts_decorate([
     (0, _typeorm.OneToMany)(()=>subCategory, (sub)=>sub.category, {
         cascade: true
     }),
@@ -100,6 +107,13 @@ _ts_decorate([
     }),
     _ts_metadata("design:type", String)
 ], subCategory.prototype, "name", void 0);
+_ts_decorate([
+    (0, _typeorm.Column)({
+        type: 'longtext',
+        nullable: true
+    }),
+    _ts_metadata("design:type", String)
+], subCategory.prototype, "icon", void 0);
 _ts_decorate([
     (0, _typeorm.ManyToOne)(()=>category, (category)=>category.subCategories, {
         onDelete: 'CASCADE'

@@ -89,7 +89,7 @@ let ProductService = class ProductService {
    */ async saveFiles(files = [], productName, subDirectory) {
         const productPath = `products/${productName.replace(/\s+/g, '_').toLowerCase()}/${subDirectory}`;
         return await this.fileStorageService.saveFiles(files, productPath, {
-            quality: 20,
+            quality: 50,
             format: 'jpeg',
             progressive: true
         });
@@ -98,11 +98,21 @@ let ProductService = class ProductService {
    * Save a single file to storage and return its path
    */ async saveFile(file, productName, subDirectory) {
         const productPath = `products/${productName.replace(/\s+/g, '_').toLowerCase()}/${subDirectory}`;
-        return await this.fileStorageService.saveFile(file, productPath, {
-            quality: 20,
-            format: 'jpeg',
-            progressive: true
-        });
+        // Skip compression for sizechart and measure files
+        if (subDirectory === 'sizechart' || subDirectory === 'measure') {
+            // Don't compress these files - keep original quality
+            return await this.fileStorageService.saveFile(file, productPath, {
+                quality: 100,
+                format: 'jpeg',
+                progressive: true
+            });
+        } else {
+            return await this.fileStorageService.saveFile(file, productPath, {
+                quality: 50,
+                format: 'jpeg',
+                progressive: true
+            });
+        }
     }
     async uploadFiles(files, productName) {
         const result = {};
@@ -172,9 +182,7 @@ let ProductService = class ProductService {
         ]);
         const features = new _apifeatures.ApiFeatures(queryBuilder, query || {}, this.productRepo.metadata).filter().sort().paginate();
         const [data, total] = await features.getManyAndCount();
-        // Transform file paths to full URLs if request object is provided
         const transformedData = req ? this.transformProductUrls(data, req) : data;
-        // Get pagination info from features
         const pagination = features.getPaginationInfo();
         return {
             status: 'success',

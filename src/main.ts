@@ -6,6 +6,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
+import { NotFoundExceptionFilter } from './common/filters/not-found-exception.filter';
 
 // import dataSource from './data-source';
 async function bootstrap() {
@@ -39,7 +41,15 @@ async function bootstrap() {
       transformOptions: {
         enableImplicitConversion: true, // <- This line here
       },
+      whitelist: true,
+      forbidNonWhitelisted: true,
     }),
+  );
+
+  // Apply global exception filters
+  app.useGlobalFilters(
+    new ValidationExceptionFilter(),
+    new NotFoundExceptionFilter(),
   );
 
   await app.listen(process.env.PORT ?? 3000);

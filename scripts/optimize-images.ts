@@ -21,10 +21,13 @@ async function optimizeAllImages() {
     const optimizedFolder = 'uploads_optimized';
     await fs.ensureDir(optimizedFolder);
 
+    // Using dynamic quality settings:
+    // - Files < 150KB: 50% quality
+    // - Files ≥ 150KB: 30% quality
     const results = await imageOptimizationService.optimizeAllUploads({
-      quality: 20, // Only compress, don't resize
       format: 'jpeg',
       progressive: true,
+      // No quality specified - will use dynamic quality based on file size
     });
 
     // Calculate summary statistics

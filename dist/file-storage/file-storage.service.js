@@ -43,7 +43,7 @@ let FileStorageService = class FileStorageService {
             try {
                 bufferToSave = await this.imageOptimizationService.optimizeBuffer(file.buffer, optimizeOptions);
             } catch (error) {
-                console.warn(`Failed to optimize image ${file.originalname}, saving original:`, error.message);
+                console.log(`Failed to optimize image ${file.originalname}, saving original:`, error.message);
             // Continue with original buffer if optimization fails
             }
         }
@@ -82,11 +82,6 @@ let FileStorageService = class FileStorageService {
    */ deleteFile(filePath) {
         if (!filePath) return false;
         const fullPath = (0, _path.join)(this.uploadDir, filePath);
-        console.log('FileStorageService.deleteFile:', {
-            originalPath: filePath,
-            fullPath,
-            exists: (0, _fs.existsSync)(fullPath)
-        });
         if (!(0, _fs.existsSync)(fullPath)) return false;
         try {
             (0, _fs.unlinkSync)(fullPath);

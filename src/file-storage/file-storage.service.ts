@@ -57,7 +57,7 @@ export class FileStorageService {
           optimizeOptions,
         );
       } catch (error) {
-        console.warn(
+        console.log(
           `Failed to optimize image ${file.originalname}, saving original:`,
           error.message,
         );
@@ -121,17 +121,8 @@ export class FileStorageService {
    */
   deleteFile(filePath: string | null | undefined): boolean {
     if (!filePath) return false;
-
     const fullPath = join(this.uploadDir, filePath);
-
-    console.log('FileStorageService.deleteFile:', {
-      originalPath: filePath,
-      fullPath,
-      exists: existsSync(fullPath),
-    });
-
     if (!existsSync(fullPath)) return false;
-
     try {
       unlinkSync(fullPath);
       return true;
@@ -140,7 +131,6 @@ export class FileStorageService {
       return false;
     }
   }
-
   /**
    * Delete multiple files from storage
    */

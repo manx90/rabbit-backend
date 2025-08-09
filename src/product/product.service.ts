@@ -41,7 +41,6 @@ export class ProductService {
     private readonly fileStorageService: FileStorageService,
     private readonly configService: ConfigService,
   ) {}
-
   /**
    * Save files to storage and return their paths
    * This replaces the old mapFiles method that converted to base64
@@ -53,12 +52,11 @@ export class ProductService {
   ): Promise<string[]> {
     const productPath = `products/${productName.replace(/\s+/g, '_').toLowerCase()}/${subDirectory}`;
     return await this.fileStorageService.saveFiles(files, productPath, {
-      quality: 20, // Only compress, don't resize
+      quality: 50,
       format: 'jpeg',
       progressive: true,
     });
   }
-
   /**
    * Save a single file to storage and return its path
    */
@@ -68,11 +66,21 @@ export class ProductService {
     subDirectory: string,
   ): Promise<string> {
     const productPath = `products/${productName.replace(/\s+/g, '_').toLowerCase()}/${subDirectory}`;
-    return await this.fileStorageService.saveFile(file, productPath, {
-      quality: 20, // Only compress, don't resize
-      format: 'jpeg',
-      progressive: true,
-    });
+    // Skip compression for sizechart and measure files
+    if (subDirectory === 'sizechart' || subDirectory === 'measure') {
+      // Don't compress these files - keep original quality
+      return await this.fileStorageService.saveFile(file, productPath, {
+        quality: 100, // Keep original quality
+        format: 'jpeg',
+        progressive: true,
+      });
+    } else {
+      return await this.fileStorageService.saveFile(file, productPath, {
+        quality: 50,
+        format: 'jpeg',
+        progressive: true,
+      });
+    }
   }
 
   private async uploadFiles(
@@ -90,7 +98,6 @@ export class ProductService {
     if (files.images && files.images.length > 0) {
       result.images = await this.saveFiles(files.images, productName, 'images');
     }
-
     if (files.imgCover && files.imgCover.length > 0) {
       result.imgCover = await this.saveFile(
         files.imgCover[0],
@@ -98,7 +105,6 @@ export class ProductService {
         'cover',
       );
     }
-
     if (files.imgSizeChart && files.imgSizeChart.length > 0) {
       result.imgSizeChart = await this.saveFile(
         files.imgSizeChart[0],
@@ -106,7 +112,6 @@ export class ProductService {
         'size-chart',
       );
     }
-
     if (files.imgMeasure && files.imgMeasure.length > 0) {
       result.imgMeasure = await this.saveFile(
         files.imgMeasure[0],
@@ -114,7 +119,6 @@ export class ProductService {
         'measure',
       );
     }
-
     if (files.imgColors && files.imgColors.length > 0) {
       result.imgColors = await this.saveFiles(
         files.imgColors,
@@ -122,10 +126,8 @@ export class ProductService {
         'colors',
       );
     }
-
     return result;
   }
-
   /**
    * Transform product file paths to full URLs
    * @param products Array of product entities
@@ -210,7 +212,6 @@ export class ProductService {
         'subCategory.id',
         'auth.username',
       ]);
-
     const features = new ApiFeatures(
       queryBuilder,
       query || {},
@@ -220,11 +221,8 @@ export class ProductService {
       .sort()
       .paginate();
     const [data, total] = await features.getManyAndCount();
-    // Transform file paths to full URLs if request object is provided
     const transformedData = req ? this.transformProductUrls(data, req) : data;
-    // Get pagination info from features
     const pagination = features.getPaginationInfo();
-
     return {
       status: 'success',
       results: transformedData.length,
