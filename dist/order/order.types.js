@@ -10,9 +10,8 @@ Object.defineProperty(exports, "OrderStatus", {
 });
 var OrderStatus = /*#__PURE__*/ function(OrderStatus) {
     OrderStatus["PENDING"] = "pending";
-    OrderStatus["PROCESSING"] = "processing";
+    OrderStatus["READIED"] = "readied";
     OrderStatus["SHIPPED"] = "shipped";
-    OrderStatus["DELIVERED"] = "delivered";
     OrderStatus["CANCELLED"] = "cancelled";
     return OrderStatus;
 }({});

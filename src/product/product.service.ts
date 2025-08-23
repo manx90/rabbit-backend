@@ -395,7 +395,11 @@ export class ProductService {
         }
       }
     }
-
+    //  Date Published
+    if (dto.datePublished) {
+      Product.datePublished = dto.datePublished;
+      Product.publishState = PublishState.DRAFT;
+    }
     Product.sizeDetails = dto.sizes.map((size) => ({
       sizeName: size.sizeName,
       price: size.price,
@@ -404,6 +408,10 @@ export class ProductService {
         quantity: colorQty.quantity,
       })),
     }));
+
+    if (dto.wordKeys) Product.wordKeys = dto.wordKeys;
+    if (dto.videoLink) Product.videoLink = dto.videoLink;
+    if (dto.season) Product.season = dto.season;
 
     // Calculate total quantity
     Product.quantity = Product.getTotalQuantity();
@@ -705,5 +713,27 @@ export class ProductService {
       .from(product)
       .where('1 = 1')
       .execute();
+  }
+
+  async ConnectProduct(productIds: number[]): Promise<any> {
+    const productsIds: number[] = [];
+    const products = await Promise.all(
+      productIds.map(async (id) => {
+        const prod = await this.productRepo.findOne({ where: { id } });
+        if (!prod) {
+          throw new NotFoundException(`Product with ID ${id} not found`);
+        }
+        productsIds.push(prod.id);
+        return prod;
+      }),
+    );
+    for (const prod of products) {
+      prod.productIdsCollection = productsIds;
+      await this.productRepo.save(prod);
+    }
+    return {
+      data: products,
+      message: 'Products connected successfully',
+    };
   }
 }

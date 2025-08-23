@@ -35,11 +35,8 @@ let OrderService = class OrderService {
     deleteOrder(id) {
         return this.orderRepository.deleteOrder(id);
     }
-    updateOrderStatusToProcessing(id) {
-        return this.orderRepository.updateOrderStatusToProcessing(id);
-    }
-    updateOrderStatusToDelivered(id) {
-        return this.orderRepository.updateOrderStatusToDelivered(id);
+    updateOrderStatusToReadied(id) {
+        return this.orderRepository.updateOrderStatusToReadied(id);
     }
     updateOrderStatusToShipped(id) {
         return this.orderRepository.updateOrderStatusToShipped(id);

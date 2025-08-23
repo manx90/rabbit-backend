@@ -249,17 +249,17 @@ export class ProductCollectionService {
   ): Promise<string> {
     // If single category
     if (collection.categories && collection.categories.length === 1) {
-      return `${collection.categories[0].name} Collection`;
+      return `${collection.categories[0].name}`;
     }
 
     // If single subcategory
     if (collection.subCategories && collection.subCategories.length === 1) {
-      return `${collection.subCategories[0].name} Collection`;
+      return `${collection.subCategories[0].name}`;
     }
 
     // If single product
     if (collection.products && collection.products.length === 1) {
-      return `${collection.products[0].name} Collection`;
+      return `${collection.products[0].name}`;
     }
 
     // If multiple categories
@@ -267,7 +267,7 @@ export class ProductCollectionService {
       const categoryNames = collection.categories
         .map((cat) => cat.name)
         .join(' & ');
-      return `${categoryNames} Collections`;
+      return `${categoryNames}`;
     }
 
     // If multiple subcategories
@@ -275,7 +275,7 @@ export class ProductCollectionService {
       const subCategoryNames = collection.subCategories
         .map((sub) => sub.name)
         .join(' & ');
-      return `${subCategoryNames} Collections`;
+      return `${subCategoryNames}`;
     }
 
     // If multiple products
@@ -283,7 +283,7 @@ export class ProductCollectionService {
       const productNames = collection.products
         .map((prod) => prod.name)
         .join(' & ');
-      return `${productNames} Collection`;
+      return `${productNames}`;
     }
 
     // If mixed (categories + subcategories + products)
@@ -302,7 +302,7 @@ export class ProductCollectionService {
     }
 
     if (parts.length > 0) {
-      return `${parts.join(' + ')} Collection`;
+      return `${parts.join(' + ')}`;
     }
 
     // Fallback

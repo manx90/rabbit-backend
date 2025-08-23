@@ -1,11 +1,9 @@
-// order/order.dto.ts
 import {
   IsArray,
-  // IsNotEmpty,
   IsNumber,
   IsString,
   ValidateNested,
-  // IsIn,
+  IsOptional,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -51,33 +49,35 @@ export class CreateOrderDto {
   // Shipment
   // @IsNotEmpty()
   @IsString()
-  shipment_types: string;
+  shipment_types: string = '1';
+
+  // // @IsNotEmpty()
+  // @IsOptional()
+  // @IsString()
+  // quantity: string;
 
   // @IsNotEmpty()
   @IsString()
-  quantity: string;
+  items_description: string = '';
+
+  // @IsNotEmpty()
+  @IsOptional()
+  @IsString()
+  is_cod: string = '1';
+
+  // // @IsNotEmpty()
+  // @IsString()
+  // cod_amount: string;
 
   // @IsNotEmpty()
   @IsString()
-  items_description: string;
-
-  // @IsNotEmpty()
-  @IsString()
-  is_cod: string;
-
-  // @IsNotEmpty()
-  @IsString()
-  cod_amount: string;
-
-  // @IsNotEmpty()
-  @IsString()
-  has_return: string;
+  has_return: string = '0';
 
   @IsString()
-  return_notes: string;
+  return_notes: string = '';
 
   @IsString()
-  notes: string;
+  notes: string = '';
 
   // Items
   @IsArray()

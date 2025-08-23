@@ -29,6 +29,7 @@ const _classvalidator = require("class-validator");
 const _classtransformer = require("class-transformer");
 const _swagger = require("@nestjs/swagger");
 const _entityinterface = require("../../common/interfaces/entity.interface");
+const _productentity = require("../entities/product.entity");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -176,6 +177,14 @@ _ts_decorate([
 ], CreateProductDto.prototype, "sizes", void 0);
 _ts_decorate([
     (0, _swagger.ApiPropertyOptional)({
+        example: '2025-01-01'
+    }),
+    (0, _classvalidator.IsDate)(),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", typeof Date === "undefined" ? Object : Date)
+], CreateProductDto.prototype, "datePublished", void 0);
+_ts_decorate([
+    (0, _swagger.ApiPropertyOptional)({
         description: 'Flat list of colors (redundant, but handy for front-end)',
         type: [
             ColorDetailDto
@@ -229,6 +238,79 @@ _ts_decorate([
     (0, _classvalidator.IsOptional)(),
     _ts_metadata("design:type", Boolean)
 ], CreateProductDto.prototype, "isBestSeller", void 0);
+_ts_decorate([
+    (0, _swagger.ApiPropertyOptional)({
+        example: 'cover.jpg'
+    }),
+    (0, _classvalidator.IsString)(),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", String)
+], CreateProductDto.prototype, "imgCover", void 0);
+_ts_decorate([
+    (0, _swagger.ApiPropertyOptional)({
+        example: 'size-chart.jpg'
+    }),
+    (0, _classvalidator.IsString)(),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", String)
+], CreateProductDto.prototype, "imgSizeChart", void 0);
+_ts_decorate([
+    (0, _swagger.ApiPropertyOptional)({
+        example: 'measure.jpg'
+    }),
+    (0, _classvalidator.IsString)(),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", String)
+], CreateProductDto.prototype, "imgMeasure", void 0);
+_ts_decorate([
+    (0, _swagger.ApiPropertyOptional)({
+        example: 'images.jpg'
+    }),
+    (0, _classvalidator.IsString)(),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", String)
+], CreateProductDto.prototype, "images", void 0);
+_ts_decorate([
+    (0, _swagger.ApiPropertyOptional)({
+        example: 'colors.jpg'
+    }),
+    (0, _classvalidator.IsString)(),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", String)
+], CreateProductDto.prototype, "imgColors", void 0);
+_ts_decorate([
+    (0, _swagger.ApiPropertyOptional)({
+        enum: _productentity.Season,
+        default: _productentity.Season.all
+    }),
+    (0, _classvalidator.IsEnum)(_productentity.Season),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", typeof _productentity.Season === "undefined" ? Object : _productentity.Season)
+], CreateProductDto.prototype, "season", void 0);
+_ts_decorate([
+    (0, _swagger.ApiPropertyOptional)({
+        example: [
+            'fashion',
+            'clothing',
+            'trendy',
+            'stylish'
+        ]
+    }),
+    (0, _classvalidator.IsArray)(),
+    (0, _classvalidator.IsString)({
+        each: true
+    }),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", Array)
+], CreateProductDto.prototype, "wordKeys", void 0);
+_ts_decorate([
+    (0, _swagger.ApiPropertyOptional)({
+        example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+    }),
+    (0, _classvalidator.IsString)(),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", String)
+], CreateProductDto.prototype, "videoLink", void 0);
 let UpdateProductDto = class UpdateProductDto {
 };
 _ts_decorate([
@@ -299,5 +381,28 @@ _ts_decorate([
     (0, _classvalidator.IsBoolean)(),
     _ts_metadata("design:type", Boolean)
 ], UpdateProductDto.prototype, "isBestSeller", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsOptional)(),
+    (0, _classvalidator.IsDate)(),
+    _ts_metadata("design:type", typeof Date === "undefined" ? Object : Date)
+], UpdateProductDto.prototype, "datePublished", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsOptional)(),
+    (0, _classvalidator.IsEnum)(_productentity.Season),
+    _ts_metadata("design:type", typeof _productentity.Season === "undefined" ? Object : _productentity.Season)
+], UpdateProductDto.prototype, "season", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsOptional)(),
+    (0, _classvalidator.IsArray)(),
+    (0, _classvalidator.IsString)({
+        each: true
+    }),
+    _ts_metadata("design:type", Array)
+], UpdateProductDto.prototype, "wordKeys", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsOptional)(),
+    (0, _classvalidator.IsString)(),
+    _ts_metadata("design:type", String)
+], UpdateProductDto.prototype, "videoLink", void 0);
 
 //# sourceMappingURL=Product.dto.js.map

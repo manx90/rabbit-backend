@@ -63,11 +63,8 @@ let OrderController = class OrderController {
     deleteOrder(id) {
         return this.orderService.deleteOrder(id);
     }
-    updateOrderStatusToProcessing(id) {
-        return this.orderService.updateOrderStatusToProcessing(id);
-    }
-    updateOrderStatusToDelivered(id) {
-        return this.orderService.updateOrderStatusToDelivered(id);
+    updateOrderStatusToReadied(id) {
+        return this.orderService.updateOrderStatusToReadied(id);
     }
     updateOrderStatusToShipped(id) {
         return this.orderService.updateOrderStatusToShipped(id);
@@ -172,7 +169,7 @@ _ts_decorate([
     _ts_metadata("design:returntype", typeof Promise === "undefined" ? Object : Promise)
 ], OrderController.prototype, "deleteOrder", null);
 _ts_decorate([
-    (0, _common.Put)('processing/:id'),
+    (0, _common.Put)('readied/:id'),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
     (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
     _ts_param(0, (0, _common.Param)('id')),
@@ -181,18 +178,7 @@ _ts_decorate([
         String
     ]),
     _ts_metadata("design:returntype", typeof Promise === "undefined" ? Object : Promise)
-], OrderController.prototype, "updateOrderStatusToProcessing", null);
-_ts_decorate([
-    (0, _common.Put)('delivered/:id'),
-    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
-    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
-    _ts_param(0, (0, _common.Param)('id')),
-    _ts_metadata("design:type", Function),
-    _ts_metadata("design:paramtypes", [
-        String
-    ]),
-    _ts_metadata("design:returntype", typeof Promise === "undefined" ? Object : Promise)
-], OrderController.prototype, "updateOrderStatusToDelivered", null);
+], OrderController.prototype, "updateOrderStatusToReadied", null);
 _ts_decorate([
     (0, _common.Put)('shipped/:id'),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),

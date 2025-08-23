@@ -96,18 +96,11 @@ export class OrderController {
     return this.orderService.deleteOrder(id);
   }
 
-  @Put('processing/:id')
+  @Put('readied/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.SuperAdmin)
-  updateOrderStatusToProcessing(@Param('id') id: string): Promise<void> {
-    return this.orderService.updateOrderStatusToProcessing(id);
-  }
-
-  @Put('delivered/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.SuperAdmin)
-  updateOrderStatusToDelivered(@Param('id') id: string): Promise<void> {
-    return this.orderService.updateOrderStatusToDelivered(id);
+  updateOrderStatusToReadied(@Param('id') id: string): Promise<void> {
+    return this.orderService.updateOrderStatusToReadied(id);
   }
 
   @Put('shipped/:id')
@@ -123,6 +116,4 @@ export class OrderController {
   updateOrderStatusToCancelled(@Param('id') id: string): Promise<void> {
     return this.orderService.updateOrderStatusToCancelled(id);
   }
-
-  
 }

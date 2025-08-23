@@ -163,7 +163,8 @@ _ts_decorate([
 _ts_decorate([
     (0, _typeorm.OneToMany)(()=>orderitem, (item)=>item.order, {
         cascade: true,
-        eager: true
+        eager: true,
+        onDelete: 'CASCADE'
     }),
     _ts_metadata("design:type", Array)
 ], order.prototype, "items", void 0);
@@ -187,6 +188,20 @@ _ts_decorate([
     _ts_metadata("design:paramtypes", []),
     _ts_metadata("design:returntype", void 0)
 ], order.prototype, "calculateAmount", null);
+_ts_decorate([
+    (0, _typeorm.Column)({
+        type: 'numeric',
+        nullable: true
+    }),
+    _ts_metadata("design:type", Number)
+], order.prototype, "optos_id", void 0);
+_ts_decorate([
+    (0, _typeorm.Column)({
+        type: 'varchar',
+        nullable: true
+    }),
+    _ts_metadata("design:type", String)
+], order.prototype, "optos_status", void 0);
 order = _ts_decorate([
     (0, _typeorm.Entity)()
 ], order);
@@ -205,7 +220,9 @@ _ts_decorate([
     _ts_metadata("design:type", String)
 ], orderitem.prototype, "id", void 0);
 _ts_decorate([
-    (0, _typeorm.ManyToOne)(()=>order, (order)=>order.items),
+    (0, _typeorm.ManyToOne)(()=>order, (order)=>order.items, {
+        onDelete: 'CASCADE'
+    }),
     (0, _classtransformer.Exclude)(),
     _ts_metadata("design:type", typeof order === "undefined" ? Object : order)
 ], orderitem.prototype, "order", void 0);

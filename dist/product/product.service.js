@@ -13,6 +13,7 @@ const _typeorm = require("@nestjs/typeorm");
 const _typeorm1 = require("typeorm");
 const _productentity = require("./entities/product.entity");
 const _Categoryentity = require("./entities/Category.entity");
+const _entityinterface = require("../common/interfaces/entity.interface");
 const _apifeatures = require("../common/utils/api-features");
 const _filestorageservice = require("../file-storage/file-storage.service");
 const _config = require("@nestjs/config");
@@ -297,6 +298,11 @@ let ProductService = class ProductService {
                 }
             }
         }
+        //  Date Published
+        if (dto.datePublished) {
+            Product.datePublished = dto.datePublished;
+            Product.publishState = _entityinterface.PublishState.DRAFT;
+        }
         Product.sizeDetails = dto.sizes.map((size)=>({
                 sizeName: size.sizeName,
                 price: size.price,
@@ -305,6 +311,9 @@ let ProductService = class ProductService {
                         quantity: colorQty.quantity
                     }))
             }));
+        if (dto.wordKeys) Product.wordKeys = dto.wordKeys;
+        if (dto.videoLink) Product.videoLink = dto.videoLink;
+        if (dto.season) Product.season = dto.season;
         // Calculate total quantity
         Product.quantity = Product.getTotalQuantity();
         try {
@@ -524,6 +533,29 @@ let ProductService = class ProductService {
         const productPath = `products`;
         this.fileStorageService.deleteDirectory(productPath);
         await this.productRepo.createQueryBuilder().delete().from(_productentity.product).where('1 = 1').execute();
+    }
+    async ConnectProduct(productIds) {
+        const productsIds = [];
+        const products = await Promise.all(productIds.map(async (id)=>{
+            const prod = await this.productRepo.findOne({
+                where: {
+                    id
+                }
+            });
+            if (!prod) {
+                throw new _common.NotFoundException(`Product with ID ${id} not found`);
+            }
+            productsIds.push(prod.id);
+            return prod;
+        }));
+        for (const prod of products){
+            prod.productIdsCollection = productsIds;
+            await this.productRepo.save(prod);
+        }
+        return {
+            data: products,
+            message: 'Products connected successfully'
+        };
     }
     constructor(productRepo, categoryRepo, subCategoryRepo, fileStorageService, configService){
         this.productRepo = productRepo;

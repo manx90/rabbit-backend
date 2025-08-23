@@ -10,10 +10,12 @@ import {
   Min,
   IsPositive,
   ArrayMinSize,
+  IsDate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PublishState } from '../../common/interfaces/entity.interface';
+import { Season } from '../entities/product.entity';
 
 /* ---------- nested DTOs ---------- */
 
@@ -102,6 +104,11 @@ export class CreateProductDto {
   @Type(() => SizeDetailDto)
   sizes: SizeDetailDto[];
 
+  @ApiPropertyOptional({ example: '2025-01-01' })
+  @IsDate()
+  @IsOptional()
+  datePublished?: Date;
+
   /** optional convenience list if you want to expose colors separately */
   @ApiPropertyOptional({
     description: 'Flat list of colors (redundant, but handy for front-end)',
@@ -134,10 +141,47 @@ export class CreateProductDto {
   @IsBoolean()
   @IsOptional()
   isBestSeller?: boolean = false;
-  imgCover: string;
-  imgSizeChart: string;
-  imgMeasure: string;
-  images: string[];
+
+  @ApiPropertyOptional({ example: 'cover.jpg' })
+  @IsString()
+  @IsOptional()
+  imgCover?: string;
+  @ApiPropertyOptional({ example: 'size-chart.jpg' })
+  @IsString()
+  @IsOptional()
+  imgSizeChart?: string;
+  @ApiPropertyOptional({ example: 'measure.jpg' })
+  @IsString()
+  @IsOptional()
+  imgMeasure?: string;
+  @ApiPropertyOptional({ example: 'images.jpg' })
+  @IsString()
+  @IsOptional()
+  images?: string;
+  @ApiPropertyOptional({ example: 'colors.jpg' })
+  @IsString()
+  @IsOptional()
+  imgColors?: string;
+
+  @ApiPropertyOptional({ enum: Season, default: Season.all })
+  @IsEnum(Season)
+  @IsOptional()
+  season?: Season;
+
+  @ApiPropertyOptional({
+    example: ['fashion', 'clothing', 'trendy', 'stylish'],
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  wordKeys?: string[];
+
+  @ApiPropertyOptional({
+    example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+  })
+  @IsString()
+  @IsOptional()
+  videoLink?: string;
 }
 
 export class UpdateProductDto {
@@ -191,4 +235,21 @@ export class UpdateProductDto {
   @IsOptional()
   @IsBoolean()
   isBestSeller?: boolean;
+
+  @IsOptional()
+  @IsDate()
+  datePublished?: Date;
+
+  @IsOptional()
+  @IsEnum(Season)
+  season?: Season;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  wordKeys?: string[];
+
+  @IsOptional()
+  @IsString()
+  videoLink?: string;
 }

@@ -231,30 +231,30 @@ let ProductCollectionService = class ProductCollectionService {
    */ async generateCollectionName(collection) {
         // If single category
         if (collection.categories && collection.categories.length === 1) {
-            return `${collection.categories[0].name} Collection`;
+            return `${collection.categories[0].name}`;
         }
         // If single subcategory
         if (collection.subCategories && collection.subCategories.length === 1) {
-            return `${collection.subCategories[0].name} Collection`;
+            return `${collection.subCategories[0].name}`;
         }
         // If single product
         if (collection.products && collection.products.length === 1) {
-            return `${collection.products[0].name} Collection`;
+            return `${collection.products[0].name}`;
         }
         // If multiple categories
         if (collection.categories && collection.categories.length > 1) {
             const categoryNames = collection.categories.map((cat)=>cat.name).join(' & ');
-            return `${categoryNames} Collections`;
+            return `${categoryNames}`;
         }
         // If multiple subcategories
         if (collection.subCategories && collection.subCategories.length > 1) {
             const subCategoryNames = collection.subCategories.map((sub)=>sub.name).join(' & ');
-            return `${subCategoryNames} Collections`;
+            return `${subCategoryNames}`;
         }
         // If multiple products
         if (collection.products && collection.products.length > 1) {
             const productNames = collection.products.map((prod)=>prod.name).join(' & ');
-            return `${productNames} Collection`;
+            return `${productNames}`;
         }
         // If mixed (categories + subcategories + products)
         const parts = [];
@@ -268,7 +268,7 @@ let ProductCollectionService = class ProductCollectionService {
             parts.push(`${collection.products.length} Products`);
         }
         if (parts.length > 0) {
-            return `${parts.join(' + ')} Collection`;
+            return `${parts.join(' + ')}`;
         }
         // Fallback
         return 'Custom Collection';

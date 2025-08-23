@@ -2,9 +2,17 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-Object.defineProperty(exports, "product", {
-    enumerable: true,
-    get: function() {
+function _export(target, all) {
+    for(var name in all)Object.defineProperty(target, name, {
+        enumerable: true,
+        get: all[name]
+    });
+}
+_export(exports, {
+    Season: function() {
+        return Season;
+    },
+    product: function() {
         return product;
     }
 });
@@ -12,6 +20,7 @@ const _typeorm = require("typeorm");
 const _Categoryentity = require("./Category.entity");
 const _entityinterface = require("../../common/interfaces/entity.interface");
 const _authentity = require("../../auth/entities/auth.entity");
+const _classtransformer = require("class-transformer");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -21,6 +30,13 @@ function _ts_decorate(decorators, target, key, desc) {
 function _ts_metadata(k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 }
+var Season = /*#__PURE__*/ function(Season) {
+    Season["winter"] = "winter";
+    Season["summer"] = "summer";
+    Season["spring_autumn"] = "spring_autumn";
+    Season["all"] = "all";
+    return Season;
+}({});
 let product = class product {
     /**
    * Calculate total quantity from all sizes and colors
@@ -56,13 +72,14 @@ let product = class product {
         if (!this.sizeDetails) return [];
         return this.sizeDetails.filter((size)=>size.quantities.some((q)=>q.quantity > 0)).map((size)=>size.sizeName);
     }
-    /**
-   * Before insert hook - set isActive based on publishState
-  //  */ // @BeforeInsert()
-    // @BeforeUpdate()
-    // setActiveStatus() {
-    //   this.isActive = this.publishState === PublishState.PUBLISHED;
-    // }
+    // schedule publish
+    updatePublishState() {
+        if (this.datePublished && this.datePublished > new Date()) {
+            this.publishState = _entityinterface.PublishState.DRAFT;
+        } else {
+            this.publishState = _entityinterface.PublishState.PUBLISHED;
+        }
+    }
     /**
    * Before insert hook - validate size details
    */ validateSizeDetails() {
@@ -104,6 +121,33 @@ _ts_decorate([
 ], product.prototype, "name", void 0);
 _ts_decorate([
     (0, _typeorm.Column)({
+        type: 'enum',
+        enum: Season,
+        default: "all",
+        nullable: true
+    }),
+    _ts_metadata("design:type", String)
+], product.prototype, "season", void 0);
+_ts_decorate([
+    (0, _typeorm.Column)({
+        type: 'simple-array',
+        nullable: true
+    }),
+    (0, _classtransformer.Transform)(({ value })=>{
+        const newVal = value === null || value === void 0 ? void 0 : value.map((item)=>item.trim());
+        return newVal;
+    }),
+    _ts_metadata("design:type", Array)
+], product.prototype, "wordKeys", void 0);
+_ts_decorate([
+    (0, _typeorm.Column)({
+        type: 'longtext',
+        nullable: true
+    }),
+    _ts_metadata("design:type", String)
+], product.prototype, "videoLink", void 0);
+_ts_decorate([
+    (0, _typeorm.Column)({
         type: 'text',
         nullable: true
     }),
@@ -116,6 +160,13 @@ _ts_decorate([
     }),
     _ts_metadata("design:type", Array)
 ], product.prototype, "images", void 0);
+_ts_decorate([
+    (0, _typeorm.Column)({
+        type: 'simple-array',
+        nullable: true
+    }),
+    _ts_metadata("design:type", Array)
+], product.prototype, "productIdsCollection", void 0);
 _ts_decorate([
     (0, _typeorm.Column)({
         type: 'longtext',
@@ -235,6 +286,14 @@ _ts_decorate([
 _ts_decorate([
     (0, _typeorm.Column)({
         type: 'timestamp',
+        default: null,
+        nullable: true
+    }),
+    _ts_metadata("design:type", typeof Date === "undefined" ? Object : Date)
+], product.prototype, "datePublished", void 0);
+_ts_decorate([
+    (0, _typeorm.Column)({
+        type: 'timestamp',
         default: ()=>'CURRENT_TIMESTAMP'
     }),
     _ts_metadata("design:type", typeof Date === "undefined" ? Object : Date)
@@ -255,6 +314,14 @@ _ts_decorate([
     }),
     _ts_metadata("design:type", typeof Date === "undefined" ? Object : Date)
 ], product.prototype, "updatedAt", void 0);
+_ts_decorate([
+    (0, _typeorm.AfterLoad)(),
+    (0, _typeorm.AfterInsert)(),
+    (0, _typeorm.AfterUpdate)(),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:returntype", void 0)
+], product.prototype, "updatePublishState", null);
 _ts_decorate([
     (0, _typeorm.BeforeInsert)(),
     (0, _typeorm.BeforeUpdate)(),

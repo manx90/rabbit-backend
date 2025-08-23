@@ -13,8 +13,12 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFiles,
+  Query,
+  Req,
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
+import { Request as ExpressRequest } from 'express';
+import { ParsedQs } from 'qs';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -50,8 +54,20 @@ export class CategoryController {
   }
 
   @Get()
-  async getAllCategories(): Promise<CategoryResponseDto[]> {
-    return this.categoryService.getAllCategories();
+  async getAllCategories(
+    @Query() query: ParsedQs,
+    @Req() req: ExpressRequest,
+  ): Promise<{
+    status: string;
+    results: number;
+    total: number;
+    currentPage: number;
+    limit: number;
+    totalPages: number;
+    lastPage: number;
+    data: CategoryResponseDto[];
+  }> {
+    return this.categoryService.getAllCategories(query, req);
   }
 
   @Post()

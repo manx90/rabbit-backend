@@ -57,7 +57,7 @@ export class ProductController {
     @Req() req: Request,
   ) {
     if (!files.imgCover || !files.imgColors) {
-      throw new BadRequestException('imgCover and ImgColors must be upload!');
+      throw new BadRequestException('imgCover and imgColors must be upload!');
     }
     const poster = req.user as auth;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -110,5 +110,15 @@ export class ProductController {
   @Roles(Role.Admin, Role.SuperAdmin)
   deleteall() {
     return this.productService.deleteAll();
+  }
+
+  @Post('connectProductIds')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  connectProduct(@Body() body: { productIds: number[] }) {
+    const ProductsIds = body.productIds?.map((id) =>
+      Number(id.toString().trim()),
+    );
+    return this.productService.ConnectProduct(ProductsIds);
   }
 }

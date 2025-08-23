@@ -1,4 +1,3 @@
-// order/order.dto.ts
 "use strict";
 Object.defineProperty(exports, "__esModule", {
     value: true
@@ -50,6 +49,26 @@ _ts_decorate([
     _ts_metadata("design:type", Number)
 ], OrderItemDto.prototype, "quantity", void 0);
 let CreateOrderDto = class CreateOrderDto {
+    constructor(){
+        // Shipment
+        // @IsNotEmpty()
+        this.shipment_types = '1';
+        // // @IsNotEmpty()
+        // @IsOptional()
+        // @IsString()
+        // quantity: string;
+        // @IsNotEmpty()
+        this.items_description = '';
+        // @IsNotEmpty()
+        this.is_cod = '1';
+        // // @IsNotEmpty()
+        // @IsString()
+        // cod_amount: string;
+        // @IsNotEmpty()
+        this.has_return = '0';
+        this.return_notes = '';
+        this.notes = '';
+    }
 };
 _ts_decorate([
     (0, _classvalidator.IsString)(),
@@ -78,19 +97,12 @@ _ts_decorate([
 _ts_decorate([
     (0, _classvalidator.IsString)(),
     _ts_metadata("design:type", String)
-], CreateOrderDto.prototype, "quantity", void 0);
-_ts_decorate([
-    (0, _classvalidator.IsString)(),
-    _ts_metadata("design:type", String)
 ], CreateOrderDto.prototype, "items_description", void 0);
 _ts_decorate([
+    (0, _classvalidator.IsOptional)(),
     (0, _classvalidator.IsString)(),
     _ts_metadata("design:type", String)
 ], CreateOrderDto.prototype, "is_cod", void 0);
-_ts_decorate([
-    (0, _classvalidator.IsString)(),
-    _ts_metadata("design:type", String)
-], CreateOrderDto.prototype, "cod_amount", void 0);
 _ts_decorate([
     (0, _classvalidator.IsString)(),
     _ts_metadata("design:type", String)

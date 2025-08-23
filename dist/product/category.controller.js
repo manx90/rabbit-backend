@@ -10,6 +10,8 @@ Object.defineProperty(exports, "CategoryController", {
 });
 const _common = require("@nestjs/common");
 const _categoryservice = require("./category.service");
+const _express = require("express");
+const _qs = require("qs");
 const _jwtauthguard = require("../common/guards/jwt-auth.guard");
 const _rolesguard = require("../common/guards/roles.guard");
 const _rolesdecorator = require("../common/decorators/roles.decorator");
@@ -37,8 +39,8 @@ let CategoryController = class CategoryController {
     async getSubCategoryById(id) {
         return this.categoryService.getSubCategoryById(Number(id));
     }
-    async getAllCategories() {
-        return this.categoryService.getAllCategories();
+    async getAllCategories(query, req) {
+        return this.categoryService.getAllCategories(query, req);
     }
     async createCategory(files, dto) {
         try {
@@ -151,8 +153,13 @@ _ts_decorate([
 ], CategoryController.prototype, "getSubCategoryById", null);
 _ts_decorate([
     (0, _common.Get)(),
+    _ts_param(0, (0, _common.Query)()),
+    _ts_param(1, (0, _common.Req)()),
     _ts_metadata("design:type", Function),
-    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:paramtypes", [
+        typeof _qs.ParsedQs === "undefined" ? Object : _qs.ParsedQs,
+        typeof _express.Request === "undefined" ? Object : _express.Request
+    ]),
     _ts_metadata("design:returntype", Promise)
 ], CategoryController.prototype, "getAllCategories", null);
 _ts_decorate([

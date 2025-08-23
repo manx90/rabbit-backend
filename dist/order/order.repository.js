@@ -31,11 +31,7 @@ function _ts_param(paramIndex, decorator) {
     };
 }
 let OrderRepository = class OrderRepository {
-    /** Create and persist a new order */ /**
-   * Create and persist a new order
-   * @param dto CreateOrderDto
-   * @returns Promise<order>
-   */ async createOrder(dto) {
+    async createOrder(dto) {
         const Order = new _orderentity.order();
         // order.business = 1; // Set explicit business value
         Order.items = [];
@@ -87,7 +83,7 @@ let OrderRepository = class OrderRepository {
         Order.consignee_area = dto.consignee_area;
         Order.consignee_address = dto.consignee_address;
         Order.shipment_types = dto.shipment_types;
-        Order.quantity = dto.quantity;
+        Order.quantity = dto.items.reduce((total, item)=>total + item.quantity, 0).toString();
         Order.items_description = dto.items_description;
         Order.is_cod = dto.is_cod;
         Order.cod_amount = Order.amount.toString();
@@ -102,7 +98,7 @@ let OrderRepository = class OrderRepository {
             consignee_area: dto.consignee_area,
             consignee_address: dto.consignee_address,
             shipment_types: dto.shipment_types,
-            quantity: dto.quantity,
+            quantity: Order.quantity,
             items_description: dto.items_description,
             is_cod: dto.is_cod === '1' ? '1' : '0',
             cod_amount: Order.amount.toString(),
@@ -110,11 +106,13 @@ let OrderRepository = class OrderRepository {
             return_notes: dto.return_notes,
             notes: dto.notes
         };
-        await this.optosService.createShipment(shipmentDto);
+        await this.optosService.createShipment(shipmentDto).then((res)=>{
+            Order.optos_id = res.id;
+            Order.optos_status = res.status;
+        });
         // Update the order with the calculated amount
         return this.orderRepo.save(savedOrder);
     }
-    // update order
     async updateOrder(id, orderDto) {
         const order = await this.orderRepo.findOne({
             where: {
@@ -134,14 +132,6 @@ let OrderRepository = class OrderRepository {
         if (orderDto.items_description) order.items_description = orderDto.items_description;
         if (orderDto.return_notes) order.return_notes = orderDto.return_notes;
         if (orderDto.notes) order.notes = orderDto.notes;
-        // Safely update numeric fields
-        if (orderDto.quantity && !isNaN(Number(orderDto.quantity))) {
-            order.quantity = orderDto.quantity;
-        }
-        if (orderDto.cod_amount && !isNaN(Number(orderDto.cod_amount))) {
-            order.cod_amount = orderDto.cod_amount;
-        }
-        // Handle boolean fields represented as strings
         if (orderDto.is_cod) {
             order.is_cod = orderDto.is_cod;
         }
@@ -185,11 +175,7 @@ let OrderRepository = class OrderRepository {
         }
         return order;
     }
-    /**
-   * Update order status to processing
-   * @param id string
-   * @returns Promise<void>
-   */ async updateOrderStatusToProcessing(id) {
+    async updateOrderStatusToReadied(id) {
         const order = await this.orderRepo.findOne({
             where: {
                 id
@@ -198,32 +184,11 @@ let OrderRepository = class OrderRepository {
         if (!order) {
             throw new _common.NotFoundException(`Order ${id} not found`);
         }
-        order.status = _ordertypes.OrderStatus.PROCESSING;
+        order.status = _ordertypes.OrderStatus.READIED;
         const updatedOrder = await this.orderRepo.save(order);
         return updatedOrder;
     }
-    /**
-   * Update order status to delivered
-   * @param id string
-   * @returns Promise<void>
-   */ async updateOrderStatusToDelivered(id) {
-        const order = await this.orderRepo.findOne({
-            where: {
-                id
-            }
-        });
-        if (!order) {
-            throw new _common.NotFoundException(`Order ${id} not found`);
-        }
-        order.status = _ordertypes.OrderStatus.DELIVERED;
-        await this.orderRepo.save(order);
-        return;
-    }
-    /**
-   * Update order status to shipped
-   * @param id string
-   * @returns Promise<void>
-   */ async updateOrderStatusToShipped(id) {
+    async updateOrderStatusToShipped(id) {
         const order = await this.orderRepo.findOne({
             where: {
                 id
@@ -234,34 +199,53 @@ let OrderRepository = class OrderRepository {
         }
         order.status = _ordertypes.OrderStatus.SHIPPED;
         await this.orderRepo.save(order);
+        return;
     }
-    /**
-   * Update order status to cancelled
-   * @param id string
-   * @returns Promise<void>
-   */ async updateOrderStatusToCancelled(id) {
+    async updateOrderStatusToCancelled(id) {
         const order = await this.orderRepo.findOne({
             where: {
                 id
-            }
+            },
+            relations: [
+                'items',
+                'items.product'
+            ]
         });
         if (!order) {
             throw new _common.NotFoundException(`Order ${id} not found`);
         }
+        // Return all items to inventory before cancelling the order
+        if (order.items && order.items.length > 0) {
+            for (const item of order.items){
+                if (item.product && item.product.sizeDetails) {
+                    // Find the specific size and color combination
+                    const sizeDetail = item.product.sizeDetails.find((size)=>size.sizeName === item.sizeName);
+                    if (sizeDetail) {
+                        const colorQuantity = sizeDetail.quantities.find((colorQty)=>colorQty.colorName === item.colorName);
+                        if (colorQuantity) {
+                            // Return the quantity back to inventory
+                            colorQuantity.quantity += item.quantity;
+                        }
+                    }
+                    // Save the updated product
+                    await this.orderRepo.manager.save(item.product);
+                }
+            }
+        }
         order.status = _ordertypes.OrderStatus.CANCELLED;
         await this.orderRepo.save(order);
     }
-    /**
-   * Get all orders
-   * @returns Promise<order[]>
-   */ async getAllOrders() {
-        return this.orderRepo.find();
+    async getAllOrders() {
+        const orders = await this.orderRepo.find();
+        for (const order of orders){
+            if (order.optos_id) {
+                await this.updateOrderOptosStatus(order.optos_id);
+            }
+        }
+        const finalOrders = await this.orderRepo.find();
+        return finalOrders;
     }
-    /**
-   * Get order by id
-   * @param id string
-   * @returns Promise<order>
-   */ async getOrderById(id) {
+    async getOrderById(id) {
         const order = await this.orderRepo.findOne({
             where: {
                 id
@@ -272,22 +256,14 @@ let OrderRepository = class OrderRepository {
         }
         return order;
     }
-    /**
-   * Get orders by status
-   * @param status OrderStatus
-   * @returns Promise<order[]>
-   */ async getOrdersByStatus(status) {
+    async getOrdersByStatus(status) {
         return this.orderRepo.find({
             where: {
                 status
             }
         });
     }
-    /**
-   * Delete order
-   * @param id string
-   * @returns Promise<void>
-   */ async deleteOrder(id) {
+    async deleteOrder(id) {
         const order = await this.orderRepo.findOne({
             where: {
                 id
@@ -298,12 +274,7 @@ let OrderRepository = class OrderRepository {
         }
         await this.orderRepo.remove(order);
     }
-    /**
-   * Add ready by user to order
-   * @param id string
-   * @param readyById string
-   * @returns Promise<order>
-   */ async addReadyBy(id, readyById) {
+    async addReadyBy(id, readyById) {
         const order = await this.getOrderById(id);
         const readyBy = await this.authRepo.findOne({
             where: {
@@ -333,6 +304,29 @@ let OrderRepository = class OrderRepository {
         };
         await this.optosService.createShipment(optos);
         return this.orderRepo.save(order);
+    }
+    async updateOrderOptosStatus(optosId) {
+        const order = await this.orderRepo.findOne({
+            where: {
+                optos_id: optosId
+            }
+        });
+        if (!order) {
+            throw new _common.NotFoundException(`Order with optos_id ${optosId} not found`);
+        }
+        const res = await this.optosService.getShipment({
+            id: optosId
+        });
+        // Add null checks to prevent the error
+        if (res && res[0] && res[0].data && res[0].data[0]) {
+            console.log(res[0].data[0].status);
+            order.optos_status = res[0].data[0].status;
+        } else {
+            console.log(`No shipment data found for optos_id: ${optosId}`);
+            // You can set a default status or leave it as is
+            order.optos_status = order.optos_status || '';
+        }
+        return await this.orderRepo.save(order);
     }
     async deleteAllOrders() {
         await this.orderRepo.createQueryBuilder().delete().execute();

@@ -11,6 +11,9 @@ import {
   UpdateSubCategoryDto,
   UploadIcon,
 } from './dto/category.dto';
+import { CategoryApiFeatures } from 'src/common/utils/category-api-features';
+import { ParsedQs } from 'qs';
+import { Request as ExpressRequest } from 'express';
 
 @Injectable()
 export class CategoryService {
@@ -132,13 +135,105 @@ export class CategoryService {
     return this.subCategoryRepository.save(sub);
   }
 
-  async getAllCategories(): Promise<category[]> {
-    const categories = await this.categoryRepository.find({
-      select: ['id', 'name', 'icon', 'subCategories'],
-      relations: ['subCategories'],
-      loadEagerRelations: false,
+  /**
+   * Transform category file paths to full URLs
+   * @param categories Array of category entities
+   * @param req Express Request object
+   * @returns Categories with transformed URLs
+   */
+  private transformCategoryUrls(
+    categories: category[],
+    req: ExpressRequest,
+  ): any[] {
+    const protocol = req.protocol || 'http';
+    const host = req.get('host') || 'localhost:3000';
+    const baseUrl = `${protocol}://${host}`;
+
+    return categories.map((category) => {
+      // Create a clone of the category to avoid modifying the original
+      const transformed = Object.create(
+        Object.getPrototypeOf(category),
+        Object.getOwnPropertyDescriptors(category),
+      );
+
+      // Transform category icon URL
+      if (transformed.icon && !transformed.icon.startsWith('http')) {
+        transformed.icon = `${baseUrl}/uploads/${transformed.icon}`;
+      }
+
+      // Transform subcategory icon URLs
+      if (
+        transformed.subCategories &&
+        Array.isArray(transformed.subCategories)
+      ) {
+        transformed.subCategories = transformed.subCategories.map(
+          (subCat: any) => ({
+            ...subCat,
+            icon:
+              subCat.icon && !subCat.icon.startsWith('http')
+                ? `${baseUrl}/uploads/${subCat.icon}`
+                : subCat.icon,
+          }),
+        );
+      }
+
+      return transformed;
     });
-    return categories;
+  }
+
+  async getAllCategories(
+    query?: ParsedQs,
+    req?: ExpressRequest,
+  ): Promise<{
+    status: string;
+    results: number;
+    total: number;
+    currentPage: number;
+    limit: number;
+    totalPages: number;
+    lastPage: number;
+    data: category[];
+  }> {
+    const queryBuilder = this.categoryRepository
+      .createQueryBuilder('category')
+      .leftJoinAndSelect('category.subCategories', 'subCategory')
+      .select([
+        'category.id',
+        'category.name',
+        'category.icon',
+        'category.isActive',
+        'category.createdAt',
+        'category.updatedAt',
+        'subCategory.id',
+        'subCategory.name',
+        'subCategory.icon',
+        'subCategory.isActive',
+        'subCategory.categoryId',
+      ]);
+
+    const features = new CategoryApiFeatures(
+      queryBuilder,
+      query || {},
+      this.categoryRepository.metadata,
+    )
+      .filter()
+      .sort()
+      .paginate();
+
+    const [data, total] = await features.getManyAndCount();
+    const transformedData = req ? this.transformCategoryUrls(data, req) : data;
+    const pagination = features.getPaginationInfo();
+
+    return {
+      status: 'success',
+      results: transformedData.length,
+      total,
+      currentPage: pagination.page,
+      limit: pagination.limit,
+      totalPages: Math.ceil(total / pagination.limit),
+      lastPage: Math.ceil(total / pagination.limit),
+      data: transformedData,
+    };
   }
 
   async getCategoryById(id: number): Promise<category> {

@@ -7,12 +7,13 @@ import {
   ManyToOne,
   BeforeInsert,
   BeforeUpdate,
-  // JoinColumn,
+  AfterLoad,
 } from 'typeorm';
 import { OrderStatus } from './order.types';
 import { auth } from 'src/auth/entities/auth.entity';
 import { product } from 'src/product/entities/product.entity';
 import { Exclude } from 'class-transformer';
+import { OptosShipmentService } from 'src/optos/optos.shipment.service';
 
 @Entity()
 export class order {
@@ -77,14 +78,13 @@ export class order {
   @OneToMany(() => orderitem, (item) => item.order, {
     cascade: true,
     eager: true,
+    onDelete: 'CASCADE',
   })
   items: orderitem[];
 
   @ManyToOne(() => auth, {
     nullable: true,
   })
-  // @JoinColumn({ name: 'readyBy', referencedColumnName: 'id' })
-  // readyBy: auth;
   @CreateDateColumn()
   createdAt: Date;
 
@@ -103,11 +103,11 @@ export class order {
     }
   }
 
-  // @UpdateDateColumn()
-  // updatedAt: Date;
-  // @ManyToOne('Auth', { onDelete: 'SET NULL' })
-  // @JoinColumn({ name: 'readyBy' })
-  // readyBy: any; // Type as any to avoid circular dependency issues
+  @Column({ type: 'numeric', nullable: true })
+  optos_id: number;
+
+  @Column({ type: 'varchar', nullable: true })
+  optos_status: string;
 }
 
 @Entity()
@@ -115,7 +115,9 @@ export class orderitem {
   @PrimaryGeneratedColumn()
   id: string;
 
-  @ManyToOne(() => order, (order) => order.items)
+  @ManyToOne(() => order, (order) => order.items, {
+    onDelete: 'CASCADE',
+  })
   @Exclude()
   order: order;
 

@@ -38,7 +38,7 @@ let ProductController = class ProductController {
     }
     async createProduct(createProductDto, files, req) {
         if (!files.imgCover || !files.imgColors) {
-            throw new _common.BadRequestException('imgCover and ImgColors must be upload!');
+            throw new _common.BadRequestException('imgCover and imgColors must be upload!');
         }
         const poster = req.user;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -55,6 +55,11 @@ let ProductController = class ProductController {
     }
     deleteall() {
         return this.productService.deleteAll();
+    }
+    connectProduct(body) {
+        var _body_productIds;
+        const ProductsIds = (_body_productIds = body.productIds) === null || _body_productIds === void 0 ? void 0 : _body_productIds.map((id)=>Number(id.toString().trim()));
+        return this.productService.ConnectProduct(ProductsIds);
     }
     constructor(productService){
         this.productService = productService;
@@ -173,6 +178,17 @@ _ts_decorate([
     _ts_metadata("design:paramtypes", []),
     _ts_metadata("design:returntype", void 0)
 ], ProductController.prototype, "deleteall", null);
+_ts_decorate([
+    (0, _common.Post)('connectProductIds'),
+    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
+    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    _ts_param(0, (0, _common.Body)()),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        Object
+    ]),
+    _ts_metadata("design:returntype", void 0)
+], ProductController.prototype, "connectProduct", null);
 ProductController = _ts_decorate([
     (0, _common.Controller)('product'),
     _ts_metadata("design:type", Function),

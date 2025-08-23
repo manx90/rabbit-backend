@@ -1,7 +1,7 @@
 import { ObjectLiteral, SelectQueryBuilder, EntityMetadata } from 'typeorm';
 import { ParsedQs } from 'qs';
 
-export class ApiFeatures<T extends ObjectLiteral> {
+export class CategoryApiFeatures<T extends ObjectLiteral> {
   /**
    * Returns the current pagination information
    * @returns Object containing page and limit
@@ -12,6 +12,7 @@ export class ApiFeatures<T extends ObjectLiteral> {
       limit: this.limit,
     };
   }
+
   private page: number;
   private limit: number;
   private skip: number;
@@ -29,6 +30,7 @@ export class ApiFeatures<T extends ObjectLiteral> {
   }
 
   filter(): this {
+    // Search query for category name and description
     if (this.queryString.q) {
       const q = (this.queryString.q as string).toLowerCase();
       const words = q.split(/\s+/).filter((word) => word.length >= 1);
@@ -37,16 +39,14 @@ export class ApiFeatures<T extends ObjectLiteral> {
         const params: Record<string, string | number> = {};
         words.forEach((word, idx) => {
           const param = `qword${idx}`;
-          orConditions.push(`LOWER(product.name) LIKE :${param}`);
           orConditions.push(`LOWER(category.name) LIKE :${param}`);
           orConditions.push(`LOWER(subCategory.name) LIKE :${param}`);
-          orConditions.push(`LOWER(product.description) LIKE :${param}`);
 
           // Only add ID comparison if the word is a valid number
           const numericValue = Number(word);
           if (!isNaN(numericValue) && Number.isInteger(numericValue)) {
             const idParam = `id${idx}`;
-            orConditions.push(`product.id = :${idParam}`);
+            orConditions.push(`category.id = :${idParam}`);
             params[idParam] = numericValue.toString();
           }
 
@@ -58,65 +58,39 @@ export class ApiFeatures<T extends ObjectLiteral> {
       }
     }
 
-    // Special query for category name or id
-    if (this.queryString.category) {
-      const categoryValue = this.queryString.category as string;
-      if (!isNaN(Number(categoryValue))) {
-        // If category is a number, filter by categoryId
-        this.queryBuilder.andWhere('product.categoryId = :categoryId', {
-          categoryId: Number(categoryValue),
-        });
-      } else {
-        // Otherwise, filter by name
-        const category = categoryValue.toLowerCase();
-        this.queryBuilder.andWhere('LOWER(category.name) = :category', {
-          category,
-        });
-      }
-    }
-    if (this.queryString.subCategory) {
-      const subCategoryValue = this.queryString.subCategory as string;
-      if (!isNaN(Number(subCategoryValue))) {
-        this.queryBuilder.andWhere('product.subCategoryId = :subCategoryId', {
-          subCategoryId: Number(subCategoryValue),
-        });
-      } else {
-        const subCategory = subCategoryValue.toLowerCase();
-        this.queryBuilder.andWhere('LOWER(subCategory.name) = :subCategory', {
-          subCategory,
-        });
-      }
-    }
-    // Fetch products that belong to a specific category and a specific subcategory under that category
-    if (
-      this.queryString.category &&
-      this.queryString.subcategory &&
-      !isNaN(Number(this.queryString.category)) &&
-      !isNaN(Number(this.queryString.subcategory))
-    ) {
-      this.queryBuilder.andWhere(
-        'product.categoryId = :categoryId AND product.subcategoryId = :subcategoryId AND subcategory.categoryId = :categoryId',
-        {
-          categoryId: Number(this.queryString.category),
-          subcategoryId: Number(this.queryString.subcategory),
-        },
-      );
-    }
-    if (this.queryString.id) {
-      const productId = Number(this.queryString.id);
-      if (!isNaN(productId)) {
-        this.queryBuilder.andWhere('product.id = :productId', { productId });
-      }
-    }
-    if (this.queryString.productName) {
-      const productName = (
-        this.queryString.productName as string
-      ).toLowerCase();
-      this.queryBuilder.andWhere('LOWER(product.name) LIKE :productName', {
-        productName: `%${productName}%`,
+    // Filter by category name
+    if (this.queryString.name) {
+      const categoryName = (this.queryString.name as string).toLowerCase();
+      this.queryBuilder.andWhere('LOWER(category.name) LIKE :categoryName', {
+        categoryName: `%${categoryName}%`,
       });
     }
 
+    // Filter by category ID
+    if (this.queryString.id) {
+      const categoryId = Number(this.queryString.id);
+      if (!isNaN(categoryId)) {
+        this.queryBuilder.andWhere('category.id = :categoryId', { categoryId });
+      }
+    }
+
+    // Filter by active status
+    if (this.queryString.isActive !== undefined) {
+      const isActive = this.queryString.isActive === 'true';
+      this.queryBuilder.andWhere('category.isActive = :isActive', { isActive });
+    }
+
+    // Filter by having subcategories
+    if (this.queryString.hasSubCategories !== undefined) {
+      const hasSubCategories = this.queryString.hasSubCategories === 'true';
+      if (hasSubCategories) {
+        this.queryBuilder.andWhere('subCategory.id IS NOT NULL');
+      } else {
+        this.queryBuilder.andWhere('subCategory.id IS NULL');
+      }
+    }
+
+    // Handle other filters
     const queryObj = { ...this.queryString };
     const excludedFields = [
       'page',
@@ -124,11 +98,10 @@ export class ApiFeatures<T extends ObjectLiteral> {
       'limit',
       'fields',
       'q',
-      'category',
-      'subCategory',
-      'categoryId',
-      'subCategoryId',
+      'name',
       'id',
+      'isActive',
+      'hasSubCategories',
     ];
     excludedFields.forEach((el) => delete queryObj[el]);
 
@@ -151,7 +124,7 @@ export class ApiFeatures<T extends ObjectLiteral> {
           switch (operator) {
             case '$gte':
               this.queryBuilder.andWhere(
-                `product.${column.propertyName} >= :${key}Gte`,
+                `category.${column.propertyName} >= :${key}Gte`,
                 {
                   [`${key}Gte`]: operatorValue,
                 },
@@ -159,7 +132,7 @@ export class ApiFeatures<T extends ObjectLiteral> {
               break;
             case '$gt':
               this.queryBuilder.andWhere(
-                `product.${column.propertyName} > :${key}Gt`,
+                `category.${column.propertyName} > :${key}Gt`,
                 {
                   [`${key}Gt`]: operatorValue,
                 },
@@ -167,7 +140,7 @@ export class ApiFeatures<T extends ObjectLiteral> {
               break;
             case '$lte':
               this.queryBuilder.andWhere(
-                `product.${column.propertyName} <= :${key}Lte`,
+                `category.${column.propertyName} <= :${key}Lte`,
                 {
                   [`${key}Lte`]: operatorValue,
                 },
@@ -175,7 +148,7 @@ export class ApiFeatures<T extends ObjectLiteral> {
               break;
             case '$lt':
               this.queryBuilder.andWhere(
-                `product.${column.propertyName} < :${key}Lt`,
+                `category.${column.propertyName} < :${key}Lt`,
                 {
                   [`${key}Lt`]: operatorValue,
                 },
@@ -183,7 +156,7 @@ export class ApiFeatures<T extends ObjectLiteral> {
               break;
             case '$ne':
               this.queryBuilder.andWhere(
-                `product.${column.propertyName} != :${key}Ne`,
+                `category.${column.propertyName} != :${key}Ne`,
                 {
                   [`${key}Ne`]: operatorValue,
                 },
@@ -192,9 +165,12 @@ export class ApiFeatures<T extends ObjectLiteral> {
           }
         });
       } else {
-        this.queryBuilder.andWhere(`product.${column.propertyName} = :${key}`, {
-          [key]: value,
-        });
+        this.queryBuilder.andWhere(
+          `category.${column.propertyName} = :${key}`,
+          {
+            [key]: value,
+          },
+        );
       }
     });
 
@@ -214,7 +190,7 @@ export class ApiFeatures<T extends ObjectLiteral> {
             (col) => col.propertyName === actualField,
           );
           if (column) {
-            return `${column.propertyPath} ${direction}`;
+            return `category.${column.propertyName} ${direction}`;
           }
           return null;
         })
@@ -225,11 +201,12 @@ export class ApiFeatures<T extends ObjectLiteral> {
         this.queryBuilder.orderBy(sortBy);
       }
     } else {
+      // Default sort by createdAt
       const createdAtCol = this.entityMetadata.columns.find(
         (col) => col.propertyName === 'createdAt',
       );
       if (createdAtCol) {
-        this.queryBuilder.orderBy('product.createdAt', 'DESC');
+        this.queryBuilder.orderBy('category.createdAt', 'DESC');
       }
     }
 
@@ -244,12 +221,22 @@ export class ApiFeatures<T extends ObjectLiteral> {
           const column = this.entityMetadata.columns.find(
             (col) => col.propertyName === field,
           );
-          return column ? column.propertyPath : null;
+          return column ? `category.${column.propertyName}` : null;
         })
         .filter(Boolean);
-      if (!fields.includes(`${this.entityMetadata.name}.id`)) {
-        fields.unshift(`${this.entityMetadata.name}.id`);
+
+      // Always include id and basic relations
+      if (!fields.includes('category.id')) {
+        fields.unshift('category.id');
       }
+
+      // Add subcategory fields if we have them
+      fields.push(
+        'subCategory.id',
+        'subCategory.name',
+        'subCategory.icon',
+        'subCategory.isActive',
+      );
 
       this.queryBuilder.select(fields as string[]);
     }

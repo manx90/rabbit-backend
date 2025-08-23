@@ -68,7 +68,6 @@ export class OptosShipmentService {
   async getShipment(query: Record<string, any> = {}) {
     try {
       const access_token = await this.OptosService.Login();
-
       // Build query string from the query object
       const params = new URLSearchParams(query).toString();
       const url = `https://opost.ps/api/resources/shipments${params ? '?' + params : ''}`;

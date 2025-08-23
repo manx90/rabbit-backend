@@ -28,12 +28,8 @@ export class OrderService {
     return this.orderRepository.deleteOrder(id);
   }
 
-  updateOrderStatusToProcessing(id: string): Promise<any> {
-    return this.orderRepository.updateOrderStatusToProcessing(id);
-  }
-
-  updateOrderStatusToDelivered(id: string): Promise<void> {
-    return this.orderRepository.updateOrderStatusToDelivered(id);
+  updateOrderStatusToReadied(id: string): Promise<any> {
+    return this.orderRepository.updateOrderStatusToReadied(id);
   }
 
   updateOrderStatusToShipped(id: string): Promise<void> {

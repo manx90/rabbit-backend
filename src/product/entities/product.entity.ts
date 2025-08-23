@@ -6,7 +6,9 @@ import {
   BeforeInsert,
   JoinColumn,
   BeforeUpdate,
-  // OneToOne,
+  AfterInsert,
+  AfterLoad,
+  AfterUpdate,
 } from 'typeorm';
 import { subCategory, category } from './Category.entity';
 import {
@@ -15,6 +17,7 @@ import {
   ColorDetail,
 } from '../../common/interfaces/entity.interface';
 import { auth } from 'src/auth/entities/auth.entity';
+import { Transform } from 'class-transformer';
 
 export interface ProductResponse {
   id: number;
@@ -27,6 +30,13 @@ export interface ProductResponse {
   PosterAt: Date | null;
 }
 
+export enum Season {
+  winter = 'winter',
+  summer = 'summer',
+  spring_autumn = 'spring_autumn',
+  all = 'all',
+}
+
 @Entity()
 export class product {
   @PrimaryGeneratedColumn()
@@ -35,11 +45,37 @@ export class product {
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
+  @Column({
+    type: 'enum',
+    enum: Season,
+    default: Season.all,
+    nullable: true,
+  })
+  season: Season;
+
+  // Input as comma-separated string values, e.g., "fashion,clothing,trendy,stylish"
+  // Each value will be automatically trimmed of whitespace
+  @Column({
+    type: 'simple-array',
+    nullable: true,
+  })
+  @Transform(({ value }) => {
+    const newVal = value?.map((item) => item.trim());
+    return newVal;
+  })
+  wordKeys: string[];
+
+  @Column({ type: 'longtext', nullable: true })
+  videoLink: string;
+
   @Column({ type: 'text', nullable: true })
   description: string;
 
   @Column({ type: 'json', nullable: true })
   images: string[];
+
+  @Column({ type: 'simple-array', nullable: true })
+  productIdsCollection: number[];
 
   @Column({ type: 'longtext', nullable: true })
   imgCover: string;
@@ -98,6 +134,13 @@ export class product {
   @Column({ type: 'int', default: 0 })
   sales: number;
 
+  @Column({
+    type: 'timestamp',
+    default: null,
+    nullable: true,
+  })
+  datePublished: Date;
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
@@ -155,14 +198,17 @@ export class product {
       .map((size) => size.sizeName);
   }
 
-  /**
-   * Before insert hook - set isActive based on publishState
-  //  */
-  // @BeforeInsert()
-  // @BeforeUpdate()
-  // setActiveStatus() {
-  //   this.isActive = this.publishState === PublishState.PUBLISHED;
-  // }
+  // schedule publish
+  @AfterLoad()
+  @AfterInsert()
+  @AfterUpdate()
+  updatePublishState() {
+    if (this.datePublished && this.datePublished > new Date()) {
+      this.publishState = PublishState.DRAFT;
+    } else {
+      this.publishState = PublishState.PUBLISHED;
+    }
+  }
 
   /**
    * Before insert hook - validate size details

@@ -15,7 +15,6 @@ import { OrderStatus } from './order.types';
 import { auth } from 'src/auth/entities/auth.entity';
 import { OptosShipmentService } from 'src/optos/optos.shipment.service';
 import { CreateShipmentDto } from 'src/optos/optos.dto';
-// import { OrderStatus } from './order.types';
 
 @Injectable()
 export class OrderRepository {
@@ -29,12 +28,6 @@ export class OrderRepository {
     private readonly optosService: OptosShipmentService,
   ) {}
 
-  /** Create and persist a new order */
-  /**
-   * Create and persist a new order
-   * @param dto CreateOrderDto
-   * @returns Promise<order>
-   */
   async createOrder(dto: CreateOrderDto): Promise<order> {
     const Order = new order();
     // order.business = 1; // Set explicit business value
@@ -103,7 +96,9 @@ export class OrderRepository {
     Order.consignee_area = dto.consignee_area;
     Order.consignee_address = dto.consignee_address;
     Order.shipment_types = dto.shipment_types;
-    Order.quantity = dto.quantity;
+    Order.quantity = dto.items
+      .reduce((total, item) => total + item.quantity, 0)
+      .toString();
     Order.items_description = dto.items_description;
     Order.is_cod = dto.is_cod;
     Order.cod_amount = Order.amount.toString();
@@ -119,7 +114,7 @@ export class OrderRepository {
       consignee_area: dto.consignee_area,
       consignee_address: dto.consignee_address,
       shipment_types: dto.shipment_types,
-      quantity: dto.quantity,
+      quantity: Order.quantity,
       items_description: dto.items_description,
       is_cod: dto.is_cod === '1' ? '1' : '0',
       cod_amount: Order.amount.toString(),
@@ -127,11 +122,13 @@ export class OrderRepository {
       return_notes: dto.return_notes,
       notes: dto.notes,
     };
-    await this.optosService.createShipment(shipmentDto);
+    await this.optosService.createShipment(shipmentDto).then((res) => {
+      Order.optos_id = res.id;
+      Order.optos_status = res.status;
+    });
     // Update the order with the calculated amount
     return this.orderRepo.save(savedOrder);
   }
-  // update order
   async updateOrder(id: string, orderDto: UpdateOrderDto): Promise<order> {
     const order = await this.orderRepo.findOne({ where: { id } });
     if (!order) {
@@ -152,16 +149,6 @@ export class OrderRepository {
     if (orderDto.return_notes) order.return_notes = orderDto.return_notes;
     if (orderDto.notes) order.notes = orderDto.notes;
 
-    // Safely update numeric fields
-    if (orderDto.quantity && !isNaN(Number(orderDto.quantity))) {
-      order.quantity = orderDto.quantity;
-    }
-
-    if (orderDto.cod_amount && !isNaN(Number(orderDto.cod_amount))) {
-      order.cod_amount = orderDto.cod_amount;
-    }
-
-    // Handle boolean fields represented as strings
     if (orderDto.is_cod) {
       order.is_cod = orderDto.is_cod;
     }
@@ -214,41 +201,17 @@ export class OrderRepository {
     }
     return order;
   }
-  /**
-   * Update order status to processing
-   * @param id string
-   * @returns Promise<void>
-   */
-  async updateOrderStatusToProcessing(id: string): Promise<order> {
+
+  async updateOrderStatusToReadied(id: string): Promise<order> {
     const order = await this.orderRepo.findOne({ where: { id } });
     if (!order) {
       throw new NotFoundException(`Order ${id} not found`);
     }
-    order.status = OrderStatus.PROCESSING;
+    order.status = OrderStatus.READIED;
     const updatedOrder = await this.orderRepo.save(order);
     return updatedOrder;
   }
 
-  /**
-   * Update order status to delivered
-   * @param id string
-   * @returns Promise<void>
-   */
-  async updateOrderStatusToDelivered(id: string): Promise<void> {
-    const order = await this.orderRepo.findOne({ where: { id } });
-    if (!order) {
-      throw new NotFoundException(`Order ${id} not found`);
-    }
-    order.status = OrderStatus.DELIVERED;
-    await this.orderRepo.save(order);
-    return;
-  }
-
-  /**
-   * Update order status to shipped
-   * @param id string
-   * @returns Promise<void>
-   */
   async updateOrderStatusToShipped(id: string): Promise<void> {
     const order = await this.orderRepo.findOne({ where: { id } });
     if (!order) {
@@ -256,35 +219,60 @@ export class OrderRepository {
     }
     order.status = OrderStatus.SHIPPED;
     await this.orderRepo.save(order);
+    return;
   }
 
-  /**
-   * Update order status to cancelled
-   * @param id string
-   * @returns Promise<void>
-   */
   async updateOrderStatusToCancelled(id: string): Promise<void> {
-    const order = await this.orderRepo.findOne({ where: { id } });
+    const order = await this.orderRepo.findOne({
+      where: { id },
+      relations: ['items', 'items.product'],
+    });
+
     if (!order) {
       throw new NotFoundException(`Order ${id} not found`);
     }
+
+    // Return all items to inventory before cancelling the order
+    if (order.items && order.items.length > 0) {
+      for (const item of order.items) {
+        if (item.product && item.product.sizeDetails) {
+          // Find the specific size and color combination
+          const sizeDetail = item.product.sizeDetails.find(
+            (size) => size.sizeName === item.sizeName,
+          );
+
+          if (sizeDetail) {
+            const colorQuantity = sizeDetail.quantities.find(
+              (colorQty) => colorQty.colorName === item.colorName,
+            );
+
+            if (colorQuantity) {
+              // Return the quantity back to inventory
+              colorQuantity.quantity += item.quantity;
+            }
+          }
+
+          // Save the updated product
+          await this.orderRepo.manager.save(item.product);
+        }
+      }
+    }
+
     order.status = OrderStatus.CANCELLED;
     await this.orderRepo.save(order);
   }
 
-  /**
-   * Get all orders
-   * @returns Promise<order[]>
-   */
   async getAllOrders(): Promise<order[]> {
-    return this.orderRepo.find();
+    const orders = await this.orderRepo.find();
+    for (const order of orders) {
+      if (order.optos_id) {
+        await this.updateOrderOptosStatus(order.optos_id);
+      }
+    }
+    const finalOrders = await this.orderRepo.find();
+    return finalOrders;
   }
 
-  /**
-   * Get order by id
-   * @param id string
-   * @returns Promise<order>
-   */
   async getOrderById(id: string): Promise<order> {
     const order = await this.orderRepo.findOne({ where: { id } });
     if (!order) {
@@ -293,20 +281,10 @@ export class OrderRepository {
     return order;
   }
 
-  /**
-   * Get orders by status
-   * @param status OrderStatus
-   * @returns Promise<order[]>
-   */
   async getOrdersByStatus(status: OrderStatus): Promise<order[]> {
     return this.orderRepo.find({ where: { status } });
   }
 
-  /**
-   * Delete order
-   * @param id string
-   * @returns Promise<void>
-   */
   async deleteOrder(id: string): Promise<void> {
     const order = await this.orderRepo.findOne({ where: { id } });
     if (!order) {
@@ -315,12 +293,6 @@ export class OrderRepository {
     await this.orderRepo.remove(order);
   }
 
-  /**
-   * Add ready by user to order
-   * @param id string
-   * @param readyById string
-   * @returns Promise<order>
-   */
   async addReadyBy(id: string, readyById: string): Promise<order> {
     const order = await this.getOrderById(id);
     const readyBy = await this.authRepo.findOne({ where: { id: readyById } });
@@ -347,6 +319,28 @@ export class OrderRepository {
     };
     await this.optosService.createShipment(optos);
     return this.orderRepo.save(order);
+  }
+
+  async updateOrderOptosStatus(optosId: number): Promise<order> {
+    const order = await this.orderRepo.findOne({
+      where: { optos_id: optosId },
+    });
+    if (!order) {
+      throw new NotFoundException(`Order with optos_id ${optosId} not found`);
+    }
+    const res = await this.optosService.getShipment({ id: optosId });
+
+    // Add null checks to prevent the error
+    if (res && res[0] && res[0].data && res[0].data[0]) {
+      console.log(res[0].data[0].status);
+      order.optos_status = res[0].data[0].status;
+    } else {
+      console.log(`No shipment data found for optos_id: ${optosId}`);
+      // You can set a default status or leave it as is
+      order.optos_status = order.optos_status || '';
+    }
+
+    return await this.orderRepo.save(order);
   }
 
   async deleteAllOrders(): Promise<void> {

@@ -14,6 +14,59 @@ const _typeorm1 = require("typeorm");
 const _productentity = require("./entities/product.entity");
 const _Categoryentity = require("./entities/Category.entity");
 const _filestorageservice = require("../file-storage/file-storage.service");
+const _categoryapifeatures = require("../common/utils/category-api-features");
+function _define_property(obj, key, value) {
+    if (key in obj) {
+        Object.defineProperty(obj, key, {
+            value: value,
+            enumerable: true,
+            configurable: true,
+            writable: true
+        });
+    } else {
+        obj[key] = value;
+    }
+    return obj;
+}
+function _object_spread(target) {
+    for(var i = 1; i < arguments.length; i++){
+        var source = arguments[i] != null ? arguments[i] : {};
+        var ownKeys = Object.keys(source);
+        if (typeof Object.getOwnPropertySymbols === "function") {
+            ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function(sym) {
+                return Object.getOwnPropertyDescriptor(source, sym).enumerable;
+            }));
+        }
+        ownKeys.forEach(function(key) {
+            _define_property(target, key, source[key]);
+        });
+    }
+    return target;
+}
+function ownKeys(object, enumerableOnly) {
+    var keys = Object.keys(object);
+    if (Object.getOwnPropertySymbols) {
+        var symbols = Object.getOwnPropertySymbols(object);
+        if (enumerableOnly) {
+            symbols = symbols.filter(function(sym) {
+                return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+            });
+        }
+        keys.push.apply(keys, symbols);
+    }
+    return keys;
+}
+function _object_spread_props(target, source) {
+    source = source != null ? source : {};
+    if (Object.getOwnPropertyDescriptors) {
+        Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+    } else {
+        ownKeys(Object(source)).forEach(function(key) {
+            Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+        });
+    }
+    return target;
+}
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -110,20 +163,59 @@ let CategoryService = class CategoryService {
         });
         return this.subCategoryRepository.save(sub);
     }
-    async getAllCategories() {
-        const categories = await this.categoryRepository.find({
-            select: [
-                'id',
-                'name',
-                'icon',
-                'subCategories'
-            ],
-            relations: [
-                'subCategories'
-            ],
-            loadEagerRelations: false
+    /**
+   * Transform category file paths to full URLs
+   * @param categories Array of category entities
+   * @param req Express Request object
+   * @returns Categories with transformed URLs
+   */ transformCategoryUrls(categories, req) {
+        const protocol = req.protocol || 'http';
+        const host = req.get('host') || 'localhost:3000';
+        const baseUrl = `${protocol}://${host}`;
+        return categories.map((category)=>{
+            // Create a clone of the category to avoid modifying the original
+            const transformed = Object.create(Object.getPrototypeOf(category), Object.getOwnPropertyDescriptors(category));
+            // Transform category icon URL
+            if (transformed.icon && !transformed.icon.startsWith('http')) {
+                transformed.icon = `${baseUrl}/uploads/${transformed.icon}`;
+            }
+            // Transform subcategory icon URLs
+            if (transformed.subCategories && Array.isArray(transformed.subCategories)) {
+                transformed.subCategories = transformed.subCategories.map((subCat)=>_object_spread_props(_object_spread({}, subCat), {
+                        icon: subCat.icon && !subCat.icon.startsWith('http') ? `${baseUrl}/uploads/${subCat.icon}` : subCat.icon
+                    }));
+            }
+            return transformed;
         });
-        return categories;
+    }
+    async getAllCategories(query, req) {
+        const queryBuilder = this.categoryRepository.createQueryBuilder('category').leftJoinAndSelect('category.subCategories', 'subCategory').select([
+            'category.id',
+            'category.name',
+            'category.icon',
+            'category.isActive',
+            'category.createdAt',
+            'category.updatedAt',
+            'subCategory.id',
+            'subCategory.name',
+            'subCategory.icon',
+            'subCategory.isActive',
+            'subCategory.categoryId'
+        ]);
+        const features = new _categoryapifeatures.CategoryApiFeatures(queryBuilder, query || {}, this.categoryRepository.metadata).filter().sort().paginate();
+        const [data, total] = await features.getManyAndCount();
+        const transformedData = req ? this.transformCategoryUrls(data, req) : data;
+        const pagination = features.getPaginationInfo();
+        return {
+            status: 'success',
+            results: transformedData.length,
+            total,
+            currentPage: pagination.page,
+            limit: pagination.limit,
+            totalPages: Math.ceil(total / pagination.limit),
+            lastPage: Math.ceil(total / pagination.limit),
+            data: transformedData
+        };
     }
     async getCategoryById(id) {
         const category = await this.categoryRepository.findOne({
