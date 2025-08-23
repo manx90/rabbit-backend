@@ -26,6 +26,7 @@ export interface OptimizationResult {
 @Injectable()
 export class ImageOptimizationService {
   private readonly logger = new Logger(ImageOptimizationService.name);
+  private readonly isProduction = process.env.NODE_ENV === 'production';
   private readonly defaultOptions: OptimizationOptions = {
     quality: 50, // Default quality (will be overridden based on file size)
     format: 'jpeg',
@@ -40,6 +41,22 @@ export class ImageOptimizationService {
     outputPath?: string,
     options: OptimizationOptions = {},
   ): Promise<OptimizationResult> {
+    // In production mode, skip heavy optimization to save memory
+    if (this.isProduction) {
+      this.logger.log(
+        `Skipping image optimization in production mode for: ${inputPath}`,
+      );
+      return {
+        originalSize: 0,
+        optimizedSize: 0,
+        reductionPercentage: 0,
+        originalPath: inputPath,
+        optimizedPath: inputPath,
+        backupPath: inputPath,
+        success: true,
+      };
+    }
+
     // Start with default options
     const opts = { ...this.defaultOptions, ...options };
 

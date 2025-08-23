@@ -18,7 +18,7 @@ import { FileStorageModule } from './file-storage/file-storage.module';
       useFactory: (config: AppConfigService) => ({
         global: true,
         secret: config.jwtAccessToken,
-        signOptions: { expiresIn:config.jwtExpiration },
+        signOptions: { expiresIn: config.jwtExpiration },
       }),
     }),
     TypeOrmModule.forRootAsync({
@@ -32,8 +32,19 @@ import { FileStorageModule } from './file-storage/file-storage.module';
         password: config.pass,
         database: config.db,
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
+        synchronize: process.env.NODE_ENV !== 'production', // Disable in production
         migrationsRun: true,
+        // Memory optimization for cPanel
+        extra: {
+          connectionLimit: process.env.NODE_ENV === 'production' ? 3 : 10,
+          acquireTimeout: 60000,
+          timeout: 60000,
+          // Reduce memory usage
+          maxIdle: 10000,
+          idleTimeout: 60000,
+        },
+        // Disable logging in production to save memory
+        logging: process.env.NODE_ENV !== 'production',
       }),
     }),
     AuthModule,

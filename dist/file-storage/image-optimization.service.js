@@ -96,6 +96,19 @@ let ImageOptimizationService = class ImageOptimizationService {
     /**
    * Optimize a single image file
    */ async optimizeImage(inputPath, outputPath, options = {}) {
+        // In production mode, skip heavy optimization to save memory
+        if (this.isProduction) {
+            this.logger.log(`Skipping image optimization in production mode for: ${inputPath}`);
+            return {
+                originalSize: 0,
+                optimizedSize: 0,
+                reductionPercentage: 0,
+                originalPath: inputPath,
+                optimizedPath: inputPath,
+                backupPath: inputPath,
+                success: true
+            };
+        }
         // Start with default options
         const opts = _object_spread({}, this.defaultOptions, options);
         // Create backup path - preserve directory structure
@@ -329,6 +342,7 @@ let ImageOptimizationService = class ImageOptimizationService {
     }
     constructor(){
         this.logger = new _common.Logger(ImageOptimizationService.name);
+        this.isProduction = process.env.NODE_ENV === 'production';
         this.defaultOptions = {
             quality: 50,
             format: 'jpeg',
