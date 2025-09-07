@@ -27,7 +27,8 @@
     "logs:app": "node scripts/view-logs.js view app",
     "logs:debug": "node scripts/view-logs.js view debug",
     "logs:tail": "node scripts/view-logs.js tail app 50",
-    "logs:clear": "node scripts/view-logs.js clear"
+    "logs:clear": "node scripts/view-logs.js clear",
+    "db:fix": "node scripts/fix-database.js"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.0",
