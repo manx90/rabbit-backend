@@ -37,6 +37,10 @@ let ProductController = class ProductController {
     async getAllProducts(req) {
         return await this.productcrud.getAllProducts(req.query);
     }
+    // @Get()
+    // async getAllProducts(@Req() req: Request) {
+    //   return await this.productcrud.getAllProducts(req.query, req);
+    // }
     async createProduct(createProductDto, files, req) {
         if (!files.imgCover || !files.imgColors) {
             throw new _common.BadRequestException('imgCover and imgColors must be upload!');

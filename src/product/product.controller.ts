@@ -35,6 +35,10 @@ export class ProductController {
   async getAllProducts(@Req() req: Request) {
     return await this.productcrud.getAllProducts(req.query);
   }
+  // @Get()
+  // async getAllProducts(@Req() req: Request) {
+  //   return await this.productcrud.getAllProducts(req.query, req);
+  // }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
