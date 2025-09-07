@@ -15,6 +15,7 @@ const _entityinterface = require("../common/interfaces/entity.interface");
 const _apifeatures = require("../common/utils/api-features");
 const _typeorm1 = require("typeorm");
 const _filestorageservice = require("../file-storage/file-storage.service");
+const _loggerservice = require("../common/utils/logger.service");
 const _Categoryentity = require("./entities/Category.entity");
 const _productentity = require("./entities/product.entity");
 function _define_property(obj, key, value) {
@@ -164,7 +165,7 @@ let ProductCrud = class ProductCrud {
     }
     /** ----------  Get All Products  ---------- */ async getAllProducts(query, req) {
         try {
-            console.log('Starting getAllProducts with query:', query);
+            this.logger.debug(`Starting getAllProducts with query: ${JSON.stringify(query)}`, 'ProductCrud');
             const queryBuilder = this.productRepo.createQueryBuilder('product').leftJoinAndSelect('product.category', 'category').leftJoinAndSelect('product.subCategory', 'subCategory').leftJoinAndSelect('product.poster', 'auth').select([
                 'product',
                 'category.id',
@@ -173,13 +174,16 @@ let ProductCrud = class ProductCrud {
                 'subCategory.id',
                 'auth.username'
             ]);
-            console.log('Query builder created successfully');
+            this.logger.debug('Query builder created successfully', 'ProductCrud');
             const features = new _apifeatures.ApiFeatures(queryBuilder, query || {}, this.productRepo.metadata).filter().sort().paginate();
-            console.log('ApiFeatures applied successfully');
+            this.logger.debug('ApiFeatures applied successfully', 'ProductCrud');
+            this.logger.logDatabaseOperation('SELECT', 'product', {
+                query: query
+            }, 'ProductCrud');
             const [data, total] = await features.getManyAndCount();
-            console.log(`Query executed successfully. Found ${data.length} products, total: ${total}`);
+            this.logger.info(`Query executed successfully. Found ${data.length} products, total: ${total}`, 'ProductCrud');
             const transformedData = req ? this.transformProductUrls(data, req) : data;
-            console.log('Data transformation completed');
+            this.logger.debug('Data transformation completed', 'ProductCrud');
             const pagination = features.getPaginationInfo();
             const result = {
                 status: 'success',
@@ -191,17 +195,18 @@ let ProductCrud = class ProductCrud {
                 lastPage: Math.ceil(total / pagination.limit),
                 data: transformedData
             };
-            console.log('Returning result:', {
+            this.logger.debug(`Returning result: ${JSON.stringify({
                 status: result.status,
                 results: result.results,
                 total: result.total,
                 currentPage: result.currentPage,
                 limit: result.limit
-            });
+            })}`, 'ProductCrud');
             return result;
         } catch (error) {
-            console.error('Error in getAllProducts:', error);
-            console.error('Error stack:', error.stack);
+            this.logger.logError(error, 'ProductCrud', {
+                query: query
+            });
             throw error;
         }
     }
@@ -560,12 +565,13 @@ let ProductCrud = class ProductCrud {
             message: 'Products connected successfully'
         };
     }
-    constructor(productRepo, categoryRepo, subCategoryRepo, fileStorageService, configService){
+    constructor(productRepo, categoryRepo, subCategoryRepo, fileStorageService, configService, logger){
         this.productRepo = productRepo;
         this.categoryRepo = categoryRepo;
         this.subCategoryRepo = subCategoryRepo;
         this.fileStorageService = fileStorageService;
         this.configService = configService;
+        this.logger = logger;
     }
 };
 ProductCrud = _ts_decorate([
@@ -579,7 +585,8 @@ ProductCrud = _ts_decorate([
         typeof _typeorm1.Repository === "undefined" ? Object : _typeorm1.Repository,
         typeof _typeorm1.Repository === "undefined" ? Object : _typeorm1.Repository,
         typeof _filestorageservice.FileStorageService === "undefined" ? Object : _filestorageservice.FileStorageService,
-        typeof _config.ConfigService === "undefined" ? Object : _config.ConfigService
+        typeof _config.ConfigService === "undefined" ? Object : _config.ConfigService,
+        typeof _loggerservice.LoggerService === "undefined" ? Object : _loggerservice.LoggerService
     ])
 ], ProductCrud);
 

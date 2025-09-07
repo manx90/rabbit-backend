@@ -10,6 +10,7 @@ Object.defineProperty(exports, "ProductModule", {
 });
 const _common = require("@nestjs/common");
 const _typeorm = require("@nestjs/typeorm");
+const _loggerservice = require("../common/utils/logger.service");
 const _filestoragemodule = require("../file-storage/file-storage.module");
 const _categorycontroller = require("./category.controller");
 const _categoryservice = require("./category.service");
@@ -50,7 +51,8 @@ ProductModule = _ts_decorate([
             _productservice.ProductService,
             _productcrud.ProductCrud,
             _categoryservice.CategoryService,
-            _productcollectionservice.ProductCollectionService
+            _productcollectionservice.ProductCollectionService,
+            _loggerservice.LoggerService
         ],
         exports: [
             _productservice.ProductService,

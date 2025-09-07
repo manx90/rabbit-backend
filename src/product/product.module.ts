@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { LoggerService } from '../common/utils/logger.service';
 import { FileStorageModule } from '../file-storage/file-storage.module';
 import { CategoryController } from './category.controller';
 import { CategoryService } from './category.service';
@@ -32,6 +33,7 @@ import { ProductService } from './product.service';
     ProductCrud,
     CategoryService,
     ProductCollectionService,
+    LoggerService,
   ],
   exports: [
     ProductService,

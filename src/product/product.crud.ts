@@ -17,6 +17,7 @@ import { PublishState } from 'src/common/interfaces/entity.interface';
 import { ApiFeatures } from 'src/common/utils/api-features';
 import { Repository } from 'typeorm';
 import { FileStorageService } from '../file-storage/file-storage.service';
+import { LoggerService } from '../common/utils/logger.service';
 import { CreateProductDto, UpdateProductDto } from './dto/Product.dto';
 import { category, subCategory } from './entities/Category.entity';
 import { product } from './entities/product.entity';
@@ -40,6 +41,7 @@ export class ProductCrud {
     private readonly subCategoryRepo: Repository<subCategory>,
     private readonly fileStorageService: FileStorageService,
     private readonly configService: ConfigService,
+    private readonly logger: LoggerService,
   ) {}
 
   private async saveFiles(
@@ -189,7 +191,10 @@ export class ProductCrud {
     data: product[];
   }> {
     try {
-      console.log('Starting getAllProducts with query:', query);
+      this.logger.debug(
+        `Starting getAllProducts with query: ${JSON.stringify(query)}`,
+        'ProductCrud',
+      );
 
       const queryBuilder = this.productRepo
         .createQueryBuilder('product')
@@ -205,7 +210,7 @@ export class ProductCrud {
           'auth.username',
         ]);
 
-      console.log('Query builder created successfully');
+      this.logger.debug('Query builder created successfully', 'ProductCrud');
 
       const features = new ApiFeatures(
         queryBuilder,
@@ -216,15 +221,22 @@ export class ProductCrud {
         .sort()
         .paginate();
 
-      console.log('ApiFeatures applied successfully');
+      this.logger.debug('ApiFeatures applied successfully', 'ProductCrud');
 
+      this.logger.logDatabaseOperation(
+        'SELECT',
+        'product',
+        { query: query },
+        'ProductCrud',
+      );
       const [data, total] = await features.getManyAndCount();
-      console.log(
+      this.logger.info(
         `Query executed successfully. Found ${data.length} products, total: ${total}`,
+        'ProductCrud',
       );
 
       const transformedData = req ? this.transformProductUrls(data, req) : data;
-      console.log('Data transformation completed');
+      this.logger.debug('Data transformation completed', 'ProductCrud');
 
       const pagination = features.getPaginationInfo();
 
@@ -239,18 +251,20 @@ export class ProductCrud {
         data: transformedData,
       };
 
-      console.log('Returning result:', {
-        status: result.status,
-        results: result.results,
-        total: result.total,
-        currentPage: result.currentPage,
-        limit: result.limit,
-      });
+      this.logger.debug(
+        `Returning result: ${JSON.stringify({
+          status: result.status,
+          results: result.results,
+          total: result.total,
+          currentPage: result.currentPage,
+          limit: result.limit,
+        })}`,
+        'ProductCrud',
+      );
 
       return result;
     } catch (error) {
-      console.error('Error in getAllProducts:', error);
-      console.error('Error stack:', error.stack);
+      this.logger.logError(error, 'ProductCrud', { query: query });
       throw error;
     }
   }

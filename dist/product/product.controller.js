@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */ "use strict";
+/* eslint-disable prettier/prettier */ /* eslint-disable @typescript-eslint/no-unsafe-member-access */ "use strict";
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
@@ -16,6 +16,7 @@ const _rolesdecorator = require("../common/decorators/roles.decorator");
 const _jwtauthguard = require("../common/guards/jwt-auth.guard");
 const _rolesguard = require("../common/guards/roles.guard");
 const _parseformjsonpipe = require("../common/pipes/parse-form-json.pipe");
+const _loggerservice = require("../common/utils/logger.service");
 const _Productdto = require("./dto/Product.dto");
 const _productcrud = require("./product.crud");
 const _productservice = require("./product.service");
@@ -35,14 +36,20 @@ function _ts_param(paramIndex, decorator) {
 }
 let ProductController = class ProductController {
     async getAllProducts(req) {
+        const startTime = Date.now();
         try {
-            console.log('ProductController: getAllProducts called with query:', req.query);
+            this.logger.logApiRequest('GET', '/product', req.query, null, 'ProductController');
             const result = await this.productcrud.getAllProducts(req.query);
-            console.log('ProductController: getAllProducts completed successfully');
+            const responseTime = Date.now() - startTime;
+            this.logger.logApiResponse('GET', '/product', 200, responseTime, 'ProductController');
+            this.logger.info(`getAllProducts completed successfully. Found ${result.results} products`, 'ProductController');
             return result;
         } catch (error) {
-            console.error('ProductController: Error in getAllProducts:', error);
-            console.error('ProductController: Error stack:', error.stack);
+            const responseTime = Date.now() - startTime;
+            this.logger.logApiResponse('GET', '/product', 500, responseTime, 'ProductController');
+            this.logger.logError(error, 'ProductController', {
+                query: req.query
+            });
             throw error;
         }
     }
@@ -182,9 +189,10 @@ let ProductController = class ProductController {
             message: `${count} products created between ${startDate} and ${endDate}`
         };
     }
-    constructor(productcrud, productservice){
+    constructor(productcrud, productservice, logger){
         this.productcrud = productcrud;
         this.productservice = productservice;
+        this.logger = logger;
     }
 };
 _ts_decorate([
@@ -501,7 +509,8 @@ ProductController = _ts_decorate([
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
         typeof _productcrud.ProductCrud === "undefined" ? Object : _productcrud.ProductCrud,
-        typeof _productservice.ProductService === "undefined" ? Object : _productservice.ProductService
+        typeof _productservice.ProductService === "undefined" ? Object : _productservice.ProductService,
+        typeof _loggerservice.LoggerService === "undefined" ? Object : _loggerservice.LoggerService
     ])
 ], ProductController);
 

@@ -8,11 +8,14 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
 import { NotFoundExceptionFilter } from './common/filters/not-found-exception.filter';
+import { LoggerService } from './common/utils/logger.service';
 
 // import dataSource from './data-source';
 async function bootstrap() {
+  const logger = new LoggerService();
+
   try {
-    console.log('Starting application bootstrap...');
+    logger.info('Starting application bootstrap...', 'Bootstrap');
 
     // Optimize for production environment
     const isProduction = process.env.NODE_ENV === 'production';
@@ -24,7 +27,7 @@ async function bootstrap() {
         : ['log', 'error', 'warn', 'debug'],
     });
 
-    console.log('Application created successfully');
+    logger.info('Application created successfully', 'Bootstrap');
 
     // Configure static file serving for uploads
     app.useStaticAssets(join(__dirname, '..', 'uploads'), {
@@ -74,14 +77,14 @@ async function bootstrap() {
       new NotFoundExceptionFilter(),
     );
 
-    console.log('Starting server...');
+    logger.info('Starting server...', 'Bootstrap');
     await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
-    console.log(
+    logger.info(
       `Application is running on: http://0.0.0.0:${process.env.PORT ?? 3000}`,
+      'Bootstrap',
     );
   } catch (error) {
-    console.error('Error during application bootstrap:', error);
-    console.error('Error stack:', error.stack);
+    logger.logError(error, 'Bootstrap');
     process.exit(1);
   }
 }

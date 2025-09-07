@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   BadRequestException,
@@ -23,6 +24,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { ParseFormJsonPipe } from '../common/pipes/parse-form-json.pipe';
+import { LoggerService } from '../common/utils/logger.service';
 import { CreateProductDto, UpdateProductDto } from './dto/Product.dto';
 import { ProductCrud } from './product.crud';
 import { ProductService } from './product.service';
@@ -31,20 +33,46 @@ export class ProductController {
   constructor(
     private readonly productcrud: ProductCrud,
     private readonly productservice: ProductService,
+    private readonly logger: LoggerService,
   ) {}
   @Get()
   async getAllProducts(@Req() req: Request) {
+    const startTime = Date.now();
     try {
-      console.log(
-        'ProductController: getAllProducts called with query:',
+      this.logger.logApiRequest(
+        'GET',
+        '/product',
         req.query,
+        null,
+        'ProductController',
       );
+
       const result = await this.productcrud.getAllProducts(req.query);
-      console.log('ProductController: getAllProducts completed successfully');
+
+      const responseTime = Date.now() - startTime;
+      this.logger.logApiResponse(
+        'GET',
+        '/product',
+        200,
+        responseTime,
+        'ProductController',
+      );
+      this.logger.info(
+        `getAllProducts completed successfully. Found ${result.results} products`,
+        'ProductController',
+      );
+
       return result;
     } catch (error) {
-      console.error('ProductController: Error in getAllProducts:', error);
-      console.error('ProductController: Error stack:', error.stack);
+      const responseTime = Date.now() - startTime;
+      this.logger.logApiResponse(
+        'GET',
+        '/product',
+        500,
+        responseTime,
+        'ProductController',
+      );
+      this.logger.logError(error, 'ProductController', { query: req.query });
       throw error;
     }
   }

@@ -21,7 +21,13 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js --dataSource src/data-source.ts",
-    "optimize-images": "ts-node -r tsconfig-paths/register scripts/optimize-images.ts"
+    "optimize-images": "ts-node -r tsconfig-paths/register scripts/optimize-images.ts",
+    "logs:view": "node scripts/view-logs.js view all",
+    "logs:error": "node scripts/view-logs.js view error",
+    "logs:app": "node scripts/view-logs.js view app",
+    "logs:debug": "node scripts/view-logs.js view debug",
+    "logs:tail": "node scripts/view-logs.js tail app 50",
+    "logs:clear": "node scripts/view-logs.js clear"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.0",

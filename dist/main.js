@@ -11,6 +11,7 @@ const _loggermiddleware = require("./common/middleware/logger.middleware");
 const _path = require("path");
 const _validationexceptionfilter = require("./common/filters/validation-exception.filter");
 const _notfoundexceptionfilter = require("./common/filters/not-found-exception.filter");
+const _loggerservice = require("./common/utils/logger.service");
 function _getRequireWildcardCache(nodeInterop) {
     if (typeof WeakMap !== "function") return null;
     var cacheBabelInterop = new WeakMap();
@@ -54,8 +55,9 @@ function _interop_require_wildcard(obj, nodeInterop) {
 }
 // import dataSource from './data-source';
 async function bootstrap() {
+    const logger = new _loggerservice.LoggerService();
     try {
-        console.log('Starting application bootstrap...');
+        logger.info('Starting application bootstrap...', 'Bootstrap');
         // Optimize for production environment
         const isProduction = process.env.NODE_ENV === 'production';
         const app = await _core.NestFactory.create(_appmodule.AppModule, {
@@ -70,7 +72,7 @@ async function bootstrap() {
                 'debug'
             ]
         });
-        console.log('Application created successfully');
+        logger.info('Application created successfully', 'Bootstrap');
         // Configure static file serving for uploads
         app.useStaticAssets((0, _path.join)(__dirname, '..', 'uploads'), {
             prefix: '/uploads'
@@ -109,14 +111,13 @@ async function bootstrap() {
         }));
         // Apply global exception filters
         app.useGlobalFilters(new _validationexceptionfilter.ValidationExceptionFilter(), new _notfoundexceptionfilter.NotFoundExceptionFilter());
-        console.log('Starting server...');
+        logger.info('Starting server...', 'Bootstrap');
         var _process_env_PORT;
         await app.listen((_process_env_PORT = process.env.PORT) !== null && _process_env_PORT !== void 0 ? _process_env_PORT : 3000, '0.0.0.0');
         var _process_env_PORT1;
-        console.log(`Application is running on: http://0.0.0.0:${(_process_env_PORT1 = process.env.PORT) !== null && _process_env_PORT1 !== void 0 ? _process_env_PORT1 : 3000}`);
+        logger.info(`Application is running on: http://0.0.0.0:${(_process_env_PORT1 = process.env.PORT) !== null && _process_env_PORT1 !== void 0 ? _process_env_PORT1 : 3000}`, 'Bootstrap');
     } catch (error) {
-        console.error('Error during application bootstrap:', error);
-        console.error('Error stack:', error.stack);
+        logger.logError(error, 'Bootstrap');
         process.exit(1);
     }
 }
