@@ -54,60 +54,71 @@ function _interop_require_wildcard(obj, nodeInterop) {
 }
 // import dataSource from './data-source';
 async function bootstrap() {
-    // Optimize for production environment
-    const isProduction = process.env.NODE_ENV === 'production';
-    const app = await _core.NestFactory.create(_appmodule.AppModule, {
-        // Reduce memory usage
-        logger: isProduction ? [
-            'error',
-            'warn'
-        ] : [
-            'log',
-            'error',
-            'warn',
-            'debug'
-        ]
-    });
-    // Configure static file serving for uploads
-    app.useStaticAssets((0, _path.join)(__dirname, '..', 'uploads'), {
-        prefix: '/uploads'
-    });
-    // await dataSource.initialize();
-    // await dataSource.runMigrations();
-    // Only enable Swagger in development
-    if (!isProduction) {
-        const config = new _swagger.DocumentBuilder().setTitle('rabbit').setDescription('The rabbit API description').setVersion('1.0').addBearerAuth() // Add Bearer Auth to Swagger
-        .build();
-        const documentFactory = ()=>_swagger.SwaggerModule.createDocument(app, config);
-        _swagger.SwaggerModule.setup('api', app, documentFactory);
+    try {
+        console.log('Starting application bootstrap...');
+        // Optimize for production environment
+        const isProduction = process.env.NODE_ENV === 'production';
+        const app = await _core.NestFactory.create(_appmodule.AppModule, {
+            // Reduce memory usage
+            logger: isProduction ? [
+                'error',
+                'warn'
+            ] : [
+                'log',
+                'error',
+                'warn',
+                'debug'
+            ]
+        });
+        console.log('Application created successfully');
+        // Configure static file serving for uploads
+        app.useStaticAssets((0, _path.join)(__dirname, '..', 'uploads'), {
+            prefix: '/uploads'
+        });
+        // await dataSource.initialize();
+        // await dataSource.runMigrations();
+        // Only enable Swagger in development
+        if (!isProduction) {
+            const config = new _swagger.DocumentBuilder().setTitle('rabbit').setDescription('The rabbit API description').setVersion('1.0').addBearerAuth() // Add Bearer Auth to Swagger
+            .build();
+            const documentFactory = ()=>_swagger.SwaggerModule.createDocument(app, config);
+            _swagger.SwaggerModule.setup('api', app, documentFactory);
+        }
+        // Reduce body parser limits to save memory
+        const bodyLimit = isProduction ? '10mb' : '50mb';
+        app.use(_bodyparser.json({
+            limit: bodyLimit
+        }));
+        app.use(_bodyparser.urlencoded({
+            extended: true,
+            limit: bodyLimit
+        }));
+        app.use(_loggermiddleware.LoggerMiddleware);
+        app.enableCors({
+            origin: '*',
+            methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+            credentials: false
+        });
+        app.useGlobalPipes(new _common.ValidationPipe({
+            transform: true,
+            transformOptions: {
+                enableImplicitConversion: true
+            },
+            whitelist: true,
+            forbidNonWhitelisted: true
+        }));
+        // Apply global exception filters
+        app.useGlobalFilters(new _validationexceptionfilter.ValidationExceptionFilter(), new _notfoundexceptionfilter.NotFoundExceptionFilter());
+        console.log('Starting server...');
+        var _process_env_PORT;
+        await app.listen((_process_env_PORT = process.env.PORT) !== null && _process_env_PORT !== void 0 ? _process_env_PORT : 3000, '0.0.0.0');
+        var _process_env_PORT1;
+        console.log(`Application is running on: http://0.0.0.0:${(_process_env_PORT1 = process.env.PORT) !== null && _process_env_PORT1 !== void 0 ? _process_env_PORT1 : 3000}`);
+    } catch (error) {
+        console.error('Error during application bootstrap:', error);
+        console.error('Error stack:', error.stack);
+        process.exit(1);
     }
-    // Reduce body parser limits to save memory
-    const bodyLimit = isProduction ? '10mb' : '50mb';
-    app.use(_bodyparser.json({
-        limit: bodyLimit
-    }));
-    app.use(_bodyparser.urlencoded({
-        extended: true,
-        limit: bodyLimit
-    }));
-    app.use(_loggermiddleware.LoggerMiddleware);
-    app.enableCors({
-        origin: '*',
-        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-        credentials: false
-    });
-    app.useGlobalPipes(new _common.ValidationPipe({
-        transform: true,
-        transformOptions: {
-            enableImplicitConversion: true
-        },
-        whitelist: true,
-        forbidNonWhitelisted: true
-    }));
-    // Apply global exception filters
-    app.useGlobalFilters(new _validationexceptionfilter.ValidationExceptionFilter(), new _notfoundexceptionfilter.NotFoundExceptionFilter());
-    var _process_env_PORT;
-    await app.listen((_process_env_PORT = process.env.PORT) !== null && _process_env_PORT !== void 0 ? _process_env_PORT : 3000, 'localhost');
 }
 bootstrap();
 

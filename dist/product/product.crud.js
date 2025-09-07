@@ -163,28 +163,47 @@ let ProductCrud = class ProductCrud {
         });
     }
     /** ----------  Get All Products  ---------- */ async getAllProducts(query, req) {
-        const queryBuilder = this.productRepo.createQueryBuilder('product').leftJoinAndSelect('product.category', 'category').leftJoinAndSelect('product.subCategory', 'subCategory').leftJoinAndSelect('product.poster', 'auth').select([
-            'product',
-            'category.id',
-            'category.name',
-            'subCategory.name',
-            'subCategory.id',
-            'auth.username'
-        ]);
-        const features = new _apifeatures.ApiFeatures(queryBuilder, query || {}, this.productRepo.metadata).filter().sort().paginate();
-        const [data, total] = await features.getManyAndCount();
-        const transformedData = req ? this.transformProductUrls(data, req) : data;
-        const pagination = features.getPaginationInfo();
-        return {
-            status: 'success',
-            results: transformedData.length,
-            total,
-            currentPage: pagination.page,
-            limit: pagination.limit,
-            totalPages: Math.ceil(total / pagination.limit),
-            lastPage: Math.ceil(total / pagination.limit),
-            data: transformedData
-        };
+        try {
+            console.log('Starting getAllProducts with query:', query);
+            const queryBuilder = this.productRepo.createQueryBuilder('product').leftJoinAndSelect('product.category', 'category').leftJoinAndSelect('product.subCategory', 'subCategory').leftJoinAndSelect('product.poster', 'auth').select([
+                'product',
+                'category.id',
+                'category.name',
+                'subCategory.name',
+                'subCategory.id',
+                'auth.username'
+            ]);
+            console.log('Query builder created successfully');
+            const features = new _apifeatures.ApiFeatures(queryBuilder, query || {}, this.productRepo.metadata).filter().sort().paginate();
+            console.log('ApiFeatures applied successfully');
+            const [data, total] = await features.getManyAndCount();
+            console.log(`Query executed successfully. Found ${data.length} products, total: ${total}`);
+            const transformedData = req ? this.transformProductUrls(data, req) : data;
+            console.log('Data transformation completed');
+            const pagination = features.getPaginationInfo();
+            const result = {
+                status: 'success',
+                results: transformedData.length,
+                total,
+                currentPage: pagination.page,
+                limit: pagination.limit,
+                totalPages: Math.ceil(total / pagination.limit),
+                lastPage: Math.ceil(total / pagination.limit),
+                data: transformedData
+            };
+            console.log('Returning result:', {
+                status: result.status,
+                results: result.results,
+                total: result.total,
+                currentPage: result.currentPage,
+                limit: result.limit
+            });
+            return result;
+        } catch (error) {
+            console.error('Error in getAllProducts:', error);
+            console.error('Error stack:', error.stack);
+            throw error;
+        }
     }
     async create(dto, files = {}, poster, req) {
         // 1) بناء الكيان الأساسي

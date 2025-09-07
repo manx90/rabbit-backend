@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   BadRequestException,
   Body,
@@ -33,7 +34,19 @@ export class ProductController {
   ) {}
   @Get()
   async getAllProducts(@Req() req: Request) {
-    return await this.productcrud.getAllProducts(req.query);
+    try {
+      console.log(
+        'ProductController: getAllProducts called with query:',
+        req.query,
+      );
+      const result = await this.productcrud.getAllProducts(req.query);
+      console.log('ProductController: getAllProducts completed successfully');
+      return result;
+    } catch (error) {
+      console.error('ProductController: Error in getAllProducts:', error);
+      console.error('ProductController: Error stack:', error.stack);
+      throw error;
+    }
   }
   // @Get()
   // async getAllProducts(@Req() req: Request) {

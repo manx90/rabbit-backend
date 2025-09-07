@@ -1,4 +1,4 @@
-"use strict";
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */ "use strict";
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
@@ -35,7 +35,16 @@ function _ts_param(paramIndex, decorator) {
 }
 let ProductController = class ProductController {
     async getAllProducts(req) {
-        return await this.productcrud.getAllProducts(req.query);
+        try {
+            console.log('ProductController: getAllProducts called with query:', req.query);
+            const result = await this.productcrud.getAllProducts(req.query);
+            console.log('ProductController: getAllProducts completed successfully');
+            return result;
+        } catch (error) {
+            console.error('ProductController: Error in getAllProducts:', error);
+            console.error('ProductController: Error stack:', error.stack);
+            throw error;
+        }
     }
     // @Get()
     // async getAllProducts(@Req() req: Request) {
