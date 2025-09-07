@@ -10,16 +10,17 @@ Object.defineProperty(exports, "ProductModule", {
 });
 const _common = require("@nestjs/common");
 const _typeorm = require("@nestjs/typeorm");
-const _productcontroller = require("./product.controller");
-const _productservice = require("./product.service");
+const _filestoragemodule = require("../file-storage/file-storage.module");
 const _categorycontroller = require("./category.controller");
 const _categoryservice = require("./category.service");
-const _productcollectioncontroller = require("./product-collection.controller");
-const _productcollectionservice = require("./product-collection.service");
-const _productentity = require("./entities/product.entity");
 const _Categoryentity = require("./entities/Category.entity");
 const _productcollectionentity = require("./entities/product-collection.entity");
-const _filestoragemodule = require("../file-storage/file-storage.module");
+const _productentity = require("./entities/product.entity");
+const _productcollectioncontroller = require("./product-collection.controller");
+const _productcollectionservice = require("./product-collection.service");
+const _productcontroller = require("./product.controller");
+const _productcrud = require("./product.crud");
+const _productservice = require("./product.service");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -35,7 +36,8 @@ ProductModule = _ts_decorate([
                 _productentity.product,
                 _Categoryentity.category,
                 _Categoryentity.subCategory,
-                _productcollectionentity.ProductCollection
+                _productcollectionentity.ProductCollection,
+                _productservice.ProductService
             ]),
             _filestoragemodule.FileStorageModule
         ],
@@ -46,11 +48,13 @@ ProductModule = _ts_decorate([
         ],
         providers: [
             _productservice.ProductService,
+            _productcrud.ProductCrud,
             _categoryservice.CategoryService,
             _productcollectionservice.ProductCollectionService
         ],
         exports: [
             _productservice.ProductService,
+            _productcrud.ProductCrud,
             _categoryservice.CategoryService,
             _productcollectionservice.ProductCollectionService
         ]

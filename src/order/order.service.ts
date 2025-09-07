@@ -55,4 +55,20 @@ export class OrderService {
   numberOfOrders(): Promise<number> {
     return this.orderRepository.length();
   }
+
+  countPendingOrders(): Promise<number> {
+    return this.orderRepository.countPendingOrders();
+  }
+
+  countCancelledOrders(): Promise<number> {
+    return this.orderRepository.countCancelledOrders();
+  }
+
+  countShippedOrders(): Promise<number> {
+    return this.orderRepository.countShippedOrders();
+  }
+
+  countReadiedOrders(): Promise<number> {
+    return this.orderRepository.countReadiedOrders();
+  }
 }

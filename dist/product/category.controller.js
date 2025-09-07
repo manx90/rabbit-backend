@@ -9,15 +9,15 @@ Object.defineProperty(exports, "CategoryController", {
     }
 });
 const _common = require("@nestjs/common");
-const _categoryservice = require("./category.service");
+const _platformexpress = require("@nestjs/platform-express");
 const _express = require("express");
 const _qs = require("qs");
+const _rolesconstant = require("../common/constants/roles.constant");
+const _rolesdecorator = require("../common/decorators/roles.decorator");
 const _jwtauthguard = require("../common/guards/jwt-auth.guard");
 const _rolesguard = require("../common/guards/roles.guard");
-const _rolesdecorator = require("../common/decorators/roles.decorator");
-const _rolesconstant = require("../common/constants/roles.constant");
+const _categoryservice = require("./category.service");
 const _categorydto = require("./dto/category.dto");
-const _platformexpress = require("@nestjs/platform-express");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -127,6 +127,14 @@ let CategoryController = class CategoryController {
         } catch (error) {
             throw new _common.HttpException(error.message, _common.HttpStatus.BAD_REQUEST);
         }
+    }
+    async UpdateState(id) {
+        const UpdateOne = await this.categoryService.updateState(id);
+        return UpdateOne;
+    }
+    async UpdateStateSub(id) {
+        const UpdateOne = await this.categoryService.updateStateSub(id);
+        return UpdateOne;
     }
     constructor(categoryService){
         this.categoryService = categoryService;
@@ -285,6 +293,28 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], CategoryController.prototype, "deleteSubCategory", null);
+_ts_decorate([
+    (0, _common.Put)('update-state/:id'),
+    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
+    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    _ts_param(0, (0, _common.Param)('id')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        Number
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], CategoryController.prototype, "UpdateState", null);
+_ts_decorate([
+    (0, _common.Put)('update-state-subcategory/:id'),
+    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
+    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    _ts_param(0, (0, _common.Param)('id')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        Number
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], CategoryController.prototype, "UpdateStateSub", null);
 CategoryController = _ts_decorate([
     (0, _common.Controller)('category'),
     _ts_metadata("design:type", Function),

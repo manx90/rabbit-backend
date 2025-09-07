@@ -1,38 +1,38 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
   Body,
-  Param,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
   HttpException,
   HttpStatus,
-  HttpCode,
-  UseGuards,
-  UseInterceptors,
-  UploadedFiles,
+  Param,
+  Post,
+  Put,
   Query,
   Req,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { CategoryService } from './category.service';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Request as ExpressRequest } from 'express';
 import { ParsedQs } from 'qs';
+import { Role } from '../common/constants/roles.constant';
+import { Roles } from '../common/decorators/roles.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
-import { Roles } from '../common/decorators/roles.decorator';
-import { Role } from '../common/constants/roles.constant';
+import { CategoryService } from './category.service';
 import {
-  CreateCategoryDto,
-  UpdateCategoryDto,
-  CreateSubCategoryDto,
-  UpdateSubCategoryDto,
   CategoryResponseDto,
+  CreateCategoryDto,
+  CreateSubCategoryDto,
   SubCategoryResponseDto,
+  UpdateCategoryDto,
+  UpdateSubCategoryDto,
   UploadIcon,
 } from './dto/category.dto';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
 @Controller('category')
 export class CategoryController {
@@ -207,5 +207,20 @@ export class CategoryController {
     } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
+  }
+
+  @Put('update-state/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  async UpdateState(@Param('id') id: number): Promise<any> {
+    const UpdateOne = await this.categoryService.updateState(id);
+    return UpdateOne;
+  }
+  @Put('update-state-subcategory/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  async UpdateStateSub(@Param('id') id: number): Promise<any> {
+    const UpdateOne = await this.categoryService.updateStateSub(id);
+    return UpdateOne;
   }
 }

@@ -16,11 +16,11 @@ _export(exports, {
         return product;
     }
 });
-const _typeorm = require("typeorm");
-const _Categoryentity = require("./Category.entity");
-const _entityinterface = require("../../common/interfaces/entity.interface");
-const _authentity = require("../../auth/entities/auth.entity");
 const _classtransformer = require("class-transformer");
+const _authentity = require("../../auth/entities/auth.entity");
+const _typeorm = require("typeorm");
+const _entityinterface = require("../../common/interfaces/entity.interface");
+const _Categoryentity = require("./Category.entity");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -74,6 +74,10 @@ let product = class product {
     }
     // schedule publish
     updatePublishState() {
+        // Skip automatic state update if manually set
+        if (this.isManualPublishState) {
+            return;
+        }
         if (this.datePublished && this.datePublished > new Date()) {
             this.publishState = _entityinterface.PublishState.DRAFT;
         } else {
@@ -202,6 +206,13 @@ _ts_decorate([
     }),
     _ts_metadata("design:type", typeof _entityinterface.PublishState === "undefined" ? Object : _entityinterface.PublishState)
 ], product.prototype, "publishState", void 0);
+_ts_decorate([
+    (0, _typeorm.Column)({
+        type: 'boolean',
+        default: false
+    }),
+    _ts_metadata("design:type", Boolean)
+], product.prototype, "isManualPublishState", void 0);
 _ts_decorate([
     (0, _typeorm.Column)({
         type: 'json',

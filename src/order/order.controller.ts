@@ -40,6 +40,34 @@ export class OrderController {
     return this.orderService.numberOfOrders();
   }
 
+  @Get('count/pending')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  countPendingOrders(): Promise<number> {
+    return this.orderService.countPendingOrders();
+  }
+
+  @Get('count/cancelled')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  countCancelledOrders(): Promise<number> {
+    return this.orderService.countCancelledOrders();
+  }
+
+  @Get('count/shipped')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  countShippedOrders(): Promise<number> {
+    return this.orderService.countShippedOrders();
+  }
+
+  @Get('count/readied')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  countReadiedOrders(): Promise<number> {
+    return this.orderService.countReadiedOrders();
+  }
+
   @Put('update/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.SuperAdmin)

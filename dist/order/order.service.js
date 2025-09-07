@@ -56,6 +56,18 @@ let OrderService = class OrderService {
     numberOfOrders() {
         return this.orderRepository.length();
     }
+    countPendingOrders() {
+        return this.orderRepository.countPendingOrders();
+    }
+    countCancelledOrders() {
+        return this.orderRepository.countCancelledOrders();
+    }
+    countShippedOrders() {
+        return this.orderRepository.countShippedOrders();
+    }
+    countReadiedOrders() {
+        return this.orderRepository.countReadiedOrders();
+    }
     constructor(orderRepository){
         this.orderRepository = orderRepository;
     }

@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ProductController } from './product.controller';
-import { ProductService } from './product.service';
+import { FileStorageModule } from '../file-storage/file-storage.module';
 import { CategoryController } from './category.controller';
 import { CategoryService } from './category.service';
-import { ProductCollectionController } from './product-collection.controller';
-import { ProductCollectionService } from './product-collection.service';
-import { product } from './entities/product.entity';
 import { category, subCategory } from './entities/Category.entity';
 import { ProductCollection } from './entities/product-collection.entity';
-import { FileStorageModule } from '../file-storage/file-storage.module';
+import { product } from './entities/product.entity';
+import { ProductCollectionController } from './product-collection.controller';
+import { ProductCollectionService } from './product-collection.service';
+import { ProductController } from './product.controller';
+import { ProductCrud } from './product.crud';
+import { ProductService } from './product.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -17,6 +18,7 @@ import { FileStorageModule } from '../file-storage/file-storage.module';
       category,
       subCategory,
       ProductCollection,
+      ProductService,
     ]),
     FileStorageModule,
   ],
@@ -25,7 +27,17 @@ import { FileStorageModule } from '../file-storage/file-storage.module';
     CategoryController,
     ProductCollectionController,
   ],
-  providers: [ProductService, CategoryService, ProductCollectionService],
-  exports: [ProductService, CategoryService, ProductCollectionService],
+  providers: [
+    ProductService,
+    ProductCrud,
+    CategoryService,
+    ProductCollectionService,
+  ],
+  exports: [
+    ProductService,
+    ProductCrud,
+    CategoryService,
+    ProductCollectionService,
+  ],
 })
 export class ProductModule {}

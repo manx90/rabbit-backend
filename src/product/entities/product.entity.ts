@@ -1,23 +1,23 @@
+import { Transform } from 'class-transformer';
+import { auth } from 'src/auth/entities/auth.entity';
 import {
-  PrimaryGeneratedColumn,
-  Column,
-  Entity,
-  ManyToOne,
-  BeforeInsert,
-  JoinColumn,
-  BeforeUpdate,
   AfterInsert,
   AfterLoad,
   AfterUpdate,
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
-import { subCategory, category } from './Category.entity';
 import {
-  SizeDetail,
-  PublishState,
   ColorDetail,
+  PublishState,
+  SizeDetail,
 } from '../../common/interfaces/entity.interface';
-import { auth } from 'src/auth/entities/auth.entity';
-import { Transform } from 'class-transformer';
+import { category, subCategory } from './Category.entity';
 
 export interface ProductResponse {
   id: number;
@@ -53,8 +53,6 @@ export class product {
   })
   season: Season;
 
-  // Input as comma-separated string values, e.g., "fashion,clothing,trendy,stylish"
-  // Each value will be automatically trimmed of whitespace
   @Column({
     type: 'simple-array',
     nullable: true,
@@ -95,6 +93,9 @@ export class product {
     default: PublishState.PUBLISHED,
   })
   publishState: PublishState;
+
+  @Column({ type: 'boolean', default: false })
+  isManualPublishState: boolean;
 
   @Column({ type: 'json', nullable: true })
   colors: ColorDetail[];
@@ -203,6 +204,11 @@ export class product {
   @AfterInsert()
   @AfterUpdate()
   updatePublishState() {
+    // Skip automatic state update if manually set
+    if (this.isManualPublishState) {
+      return;
+    }
+
     if (this.datePublished && this.datePublished > new Date()) {
       this.publishState = PublishState.DRAFT;
     } else {

@@ -45,10 +45,10 @@ export class SizeDetailDto {
   @ApiProperty({
     description: 'Colors and their stock for this size',
     type: [ColorQuantityDto],
-    minItems: 1,
+    minItems: 0,
   })
   @IsArray()
-  @ArrayMinSize(1)
+  @ArrayMinSize(0)
   @ValidateNested({ each: true })
   @Type(() => ColorQuantityDto)
   quantities: ColorQuantityDto[];

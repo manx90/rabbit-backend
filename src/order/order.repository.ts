@@ -1,20 +1,21 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 import {
-  Injectable,
   BadRequestException,
+  Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { order, orderitem } from './order.entity';
-import { CreateOrderDto, UpdateOrderDto } from './order.dto';
-import { product } from 'src/product/entities/product.entity';
-import { OrderStatus } from './order.types';
 import { auth } from 'src/auth/entities/auth.entity';
-import { OptosShipmentService } from 'src/optos/optos.shipment.service';
 import { CreateShipmentDto } from 'src/optos/optos.dto';
+import { OptosShipmentService } from 'src/optos/optos.shipment.service';
+import { product } from 'src/product/entities/product.entity';
+import { Repository } from 'typeorm';
+import { CreateOrderDto, UpdateOrderDto } from './order.dto';
+import { order, orderitem } from './order.entity';
+import { OrderStatus } from './order.types';
 
 @Injectable()
 export class OrderRepository {
@@ -123,7 +124,9 @@ export class OrderRepository {
       notes: dto.notes,
     };
     await this.optosService.createShipment(shipmentDto).then((res) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       Order.optos_id = res.id;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       Order.optos_status = res.status;
     });
     // Update the order with the calculated amount
@@ -328,6 +331,7 @@ export class OrderRepository {
     if (!order) {
       throw new NotFoundException(`Order with optos_id ${optosId} not found`);
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const res = await this.optosService.getShipment({ id: optosId });
 
     // Add null checks to prevent the error
@@ -349,5 +353,21 @@ export class OrderRepository {
 
   async length(): Promise<number> {
     return this.orderRepo.count();
+  }
+
+  async countPendingOrders(): Promise<number> {
+    return this.orderRepo.count({ where: { status: OrderStatus.PENDING } });
+  }
+
+  async countCancelledOrders(): Promise<number> {
+    return this.orderRepo.count({ where: { status: OrderStatus.CANCELLED } });
+  }
+
+  async countShippedOrders(): Promise<number> {
+    return this.orderRepo.count({ where: { status: OrderStatus.SHIPPED } });
+  }
+
+  async countReadiedOrders(): Promise<number> {
+    return this.orderRepo.count({ where: { status: OrderStatus.READIED } });
   }
 }

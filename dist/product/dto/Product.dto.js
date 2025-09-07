@@ -82,10 +82,10 @@ _ts_decorate([
         type: [
             ColorQuantityDto
         ],
-        minItems: 1
+        minItems: 0
     }),
     (0, _classvalidator.IsArray)(),
-    (0, _classvalidator.ArrayMinSize)(1),
+    (0, _classvalidator.ArrayMinSize)(0),
     (0, _classvalidator.ValidateNested)({
         each: true
     }),

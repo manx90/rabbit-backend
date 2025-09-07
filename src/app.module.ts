@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
-import { ProductModule } from './product/product.module';
 import { AppConfigModule } from './config/config.module';
 import { AppConfigService } from './config/config.service';
+import { FileStorageModule } from './file-storage/file-storage.module';
 import { OptosModule } from './optos/optos.module';
 import { OrderModule } from './order/order.module';
-import { JwtModule } from '@nestjs/jwt';
-import { FileStorageModule } from './file-storage/file-storage.module';
+import { ProductModule } from './product/product.module';
 
 @Module({
   imports: [
@@ -44,7 +44,7 @@ import { FileStorageModule } from './file-storage/file-storage.module';
           idleTimeout: 60000,
         },
         // Disable logging in production to save memory
-        logging: process.env.NODE_ENV !== 'production',
+        logging: false, // Set to false to disable all query logging
       }),
     }),
     AuthModule,

@@ -38,6 +38,18 @@ let OrderController = class OrderController {
     numberOfOrders() {
         return this.orderService.numberOfOrders();
     }
+    countPendingOrders() {
+        return this.orderService.countPendingOrders();
+    }
+    countCancelledOrders() {
+        return this.orderService.countCancelledOrders();
+    }
+    countShippedOrders() {
+        return this.orderService.countShippedOrders();
+    }
+    countReadiedOrders() {
+        return this.orderService.countReadiedOrders();
+    }
     updateOrder(id, updateOrderDto) {
         return this.orderService.updateOrder(id, updateOrderDto);
     }
@@ -93,6 +105,38 @@ _ts_decorate([
     _ts_metadata("design:paramtypes", []),
     _ts_metadata("design:returntype", typeof Promise === "undefined" ? Object : Promise)
 ], OrderController.prototype, "numberOfOrders", null);
+_ts_decorate([
+    (0, _common.Get)('count/pending'),
+    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
+    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:returntype", typeof Promise === "undefined" ? Object : Promise)
+], OrderController.prototype, "countPendingOrders", null);
+_ts_decorate([
+    (0, _common.Get)('count/cancelled'),
+    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
+    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:returntype", typeof Promise === "undefined" ? Object : Promise)
+], OrderController.prototype, "countCancelledOrders", null);
+_ts_decorate([
+    (0, _common.Get)('count/shipped'),
+    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
+    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:returntype", typeof Promise === "undefined" ? Object : Promise)
+], OrderController.prototype, "countShippedOrders", null);
+_ts_decorate([
+    (0, _common.Get)('count/readied'),
+    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
+    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:returntype", typeof Promise === "undefined" ? Object : Promise)
+], OrderController.prototype, "countReadiedOrders", null);
 _ts_decorate([
     (0, _common.Put)('update/:id'),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),

@@ -1,19 +1,20 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { product } from './entities/product.entity';
-import { category, subCategory } from './entities/Category.entity';
+import { Request as ExpressRequest } from 'express';
+import { ParsedQs } from 'qs';
+import { PublishState } from 'src/common/interfaces/entity.interface';
+import { CategoryApiFeatures } from 'src/common/utils/category-api-features';
 import { FileStorageService } from 'src/file-storage/file-storage.service';
+import { Repository } from 'typeorm';
 import {
   CreateCategoryDto,
-  UpdateCategoryDto,
   CreateSubCategoryDto,
+  UpdateCategoryDto,
   UpdateSubCategoryDto,
   UploadIcon,
 } from './dto/category.dto';
-import { CategoryApiFeatures } from 'src/common/utils/category-api-features';
-import { ParsedQs } from 'qs';
-import { Request as ExpressRequest } from 'express';
+import { category, subCategory } from './entities/Category.entity';
+import { product } from './entities/product.entity';
 
 @Injectable()
 export class CategoryService {
@@ -37,14 +38,6 @@ export class CategoryService {
     console.log('categoryPath', categoryPath);
     return await this.fileStorageService.saveFiles(files, categoryPath);
   }
-
-  /**
-   * Creates a new category.
-   * @param file - UploadIcon object containing the icon file for the category.
-   * @param dto - Data transfer object containing category details.
-   * @returns The created category entity.
-   * @throws HttpException if the category already exists.
-   */
   async createCategory(
     file: UploadIcon,
     dto: CreateCategoryDto,
@@ -80,7 +73,6 @@ export class CategoryService {
     // Save the new category to the database and return it
     return this.categoryRepository.save(category);
   }
-
   async createSubCategory(
     file: UploadIcon,
     dto: CreateSubCategoryDto,
@@ -134,13 +126,6 @@ export class CategoryService {
     });
     return this.subCategoryRepository.save(sub);
   }
-
-  /**
-   * Transform category file paths to full URLs
-   * @param categories Array of category entities
-   * @param req Express Request object
-   * @returns Categories with transformed URLs
-   */
   private transformCategoryUrls(
     categories: category[],
     req: ExpressRequest,
@@ -180,7 +165,6 @@ export class CategoryService {
       return transformed;
     });
   }
-
   async getAllCategories(
     query?: ParsedQs,
     req?: ExpressRequest,
@@ -235,7 +219,6 @@ export class CategoryService {
       data: transformedData,
     };
   }
-
   async getCategoryById(id: number): Promise<category> {
     const category = await this.categoryRepository.findOne({
       where: { id },
@@ -245,7 +228,6 @@ export class CategoryService {
       throw new HttpException('Category not found', HttpStatus.NOT_FOUND);
     return category;
   }
-
   async updateCategory(
     id: number,
     dto: UpdateCategoryDto,
@@ -279,7 +261,6 @@ export class CategoryService {
     }
     return this.categoryRepository.save(category);
   }
-
   async updateSubCategory(
     categoryId: number,
     id: number,
@@ -317,7 +298,6 @@ export class CategoryService {
     }
     return this.subCategoryRepository.save(sub);
   }
-
   async deleteCategory(id: number): Promise<void> {
     const category = await this.getCategoryById(id);
     if (!category) {
@@ -360,13 +340,11 @@ export class CategoryService {
     }
     await this.subCategoryRepository.remove(sub);
   }
-
   async deleteAll(): Promise<void> {
     await this.productRepository.delete({});
     await this.subCategoryRepository.delete({});
     await this.categoryRepository.delete({});
   }
-
   async getSubCategories() {
     return this.subCategoryRepository.find();
   }
@@ -377,5 +355,59 @@ export class CategoryService {
     if (!subCategory)
       throw new HttpException('SubCategory not found', HttpStatus.NOT_FOUND);
     return subCategory;
+  }
+  async updateState(id: number): Promise<category> {
+    const categoryEntity = await this.categoryRepository.findOne({
+      where: { id },
+    });
+    if (!categoryEntity) {
+      throw new HttpException('Category not found', HttpStatus.NOT_FOUND);
+    }
+    const products = await this.productRepository.find({
+      where: { category: { id } },
+      relations: ['category', 'subCategory'],
+    });
+    categoryEntity.isActive = !categoryEntity.isActive;
+    await this.categoryRepository.save(categoryEntity);
+    const newPublishState = categoryEntity.isActive
+      ? PublishState.PUBLISHED
+      : PublishState.DRAFT;
+
+    for (const product of products) {
+      if (product.publishState !== newPublishState) {
+        product.publishState = newPublishState;
+        product.isManualPublishState = true;
+        await this.productRepository.save(product);
+        console.log(`Updated product ${product.id} to ${newPublishState}`);
+      }
+    }
+    return categoryEntity;
+  }
+  async updateStateSub(id: number): Promise<subCategory> {
+    const subcategoryEntity = await this.subCategoryRepository.findOne({
+      where: { id },
+    });
+    if (!subcategoryEntity) {
+      throw new HttpException('subcateogry not found', HttpStatus.NOT_FOUND);
+    }
+    const products = await this.productRepository.find({
+      where: { subCategory: { id } },
+      relations: ['category', 'subCategory'],
+    });
+    subcategoryEntity.isActive = !subcategoryEntity.isActive;
+    await this.subCategoryRepository.save(subcategoryEntity);
+    const newPublishState = subcategoryEntity.isActive
+      ? PublishState.PUBLISHED
+      : PublishState.DRAFT;
+
+    for (const product of products) {
+      if (product.publishState !== newPublishState) {
+        product.publishState = newPublishState;
+        product.isManualPublishState = true;
+        await this.productRepository.save(product);
+        console.log(`Updated product ${product.id} to ${newPublishState}`);
+      }
+    }
+    return subcategoryEntity;
   }
 }

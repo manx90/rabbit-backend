@@ -1,4 +1,4 @@
-/* eslint-disable prettier/prettier */ /* eslint-disable @typescript-eslint/no-unsafe-member-access */ "use strict";
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */ /* eslint-disable prettier/prettier */ /* eslint-disable @typescript-eslint/no-unsafe-member-access */ "use strict";
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
@@ -10,12 +10,12 @@ Object.defineProperty(exports, "OrderRepository", {
 });
 const _common = require("@nestjs/common");
 const _typeorm = require("@nestjs/typeorm");
-const _typeorm1 = require("typeorm");
-const _orderentity = require("./order.entity");
-const _productentity = require("../product/entities/product.entity");
-const _ordertypes = require("./order.types");
 const _authentity = require("../auth/entities/auth.entity");
 const _optosshipmentservice = require("../optos/optos.shipment.service");
+const _productentity = require("../product/entities/product.entity");
+const _typeorm1 = require("typeorm");
+const _orderentity = require("./order.entity");
+const _ordertypes = require("./order.types");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -107,7 +107,9 @@ let OrderRepository = class OrderRepository {
             notes: dto.notes
         };
         await this.optosService.createShipment(shipmentDto).then((res)=>{
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             Order.optos_id = res.id;
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             Order.optos_status = res.status;
         });
         // Update the order with the calculated amount
@@ -314,6 +316,7 @@ let OrderRepository = class OrderRepository {
         if (!order) {
             throw new _common.NotFoundException(`Order with optos_id ${optosId} not found`);
         }
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const res = await this.optosService.getShipment({
             id: optosId
         });
@@ -333,6 +336,34 @@ let OrderRepository = class OrderRepository {
     }
     async length() {
         return this.orderRepo.count();
+    }
+    async countPendingOrders() {
+        return this.orderRepo.count({
+            where: {
+                status: _ordertypes.OrderStatus.PENDING
+            }
+        });
+    }
+    async countCancelledOrders() {
+        return this.orderRepo.count({
+            where: {
+                status: _ordertypes.OrderStatus.CANCELLED
+            }
+        });
+    }
+    async countShippedOrders() {
+        return this.orderRepo.count({
+            where: {
+                status: _ordertypes.OrderStatus.SHIPPED
+            }
+        });
+    }
+    async countReadiedOrders() {
+        return this.orderRepo.count({
+            where: {
+                status: _ordertypes.OrderStatus.READIED
+            }
+        });
     }
     constructor(orderRepo, productRepo, authRepo, optosService){
         this.orderRepo = orderRepo;

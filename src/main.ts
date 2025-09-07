@@ -69,7 +69,7 @@ async function bootstrap() {
     new NotFoundExceptionFilter(),
   );
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3000, 'localhost');
 }
 
 bootstrap();

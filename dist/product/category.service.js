@@ -10,11 +10,12 @@ Object.defineProperty(exports, "CategoryService", {
 });
 const _common = require("@nestjs/common");
 const _typeorm = require("@nestjs/typeorm");
-const _typeorm1 = require("typeorm");
-const _productentity = require("./entities/product.entity");
-const _Categoryentity = require("./entities/Category.entity");
-const _filestorageservice = require("../file-storage/file-storage.service");
+const _entityinterface = require("../common/interfaces/entity.interface");
 const _categoryapifeatures = require("../common/utils/category-api-features");
+const _filestorageservice = require("../file-storage/file-storage.service");
+const _typeorm1 = require("typeorm");
+const _Categoryentity = require("./entities/Category.entity");
+const _productentity = require("./entities/product.entity");
 function _define_property(obj, key, value) {
     if (key in obj) {
         Object.defineProperty(obj, key, {
@@ -87,13 +88,7 @@ let CategoryService = class CategoryService {
         console.log('categoryPath', categoryPath);
         return await this.fileStorageService.saveFiles(files, categoryPath);
     }
-    /**
-   * Creates a new category.
-   * @param file - UploadIcon object containing the icon file for the category.
-   * @param dto - Data transfer object containing category details.
-   * @returns The created category entity.
-   * @throws HttpException if the category already exists.
-   */ async createCategory(file, dto) {
+    async createCategory(file, dto) {
         // Check if a category with the same name already exists
         const existing = await this.categoryRepository.findOne({
             where: {
@@ -163,12 +158,7 @@ let CategoryService = class CategoryService {
         });
         return this.subCategoryRepository.save(sub);
     }
-    /**
-   * Transform category file paths to full URLs
-   * @param categories Array of category entities
-   * @param req Express Request object
-   * @returns Categories with transformed URLs
-   */ transformCategoryUrls(categories, req) {
+    transformCategoryUrls(categories, req) {
         const protocol = req.protocol || 'http';
         const host = req.get('host') || 'localhost:3000';
         const baseUrl = `${protocol}://${host}`;
@@ -333,6 +323,72 @@ let CategoryService = class CategoryService {
         });
         if (!subCategory) throw new _common.HttpException('SubCategory not found', _common.HttpStatus.NOT_FOUND);
         return subCategory;
+    }
+    async updateState(id) {
+        const categoryEntity = await this.categoryRepository.findOne({
+            where: {
+                id
+            }
+        });
+        if (!categoryEntity) {
+            throw new _common.HttpException('Category not found', _common.HttpStatus.NOT_FOUND);
+        }
+        const products = await this.productRepository.find({
+            where: {
+                category: {
+                    id
+                }
+            },
+            relations: [
+                'category',
+                'subCategory'
+            ]
+        });
+        categoryEntity.isActive = !categoryEntity.isActive;
+        await this.categoryRepository.save(categoryEntity);
+        const newPublishState = categoryEntity.isActive ? _entityinterface.PublishState.PUBLISHED : _entityinterface.PublishState.DRAFT;
+        for (const product of products){
+            if (product.publishState !== newPublishState) {
+                product.publishState = newPublishState;
+                product.isManualPublishState = true;
+                await this.productRepository.save(product);
+                console.log(`Updated product ${product.id} to ${newPublishState}`);
+            }
+        }
+        return categoryEntity;
+    }
+    async updateStateSub(id) {
+        const subcategoryEntity = await this.subCategoryRepository.findOne({
+            where: {
+                id
+            }
+        });
+        if (!subcategoryEntity) {
+            throw new _common.HttpException('subcateogry not found', _common.HttpStatus.NOT_FOUND);
+        }
+        const products = await this.productRepository.find({
+            where: {
+                subCategory: {
+                    id
+                }
+            },
+            relations: [
+                'category',
+                'subCategory'
+            ]
+        });
+        subcategoryEntity.isActive = !subcategoryEntity.isActive;
+        await this.subCategoryRepository.save(subcategoryEntity);
+        const newPublishState = subcategoryEntity.isActive ? _entityinterface.PublishState.PUBLISHED : _entityinterface.PublishState.DRAFT;
+        for (const product of products){
+            if (product.publishState !== newPublishState) {
+                product.publishState = newPublishState;
+                product.isManualPublishState = true;
+                await this.productRepository.save(product);
+                console.log(`Updated product ${product.id} to ${newPublishState}`);
+            }
+        }
+        return subcategoryEntity;
     }
     constructor(categoryRepository, subCategoryRepository, productRepository, fileStorageService){
         this.categoryRepository = categoryRepository;

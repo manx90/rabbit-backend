@@ -9,15 +9,15 @@ Object.defineProperty(exports, "AppModule", {
     }
 });
 const _common = require("@nestjs/common");
+const _jwt = require("@nestjs/jwt");
 const _typeorm = require("@nestjs/typeorm");
 const _authmodule = require("./auth/auth.module");
-const _productmodule = require("./product/product.module");
 const _configmodule = require("./config/config.module");
 const _configservice = require("./config/config.service");
+const _filestoragemodule = require("./file-storage/file-storage.module");
 const _optosmodule = require("./optos/optos.module");
 const _ordermodule = require("./order/order.module");
-const _jwt = require("@nestjs/jwt");
-const _filestoragemodule = require("./file-storage/file-storage.module");
+const _productmodule = require("./product/product.module");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -74,7 +74,7 @@ AppModule = _ts_decorate([
                             idleTimeout: 60000
                         },
                         // Disable logging in production to save memory
-                        logging: process.env.NODE_ENV !== 'production'
+                        logging: false
                     })
             }),
             _authmodule.AuthModule,

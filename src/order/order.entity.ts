@@ -1,19 +1,17 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  OneToMany,
-  ManyToOne,
-  BeforeInsert,
-  BeforeUpdate,
-  AfterLoad,
-} from 'typeorm';
-import { OrderStatus } from './order.types';
+import { Exclude } from 'class-transformer';
 import { auth } from 'src/auth/entities/auth.entity';
 import { product } from 'src/product/entities/product.entity';
-import { Exclude } from 'class-transformer';
-import { OptosShipmentService } from 'src/optos/optos.shipment.service';
+import {
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { OrderStatus } from './order.types';
 
 @Entity()
 export class order {

@@ -107,7 +107,7 @@ async function bootstrap() {
     // Apply global exception filters
     app.useGlobalFilters(new _validationexceptionfilter.ValidationExceptionFilter(), new _notfoundexceptionfilter.NotFoundExceptionFilter());
     var _process_env_PORT;
-    await app.listen((_process_env_PORT = process.env.PORT) !== null && _process_env_PORT !== void 0 ? _process_env_PORT : 3000);
+    await app.listen((_process_env_PORT = process.env.PORT) !== null && _process_env_PORT !== void 0 ? _process_env_PORT : 3000, 'localhost');
 }
 bootstrap();
 

@@ -26,8 +26,8 @@ _export(exports, {
     }
 });
 const _swagger = require("@nestjs/swagger");
-const _classvalidator = require("class-validator");
 const _classtransformer = require("class-transformer");
+const _classvalidator = require("class-validator");
 const _productcollectionentity = require("../entities/product-collection.entity");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;

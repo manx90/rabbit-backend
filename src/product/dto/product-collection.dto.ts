@@ -1,20 +1,19 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsString,
-  IsNotEmpty,
-  IsOptional,
-  IsEnum,
-  IsBoolean,
-  IsNumber,
-  IsArray,
-  ArrayMaxSize,
-  ValidateNested,
-  IsObject,
-} from 'class-validator';
 import { Type } from 'class-transformer';
 import {
-  CollectionType,
+  ArrayMaxSize,
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+import {
   CollectionStatus,
+  CollectionType,
 } from '../entities/product-collection.entity';
 
 export class CollectionSettingsDto {
