@@ -67,8 +67,6 @@ AppModule = _ts_decorate([
                         // Memory optimization for cPanel
                         extra: {
                             connectionLimit: process.env.NODE_ENV === 'production' ? 3 : 10,
-                            acquireTimeout: 60000,
-                            timeout: 60000,
                             // Reduce memory usage
                             maxIdle: 10000,
                             idleTimeout: 60000
