@@ -94,8 +94,8 @@ export class product {
   })
   publishState: PublishState;
 
-  @Column({ type: 'boolean', default: false })
-  isManualPublishState: boolean;
+  @Column({ type: 'boolean', default: false, nullable: true })
+  isManualPublishState?: boolean;
 
   @Column({ type: 'json', nullable: true })
   colors: ColorDetail[];
@@ -204,8 +204,8 @@ export class product {
   @AfterInsert()
   @AfterUpdate()
   updatePublishState() {
-    // Skip automatic state update if manually set
-    if (this.isManualPublishState) {
+    // Skip automatic state update if manually set (only if column exists)
+    if (this.isManualPublishState === true) {
       return;
     }
 

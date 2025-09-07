@@ -43,8 +43,10 @@ let ProductService = class ProductService {
         } else {
             prod.publishState = _entityinterface.PublishState.PUBLISHED;
         }
-        // Set flag to indicate this is a manual state change
-        prod.isManualPublishState = true;
+        // Set flag to indicate this is a manual state change (only if column exists)
+        if (prod.hasOwnProperty('isManualPublishState')) {
+            prod.isManualPublishState = true;
+        }
         console.log('New publishState:', prod.publishState);
         await this.productRepo.save(prod);
         return prod;
@@ -61,7 +63,9 @@ let ProductService = class ProductService {
         }
         for (const prod of products){
             prod.publishState = _entityinterface.PublishState.PUBLISHED;
-            prod.isManualPublishState = true;
+            if (prod.hasOwnProperty('isManualPublishState')) {
+                prod.isManualPublishState = true;
+            }
             const newProd = await this.productRepo.save(prod);
             console.log(newProd);
         }
@@ -79,7 +83,9 @@ let ProductService = class ProductService {
         }
         for (const prod of products){
             prod.publishState = _entityinterface.PublishState.DRAFT;
-            prod.isManualPublishState = true;
+            if (prod.hasOwnProperty('isManualPublishState')) {
+                prod.isManualPublishState = true;
+            }
             await this.productRepo.save(prod);
         }
         return products.length;

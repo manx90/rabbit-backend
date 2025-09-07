@@ -74,8 +74,8 @@ let product = class product {
     }
     // schedule publish
     updatePublishState() {
-        // Skip automatic state update if manually set
-        if (this.isManualPublishState) {
+        // Skip automatic state update if manually set (only if column exists)
+        if (this.isManualPublishState === true) {
             return;
         }
         if (this.datePublished && this.datePublished > new Date()) {
@@ -209,7 +209,8 @@ _ts_decorate([
 _ts_decorate([
     (0, _typeorm.Column)({
         type: 'boolean',
-        default: false
+        default: false,
+        nullable: true
     }),
     _ts_metadata("design:type", Boolean)
 ], product.prototype, "isManualPublishState", void 0);
