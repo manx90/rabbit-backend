@@ -8,15 +8,16 @@ Object.defineProperty(exports, "LoggerMiddleware", {
         return LoggerMiddleware;
     }
 });
+const _loggerservice = require("../utils/logger.service");
 function LoggerMiddleware(req, res, next) {
+    const logger = new _loggerservice.LoggerService();
     const { method, originalUrl, ip } = req;
     const userAgent = req.get('user-agent') || '';
-    console.log(`[${new Date().toISOString()}] ${method} ${originalUrl} - ${ip} - ${userAgent}`);
-    // Track response time
+    logger.info(`${method} ${originalUrl} - ${ip} - ${userAgent}`, 'REQUEST');
     const start = Date.now();
     res.on('finish', ()=>{
         const duration = Date.now() - start;
-        console.log(`[${new Date().toISOString()}] ${method} ${originalUrl} - ${res.statusCode} - ${duration}ms`);
+        logger.info(`${method} ${originalUrl} - ${res.statusCode} - ${duration}ms`, 'RESPONSE');
     });
     next();
 }
