@@ -527,7 +527,6 @@ let ProductCrud = class ProductCrud {
             id: product.id,
             name: product.name
         };
-        await this.productRepo.save(product);
         // Delete the entire product directory
         const productPath = `products/${product.name.replace(/\s+/g, '_').toLowerCase()}`;
         this.fileStorageService.deleteDirectory(productPath);
@@ -540,10 +539,7 @@ let ProductCrud = class ProductCrud {
             };
         } catch (error) {
             console.error('Error deleting product:', error);
-            return {
-                success: false,
-                message: `Error deleting product: ${error.message}`
-            };
+            throw new _common.BadRequestException(`Error deleting product: ${error.message}`);
         }
     }
     async findOne(id) {
