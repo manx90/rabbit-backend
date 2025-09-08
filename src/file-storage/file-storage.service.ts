@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   existsSync,
@@ -44,7 +45,15 @@ export class FileStorageService {
     const dir = join(this.uploadDir, subDirectory);
     this.ensureDirectoryExists(dir);
 
-    const uniqueFilename = `${uuidv4()}${extname(file.originalname)}`;
+    // Determine output extension: use optimization format if provided, otherwise keep original
+    const desiredFormat = optimizeOptions?.format;
+    const targetExt = desiredFormat
+      ? desiredFormat === 'jpeg'
+        ? '.jpg'
+        : `.${desiredFormat}`
+      : extname(file.originalname);
+
+    const uniqueFilename = `${uuidv4()}${targetExt}`;
     const filePath = join(dir, uniqueFilename);
 
     let bufferToSave = file.buffer;

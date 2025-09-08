@@ -51,8 +51,8 @@ export class ProductCrud {
   ): Promise<string[]> {
     const productPath = `products/${productName.replace(/\s+/g, '_').toLowerCase()}/${subDirectory}`;
     return await this.fileStorageService.saveFiles(files, productPath, {
-      quality: 50,
-      format: 'jpeg',
+      quality: 20,
+      format: 'avif',
       progressive: true,
     });
   }
@@ -67,14 +67,14 @@ export class ProductCrud {
     if (subDirectory === 'sizechart' || subDirectory === 'measure') {
       // Don't compress these files - keep original quality
       return await this.fileStorageService.saveFile(file, productPath, {
-        quality: 100, // Keep original quality
-        format: 'jpeg',
+        quality: 100,
+        format: 'avif',
         progressive: true,
       });
     } else {
       return await this.fileStorageService.saveFile(file, productPath, {
-        quality: 50,
-        format: 'jpeg',
+        quality: 20,
+        format: 'avif',
         progressive: true,
       });
     }

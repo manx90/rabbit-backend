@@ -1,4 +1,4 @@
-"use strict";
+/* eslint-disable no-self-assign */ /* eslint-disable @typescript-eslint/no-unsafe-member-access */ /* eslint-disable @typescript-eslint/no-unsafe-assignment */ "use strict";
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
@@ -146,10 +146,6 @@ let ImageOptimizationService = class ImageOptimizationService {
             }
             // Read the image
             const image = (0, _sharp.default)(inputPath);
-            // Get image metadata
-            const metadata = await image.metadata();
-            // Keep original dimensions - only compress, don't resize
-            const { width, height } = metadata;
             // Apply transformations without resizing
             let processedImage = image;
             // Apply format-specific optimizations
@@ -221,10 +217,6 @@ let ImageOptimizationService = class ImageOptimizationService {
         const opts = _object_spread({}, this.defaultOptions, options);
         try {
             let processedImage = (0, _sharp.default)(buffer);
-            // Get image metadata
-            const metadata = await processedImage.metadata();
-            // Keep original dimensions - only compress, don't resize
-            const { width, height } = metadata;
             // Apply transformations without resizing
             processedImage = processedImage;
             // Apply format-specific optimizations

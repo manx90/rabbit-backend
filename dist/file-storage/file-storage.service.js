@@ -1,4 +1,4 @@
-"use strict";
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */ "use strict";
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
@@ -35,7 +35,10 @@ let FileStorageService = class FileStorageService {
    */ async saveFile(file, subDirectory = 'products', optimizeOptions) {
         const dir = (0, _path.join)(this.uploadDir, subDirectory);
         this.ensureDirectoryExists(dir);
-        const uniqueFilename = `${(0, _uuid.v4)()}${(0, _path.extname)(file.originalname)}`;
+        // Determine output extension: use optimization format if provided, otherwise keep original
+        const desiredFormat = optimizeOptions === null || optimizeOptions === void 0 ? void 0 : optimizeOptions.format;
+        const targetExt = desiredFormat ? desiredFormat === 'jpeg' ? '.jpg' : `.${desiredFormat}` : (0, _path.extname)(file.originalname);
+        const uniqueFilename = `${(0, _uuid.v4)()}${targetExt}`;
         const filePath = (0, _path.join)(dir, uniqueFilename);
         let bufferToSave = file.buffer;
         // Optimize image if it's a supported image format
