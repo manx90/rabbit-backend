@@ -8,6 +8,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { ValidationExceptionFilter } from './common/filters/validation-exception.filter';
 import { NotFoundExceptionFilter } from './common/filters/not-found-exception.filter';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { LoggerService } from './common/utils/logger.service';
 
 // import dataSource from './data-source';
@@ -73,6 +74,7 @@ async function bootstrap() {
 
     // Apply global exception filters
     app.useGlobalFilters(
+      new AllExceptionsFilter(new LoggerService()),
       new ValidationExceptionFilter(),
       new NotFoundExceptionFilter(),
     );

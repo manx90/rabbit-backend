@@ -11,6 +11,7 @@ const _loggermiddleware = require("./common/middleware/logger.middleware");
 const _path = require("path");
 const _validationexceptionfilter = require("./common/filters/validation-exception.filter");
 const _notfoundexceptionfilter = require("./common/filters/not-found-exception.filter");
+const _allexceptionsfilter = require("./common/filters/all-exceptions.filter");
 const _loggerservice = require("./common/utils/logger.service");
 function _getRequireWildcardCache(nodeInterop) {
     if (typeof WeakMap !== "function") return null;
@@ -110,7 +111,7 @@ async function bootstrap() {
             forbidNonWhitelisted: true
         }));
         // Apply global exception filters
-        app.useGlobalFilters(new _validationexceptionfilter.ValidationExceptionFilter(), new _notfoundexceptionfilter.NotFoundExceptionFilter());
+        app.useGlobalFilters(new _allexceptionsfilter.AllExceptionsFilter(new _loggerservice.LoggerService()), new _validationexceptionfilter.ValidationExceptionFilter(), new _notfoundexceptionfilter.NotFoundExceptionFilter());
         logger.info('Starting server...', 'Bootstrap');
         var _process_env_PORT;
         await app.listen((_process_env_PORT = process.env.PORT) !== null && _process_env_PORT !== void 0 ? _process_env_PORT : 3000, '0.0.0.0');
