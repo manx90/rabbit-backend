@@ -99,7 +99,7 @@ export class product {
   publishState: PublishState;
 
   @Column({ type: 'boolean', default: false, nullable: true })
-  isManualPublishState?: boolean;
+  isManualPublishState: boolean;
 
   @Column({ type: 'json', nullable: true })
   colors: ColorDetail[];
