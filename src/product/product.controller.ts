@@ -151,8 +151,38 @@ export class ProductController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.SuperAdmin)
-  remove(@Param('id') id: number) {
-    return this.productcrud.remove(+id);
+  async remove(@Param('id') id: number, @Req() req: Request) {
+    const start = Date.now();
+    this.logger.logApiRequest(
+      'DELETE',
+      `/product/${id}`,
+      undefined,
+      undefined,
+      'ProductController',
+    );
+    try {
+      const result = await this.productcrud.remove(+id);
+      const duration = Date.now() - start;
+      this.logger.logApiResponse(
+        'DELETE',
+        `/product/${id}`,
+        200,
+        duration,
+        'ProductController',
+      );
+      return result;
+    } catch (error) {
+      const duration = Date.now() - start;
+      this.logger.logApiResponse(
+        'DELETE',
+        `/product/${id}`,
+        500,
+        duration,
+        'ProductController',
+      );
+      this.logger.logError(error, 'ProductController', { id });
+      throw error;
+    }
   }
 
   @Delete()

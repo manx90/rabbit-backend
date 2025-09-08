@@ -71,8 +71,22 @@ let ProductController = class ProductController {
     async updateProduct(id, updateProductDto, files, req) {
         return this.productcrud.update(+id, updateProductDto, files, req);
     }
-    remove(id) {
-        return this.productcrud.remove(+id);
+    async remove(id, req) {
+        const start = Date.now();
+        this.logger.logApiRequest('DELETE', `/product/${id}`, undefined, undefined, 'ProductController');
+        try {
+            const result = await this.productcrud.remove(+id);
+            const duration = Date.now() - start;
+            this.logger.logApiResponse('DELETE', `/product/${id}`, 200, duration, 'ProductController');
+            return result;
+        } catch (error) {
+            const duration = Date.now() - start;
+            this.logger.logApiResponse('DELETE', `/product/${id}`, 500, duration, 'ProductController');
+            this.logger.logError(error, 'ProductController', {
+                id
+            });
+            throw error;
+        }
     }
     deleteall() {
         return this.productcrud.deleteAll();
@@ -294,11 +308,13 @@ _ts_decorate([
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
     (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
     _ts_param(0, (0, _common.Param)('id')),
+    _ts_param(1, (0, _common.Req)()),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
-        Number
+        Number,
+        typeof _express.Request === "undefined" ? Object : _express.Request
     ]),
-    _ts_metadata("design:returntype", void 0)
+    _ts_metadata("design:returntype", Promise)
 ], ProductController.prototype, "remove", null);
 _ts_decorate([
     (0, _common.Delete)(),

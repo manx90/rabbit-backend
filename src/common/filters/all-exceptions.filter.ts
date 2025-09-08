@@ -22,24 +22,39 @@ export class AllExceptionsFilter implements ExceptionFilter {
       ? (exception as HttpException).getStatus()
       : HttpStatus.INTERNAL_SERVER_ERROR;
 
+    // Build a rich error payload for logs
+    let errorResponse: any;
+    if (isHttpException) {
+      errorResponse = (exception as HttpException).getResponse();
+    } else if (exception instanceof Error) {
+      errorResponse = {
+        name: exception.name,
+        message: exception.message,
+        stack: exception.stack,
+      };
+    } else {
+      errorResponse = { message: 'Unknown error', value: String(exception) };
+    }
+
+    // Log with request context
+    this.logger.error(
+      `Unhandled exception at ${request.method} ${request.originalUrl}`,
+      'ALL_EXCEPTIONS',
+      typeof errorResponse === 'string'
+        ? errorResponse
+        : JSON.stringify({
+            status,
+            error: errorResponse,
+            params: request.params,
+            query: request.query,
+            body: request.body,
+          }),
+    );
+
+    // Prepare client-safe body
     const message = isHttpException
       ? (exception as HttpException).message
       : 'Internal server error';
-
-    const stack = exception instanceof Error ? exception.stack : undefined;
-
-    this.logger.logError(
-      new Error(message, {
-        cause: exception instanceof Error ? exception : undefined,
-      } as any),
-      'ALL_EXCEPTIONS',
-      {
-        method: request.method,
-        url: request.originalUrl,
-        status,
-      },
-    );
-
     const errorBody = isHttpException
       ? (exception as HttpException).getResponse()
       : {

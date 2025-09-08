@@ -26,15 +26,32 @@ let AllExceptionsFilter = class AllExceptionsFilter {
         const request = ctx.getRequest();
         const isHttpException = exception instanceof _common.HttpException;
         const status = isHttpException ? exception.getStatus() : _common.HttpStatus.INTERNAL_SERVER_ERROR;
+        // Build a rich error payload for logs
+        let errorResponse;
+        if (isHttpException) {
+            errorResponse = exception.getResponse();
+        } else if (exception instanceof Error) {
+            errorResponse = {
+                name: exception.name,
+                message: exception.message,
+                stack: exception.stack
+            };
+        } else {
+            errorResponse = {
+                message: 'Unknown error',
+                value: String(exception)
+            };
+        }
+        // Log with request context
+        this.logger.error(`Unhandled exception at ${request.method} ${request.originalUrl}`, 'ALL_EXCEPTIONS', typeof errorResponse === 'string' ? errorResponse : JSON.stringify({
+            status,
+            error: errorResponse,
+            params: request.params,
+            query: request.query,
+            body: request.body
+        }));
+        // Prepare client-safe body
         const message = isHttpException ? exception.message : 'Internal server error';
-        const stack = exception instanceof Error ? exception.stack : undefined;
-        this.logger.logError(new Error(message, {
-            cause: exception instanceof Error ? exception : undefined
-        }), 'ALL_EXCEPTIONS', {
-            method: request.method,
-            url: request.originalUrl,
-            status
-        });
         const errorBody = isHttpException ? exception.getResponse() : {
             statusCode: status,
             message,
