@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { join } from 'path';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
@@ -32,6 +33,7 @@ import { ProductModule } from './product/product.module';
         password: config.pass,
         database: config.db,
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        migrations: [join(__dirname, 'migrations', '*{.ts,.js}')],
         synchronize: process.env.NODE_ENV !== 'production', // Disable in production
         migrationsRun: true,
         // Memory optimization for cPanel

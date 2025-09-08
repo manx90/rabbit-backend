@@ -9,6 +9,7 @@ Object.defineProperty(exports, "AppModule", {
     }
 });
 const _common = require("@nestjs/common");
+const _path = require("path");
 const _jwt = require("@nestjs/jwt");
 const _typeorm = require("@nestjs/typeorm");
 const _authmodule = require("./auth/auth.module");
@@ -61,6 +62,9 @@ AppModule = _ts_decorate([
                         database: config.db,
                         entities: [
                             __dirname + '/**/*.entity{.ts,.js}'
+                        ],
+                        migrations: [
+                            (0, _path.join)(__dirname, 'migrations', '*{.ts,.js}')
                         ],
                         synchronize: process.env.NODE_ENV !== 'production',
                         migrationsRun: true,
