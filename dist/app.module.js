@@ -20,6 +20,7 @@ const _optosmodule = require("./optos/optos.module");
 const _ordermodule = require("./order/order.module");
 const _productmodule = require("./product/product.module");
 const _databasebootstrapservice = require("./common/utils/database-bootstrap.service");
+const _loggerservice = require("./common/utils/logger.service");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -87,7 +88,8 @@ AppModule = _ts_decorate([
             _filestoragemodule.FileStorageModule
         ],
         providers: [
-            _databasebootstrapservice.DatabaseBootstrapService
+            _databasebootstrapservice.DatabaseBootstrapService,
+            _loggerservice.LoggerService
         ]
     })
 ], AppModule);

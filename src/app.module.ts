@@ -10,6 +10,7 @@ import { OptosModule } from './optos/optos.module';
 import { OrderModule } from './order/order.module';
 import { ProductModule } from './product/product.module';
 import { DatabaseBootstrapService } from './common/utils/database-bootstrap.service';
+import { LoggerService } from './common/utils/logger.service';
 
 @Module({
   imports: [
@@ -54,6 +55,6 @@ import { DatabaseBootstrapService } from './common/utils/database-bootstrap.serv
     OptosModule,
     FileStorageModule,
   ],
-  providers: [DatabaseBootstrapService],
+  providers: [DatabaseBootstrapService, LoggerService],
 })
 export class AppModule {}
