@@ -9,6 +9,7 @@ import { FileStorageModule } from './file-storage/file-storage.module';
 import { OptosModule } from './optos/optos.module';
 import { OrderModule } from './order/order.module';
 import { ProductModule } from './product/product.module';
+import { DatabaseBootstrapService } from './common/utils/database-bootstrap.service';
 
 @Module({
   imports: [
@@ -34,8 +35,8 @@ import { ProductModule } from './product/product.module';
         database: config.db,
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         migrations: [join(__dirname, 'migrations', '*{.ts,.js}')],
-        synchronize: process.env.NODE_ENV !== 'production', // Disable in production
-        migrationsRun: true,
+        synchronize: false, // Prevent auto sync on cPanel
+        migrationsRun: false, // We handle schema fix in DatabaseBootstrapService
         // Memory optimization for cPanel
         extra: {
           connectionLimit: process.env.NODE_ENV === 'production' ? 3 : 10,
@@ -53,5 +54,6 @@ import { ProductModule } from './product/product.module';
     OptosModule,
     FileStorageModule,
   ],
+  providers: [DatabaseBootstrapService],
 })
 export class AppModule {}

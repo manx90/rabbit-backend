@@ -19,6 +19,7 @@ const _filestoragemodule = require("./file-storage/file-storage.module");
 const _optosmodule = require("./optos/optos.module");
 const _ordermodule = require("./order/order.module");
 const _productmodule = require("./product/product.module");
+const _databasebootstrapservice = require("./common/utils/database-bootstrap.service");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -66,8 +67,8 @@ AppModule = _ts_decorate([
                         migrations: [
                             (0, _path.join)(__dirname, 'migrations', '*{.ts,.js}')
                         ],
-                        synchronize: process.env.NODE_ENV !== 'production',
-                        migrationsRun: true,
+                        synchronize: false,
+                        migrationsRun: false,
                         // Memory optimization for cPanel
                         extra: {
                             connectionLimit: process.env.NODE_ENV === 'production' ? 3 : 10,
@@ -84,6 +85,9 @@ AppModule = _ts_decorate([
             _productmodule.ProductModule,
             _optosmodule.OptosModule,
             _filestoragemodule.FileStorageModule
+        ],
+        providers: [
+            _databasebootstrapservice.DatabaseBootstrapService
         ]
     })
 ], AppModule);
