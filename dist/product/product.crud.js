@@ -519,27 +519,41 @@ let ProductCrud = class ProductCrud {
         };
     }
     async remove(id) {
-        const product = await this.productRepo.findOneBy({
-            id
-        });
-        if (!product) throw new _common.NotFoundException('Product not found');
-        const productInfo = {
-            id: product.id,
-            name: product.name
-        };
-        // Delete the entire product directory
-        const productPath = `products/${product.name.replace(/\s+/g, '_').toLowerCase()}`;
-        this.fileStorageService.deleteDirectory(productPath);
+        this.logger.logApiRequest('DELETE', `/product/${id}`, undefined, undefined, 'ProductCrud');
+        const start = Date.now();
         try {
+            const product = await this.productRepo.findOne({
+                where: {
+                    id
+                }
+            });
+            if (!product) throw new _common.NotFoundException('Product not found');
+            const productInfo = {
+                id: product.id,
+                name: product.name
+            };
+            try {
+                const productPath = `products/${product.name.replace(/\s+/g, '_').toLowerCase()}`;
+                const deleted = this.fileStorageService.deleteDirectory(productPath);
+                this.logger.info(`deleteDirectory('${productPath}') -> ${deleted}`, 'ProductCrud');
+            } catch (fsErr) {
+                this.logger.warn(`Failed to delete product directory for ${product.name}: ${fsErr instanceof Error ? fsErr.message : String(fsErr)}`, 'ProductCrud');
+            }
             await this.productRepo.remove(product);
+            const duration = Date.now() - start;
+            this.logger.logApiResponse('DELETE', `/product/${id}`, 200, duration, 'ProductCrud');
             return {
                 success: true,
                 product: productInfo,
                 message: 'Product deleted successfully'
             };
         } catch (error) {
-            console.error('Error deleting product:', error);
-            throw new _common.BadRequestException(`Error deleting product: ${error.message}`);
+            const duration = Date.now() - start;
+            this.logger.logApiResponse('DELETE', `/product/${id}`, 500, duration, 'ProductCrud');
+            this.logger.logError(error, 'ProductCrud', {
+                id
+            });
+            throw error;
         }
     }
     async findOne(id) {
