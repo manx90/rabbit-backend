@@ -42,18 +42,14 @@ let AllExceptionsFilter = class AllExceptionsFilter {
                 value: String(exception)
             };
         }
-        // Log with request context and original stack if available
-        const logPayload = {
+        // Log with request context
+        this.logger.error(`Unhandled exception at ${request.method} ${request.originalUrl}`, 'ALL_EXCEPTIONS', typeof errorResponse === 'string' ? errorResponse : JSON.stringify({
             status,
             error: errorResponse,
             params: request.params,
             query: request.query,
-            body: request.body,
-            method: request.method,
-            url: request.originalUrl
-        };
-        const stack = exception instanceof Error ? exception.stack : undefined;
-        this.logger.error(`Unhandled exception: ${JSON.stringify(logPayload)}`, 'ALL_EXCEPTIONS', stack);
+            body: request.body
+        }));
         // Prepare client-safe body
         const message = isHttpException ? exception.message : 'Internal server error';
         const errorBody = isHttpException ? exception.getResponse() : {
