@@ -36,19 +36,21 @@ export class AllExceptionsFilter implements ExceptionFilter {
       errorResponse = { message: 'Unknown error', value: String(exception) };
     }
 
-    // Log with request context
+    // Log with request context and original stack if available
+    const logPayload = {
+      status,
+      error: errorResponse,
+      params: request.params,
+      query: request.query,
+      body: request.body,
+      method: request.method,
+      url: request.originalUrl,
+    };
+    const stack = exception instanceof Error ? exception.stack : undefined;
     this.logger.error(
-      `Unhandled exception at ${request.method} ${request.originalUrl}`,
+      `Unhandled exception: ${JSON.stringify(logPayload)}`,
       'ALL_EXCEPTIONS',
-      typeof errorResponse === 'string'
-        ? errorResponse
-        : JSON.stringify({
-            status,
-            error: errorResponse,
-            params: request.params,
-            query: request.query,
-            body: request.body,
-          }),
+      stack,
     );
 
     // Prepare client-safe body
