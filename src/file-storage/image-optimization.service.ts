@@ -135,7 +135,7 @@ export class ImageOptimizationService {
         case 'avif':
           processedImage = processedImage.avif({
             quality: opts.quality,
-            effort: 6,
+            effort: 3,
           });
           break;
         // Note: Sharp does not support SVG output. Skipping 'svg' case.
@@ -227,7 +227,7 @@ export class ImageOptimizationService {
         case 'avif':
           processedImage = processedImage.avif({
             quality: opts.quality,
-            effort: 6,
+            effort: 3,
           });
           break;
       }

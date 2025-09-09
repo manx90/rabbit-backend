@@ -50,11 +50,8 @@ let FileStorageService = class FileStorageService {
             // Continue with original buffer if optimization fails
             }
         }
-        // Use promisified version of writeFile
-        await new Promise((resolve)=>{
-            (0, _fs.writeFileSync)(filePath, bufferToSave);
-            resolve();
-        });
+        // Use async write to avoid blocking the event loop
+        await _fs.promises.writeFile(filePath, bufferToSave);
         // Return relative path that can be used in URLs
         return `${subDirectory}/${uniqueFilename}`;
     }

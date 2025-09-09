@@ -173,7 +173,7 @@ let ImageOptimizationService = class ImageOptimizationService {
                 case 'avif':
                     processedImage = processedImage.avif({
                         quality: opts.quality,
-                        effort: 6
+                        effort: 3
                     });
                     break;
             }
@@ -244,7 +244,7 @@ let ImageOptimizationService = class ImageOptimizationService {
                 case 'avif':
                     processedImage = processedImage.avif({
                         quality: opts.quality,
-                        effort: 6
+                        effort: 3
                     });
                     break;
             }

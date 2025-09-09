@@ -95,8 +95,8 @@ let ProductCrud = class ProductCrud {
     }
     async saveFile(file, productName, subDirectory) {
         const productPath = `products/${productName.replace(/\s+/g, '_').toLowerCase()}/${subDirectory}`;
-        // Skip compression for sizechart and measure files
-        if (subDirectory === 'sizechart' || subDirectory === 'measure') {
+        // Skip compression for sizechart/size-chart and measure files
+        if (subDirectory === 'sizechart' || subDirectory === 'size-chart' || subDirectory === 'measure') {
             // Don't compress these files - keep original quality
             return await this.fileStorageService.saveFile(file, productPath, {
                 quality: 100,
@@ -266,7 +266,7 @@ let ProductCrud = class ProductCrud {
             }
             // Save size chart image if provided
             if (files.imgSizeChart && files.imgSizeChart[0]) {
-                Product.imgSizeChart = await this.saveFile(files.imgSizeChart[0], dto.name, 'sizechart');
+                Product.imgSizeChart = await this.saveFile(files.imgSizeChart[0], dto.name, 'size-chart');
             }
             // Save measure image if provided
             if (files.imgMeasure && files.imgMeasure[0]) {
@@ -414,7 +414,7 @@ let ProductCrud = class ProductCrud {
                     this.fileStorageService.deleteFile(product.imgSizeChart);
                 }
                 // Save new size chart image
-                product.imgSizeChart = await this.saveFile(files.imgSizeChart[0], product.name, 'sizechart');
+                product.imgSizeChart = await this.saveFile(files.imgSizeChart[0], product.name, 'size-chart');
             }
             // Handle measure image (single file)
             if (files.imgMeasure && files.imgMeasure[0]) {

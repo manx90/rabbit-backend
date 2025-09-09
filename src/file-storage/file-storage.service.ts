@@ -9,6 +9,7 @@ import {
   rmSync,
 } from 'fs';
 import { join, extname } from 'path';
+import { promises as fsp } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import {
   ImageOptimizationService,
@@ -74,11 +75,8 @@ export class FileStorageService {
       }
     }
 
-    // Use promisified version of writeFile
-    await new Promise<void>((resolve) => {
-      writeFileSync(filePath, bufferToSave);
-      resolve();
-    });
+    // Use async write to avoid blocking the event loop
+    await fsp.writeFile(filePath, bufferToSave);
 
     // Return relative path that can be used in URLs
     return `${subDirectory}/${uniqueFilename}`;

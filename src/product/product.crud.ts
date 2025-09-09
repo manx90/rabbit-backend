@@ -63,8 +63,12 @@ export class ProductCrud {
     subDirectory: string,
   ): Promise<string> {
     const productPath = `products/${productName.replace(/\s+/g, '_').toLowerCase()}/${subDirectory}`;
-    // Skip compression for sizechart and measure files
-    if (subDirectory === 'sizechart' || subDirectory === 'measure') {
+    // Skip compression for sizechart/size-chart and measure files
+    if (
+      subDirectory === 'sizechart' ||
+      subDirectory === 'size-chart' ||
+      subDirectory === 'measure'
+    ) {
       // Don't compress these files - keep original quality
       return await this.fileStorageService.saveFile(file, productPath, {
         quality: 100,
@@ -337,7 +341,7 @@ export class ProductCrud {
         Product.imgSizeChart = await this.saveFile(
           files.imgSizeChart[0],
           dto.name,
-          'sizechart',
+          'size-chart',
         );
       }
 
@@ -555,7 +559,7 @@ export class ProductCrud {
         product.imgSizeChart = await this.saveFile(
           files.imgSizeChart[0],
           product.name,
-          'sizechart',
+          'size-chart',
         );
       }
 
