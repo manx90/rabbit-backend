@@ -59,8 +59,11 @@ export class FileStorageService {
 
     let bufferToSave = file.buffer;
 
-    // Optimize image if it's a supported image format
-    if (this.imageOptimizationService.isSupportedImage(file.originalname)) {
+    // Optimize image only when explicit options are provided
+    if (
+      optimizeOptions &&
+      this.imageOptimizationService.isSupportedImage(file.originalname)
+    ) {
       try {
         bufferToSave = await this.imageOptimizationService.optimizeBuffer(
           file.buffer,

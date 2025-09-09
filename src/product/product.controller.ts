@@ -77,10 +77,6 @@ export class ProductController {
       throw error;
     }
   }
-  // @Get()
-  // async getAllProducts(@Req() req: Request) {
-  //   return await this.productcrud.getAllProducts(req.query, req);
-  // }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -111,7 +107,6 @@ export class ProductController {
       throw new BadRequestException('imgCover and imgColors must be upload!');
     }
     const poster = req.user as auth;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.productcrud.create(createProductDto, files, poster, req);
   }
 

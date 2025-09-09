@@ -50,11 +50,7 @@ export class ProductCrud {
     subDirectory: string,
   ): Promise<string[]> {
     const productPath = `products/${productName.replace(/\s+/g, '_').toLowerCase()}/${subDirectory}`;
-    return await this.fileStorageService.saveFiles(files, productPath, {
-      quality: 20,
-      format: 'avif',
-      progressive: true,
-    });
+    return await this.fileStorageService.saveFiles(files, productPath);
   }
 
   private async saveFile(
@@ -63,25 +59,8 @@ export class ProductCrud {
     subDirectory: string,
   ): Promise<string> {
     const productPath = `products/${productName.replace(/\s+/g, '_').toLowerCase()}/${subDirectory}`;
-    // Skip compression for sizechart/size-chart and measure files
-    if (
-      subDirectory === 'sizechart' ||
-      subDirectory === 'size-chart' ||
-      subDirectory === 'measure'
-    ) {
-      // Don't compress these files - keep original quality
-      return await this.fileStorageService.saveFile(file, productPath, {
-        quality: 100,
-        format: 'avif',
-        progressive: true,
-      });
-    } else {
-      return await this.fileStorageService.saveFile(file, productPath, {
-        quality: 20,
-        format: 'avif',
-        progressive: true,
-      });
-    }
+    // Save original file without optimization
+    return await this.fileStorageService.saveFile(file, productPath);
   }
 
   private async uploadFiles(

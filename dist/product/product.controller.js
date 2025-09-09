@@ -53,16 +53,11 @@ let ProductController = class ProductController {
             throw error;
         }
     }
-    // @Get()
-    // async getAllProducts(@Req() req: Request) {
-    //   return await this.productcrud.getAllProducts(req.query, req);
-    // }
     async createProduct(createProductDto, files, req) {
         if (!files.imgCover || !files.imgColors) {
             throw new _common.BadRequestException('imgCover and imgColors must be upload!');
         }
         const poster = req.user;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return this.productcrud.create(createProductDto, files, poster, req);
     }
     findOne(id) {
