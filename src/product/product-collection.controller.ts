@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Controller,
   Get,
@@ -89,7 +90,11 @@ export class ProductCollectionController {
   })
   async getAllCollections(@Query() query: any) {
     try {
-      return await this.collectionService.getAllCollections(query);
+      const data = await this.collectionService.getAllCollections(query);
+      return {
+        status: '200',
+        data: data,
+      };
     } catch (error) {
       throw new HttpException(
         'Failed to retrieve collections',
@@ -199,7 +204,11 @@ export class ProductCollectionController {
   })
   async getActiveCollections() {
     try {
-      return await this.collectionService.getActiveCollections();
+      const collections = await this.collectionService.getActiveCollections();
+      return {
+        status: 'success',
+        data: collections,
+      };
     } catch (error) {
       throw new HttpException(
         'Failed to retrieve active collections',

@@ -42,6 +42,9 @@ let CategoryController = class CategoryController {
     async getAllCategories(query, req) {
         return this.categoryService.getAllCategories(query, req);
     }
+    async getAllActiveCategories(query, req) {
+        return this.categoryService.getAllActiveCategories(query, req);
+    }
     async createCategory(files, dto) {
         try {
             var _files_iconCat;
@@ -170,6 +173,17 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], CategoryController.prototype, "getAllCategories", null);
+_ts_decorate([
+    (0, _common.Get)('active'),
+    _ts_param(0, (0, _common.Query)()),
+    _ts_param(1, (0, _common.Req)()),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        typeof _qs.ParsedQs === "undefined" ? Object : _qs.ParsedQs,
+        typeof _express.Request === "undefined" ? Object : _express.Request
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], CategoryController.prototype, "getAllActiveCategories", null);
 _ts_decorate([
     (0, _common.Post)(),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),

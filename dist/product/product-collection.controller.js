@@ -1,4 +1,4 @@
-"use strict";
+/* eslint-disable @typescript-eslint/no-unused-vars */ "use strict";
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
@@ -46,7 +46,11 @@ let ProductCollectionController = class ProductCollectionController {
     }
     async getAllCollections(query) {
         try {
-            return await this.collectionService.getAllCollections(query);
+            const data = await this.collectionService.getAllCollections(query);
+            return {
+                status: '200',
+                data: data
+            };
         } catch (error) {
             throw new _common.HttpException('Failed to retrieve collections', _common.HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -87,7 +91,11 @@ let ProductCollectionController = class ProductCollectionController {
     // ==================== CLIENT ENDPOINTS ====================
     async getActiveCollections() {
         try {
-            return await this.collectionService.getActiveCollections();
+            const collections = await this.collectionService.getActiveCollections();
+            return {
+                status: 'success',
+                data: collections
+            };
         } catch (error) {
             throw new _common.HttpException('Failed to retrieve active collections', _common.HttpStatus.INTERNAL_SERVER_ERROR);
         }

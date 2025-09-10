@@ -1,4 +1,4 @@
-"use strict";
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */ "use strict";
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
@@ -180,6 +180,37 @@ let CategoryService = class CategoryService {
     }
     async getAllCategories(query, req) {
         const queryBuilder = this.categoryRepository.createQueryBuilder('category').leftJoinAndSelect('category.subCategories', 'subCategory').select([
+            'category.id',
+            'category.name',
+            'category.icon',
+            'category.isActive',
+            'category.createdAt',
+            'category.updatedAt',
+            'subCategory.id',
+            'subCategory.name',
+            'subCategory.icon',
+            'subCategory.isActive',
+            'subCategory.categoryId'
+        ]);
+        const features = new _categoryapifeatures.CategoryApiFeatures(queryBuilder, query || {}, this.categoryRepository.metadata).filter().sort().paginate();
+        const [data, total] = await features.getManyAndCount();
+        const transformedData = req ? this.transformCategoryUrls(data, req) : data;
+        const pagination = features.getPaginationInfo();
+        return {
+            status: 'success',
+            results: transformedData.length,
+            total,
+            currentPage: pagination.page,
+            limit: pagination.limit,
+            totalPages: Math.ceil(total / pagination.limit),
+            lastPage: Math.ceil(total / pagination.limit),
+            data: transformedData
+        };
+    }
+    async getAllActiveCategories(query, req) {
+        const queryBuilder = this.categoryRepository.createQueryBuilder('category').leftJoinAndSelect('category.subCategories', 'subCategory').where('category.isActive = :isActive', {
+            isActive: true
+        }).select([
             'category.id',
             'category.name',
             'category.icon',

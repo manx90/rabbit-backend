@@ -1,3 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable no-case-declarations */
+/* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/require-await */
 import {
   Injectable,
   NotFoundException,
@@ -326,7 +333,12 @@ export class ProductCollectionService {
       .createQueryBuilder('collection')
       .leftJoinAndSelect('collection.categories', 'categories')
       .leftJoinAndSelect('collection.subCategories', 'subCategories')
-      .leftJoinAndSelect('collection.products', 'products')
+      .leftJoinAndSelect(
+        'collection.products',
+        'products',
+        'products.state = :publishedState',
+        { publishedState: 'published' },
+      )
       .leftJoinAndSelect('collection.createdBy', 'createdBy')
       .select([
         'collection',

@@ -69,6 +69,22 @@ export class CategoryController {
   }> {
     return this.categoryService.getAllCategories(query, req);
   }
+  @Get('active')
+  async getAllActiveCategories(
+    @Query() query: ParsedQs,
+    @Req() req: ExpressRequest,
+  ): Promise<{
+    status: string;
+    results: number;
+    total: number;
+    currentPage: number;
+    limit: number;
+    totalPages: number;
+    lastPage: number;
+    data: CategoryResponseDto[];
+  }> {
+    return this.categoryService.getAllActiveCategories(query, req);
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
