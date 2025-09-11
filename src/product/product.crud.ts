@@ -198,6 +198,7 @@ export class ProductCrud {
           'product.imgMeasure',
           'product.sizeDetails',
           'product.publishState',
+          'product.isManualPublishState',
           'product.colors',
           'product.quantity',
           'product.isFeatured',
