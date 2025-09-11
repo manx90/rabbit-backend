@@ -168,12 +168,18 @@ let OrderRepository = class OrderRepository {
                 orderItem.sizeName = size.sizeName;
                 orderItem.colorName = color.colorName;
                 orderItem.quantity = item.quantity;
+                orderItem.price = size.price; // Set the price from the size
                 orderItem.order = order;
                 return orderItem;
             }));
             order.items = orderItems;
-            // Update the order with the new items
-            return this.orderRepo.save(order);
+            // Recalculate order totals
+            order.quantity = orderDto.items.reduce((total, item)=>total + item.quantity, 0).toString();
+            // The amount will be calculated automatically by the @BeforeUpdate hook
+            // but we need to set cod_amount after saving
+            const savedOrder = await this.orderRepo.save(order);
+            savedOrder.cod_amount = savedOrder.amount.toString();
+            return this.orderRepo.save(savedOrder);
         }
         return order;
     }
