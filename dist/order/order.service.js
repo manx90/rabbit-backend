@@ -68,6 +68,12 @@ let OrderService = class OrderService {
     countReadiedOrders() {
         return this.orderRepository.countReadiedOrders();
     }
+    getRevenue(options) {
+        return this.orderRepository.getRevenue(options);
+    }
+    getGrowth(days = 30) {
+        return this.orderRepository.getGrowth(days);
+    }
     constructor(orderRepository){
         this.orderRepository = orderRepository;
     }

@@ -11,6 +11,7 @@ import {
   UseGuards,
   Req,
   UnauthorizedException,
+  Query,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto, UpdateOrderDto } from './order.dto';
@@ -143,5 +144,31 @@ export class OrderController {
   @Roles(Role.Admin, Role.SuperAdmin)
   updateOrderStatusToCancelled(@Param('id') id: string): Promise<void> {
     return this.orderService.updateOrderStatusToCancelled(id);
+  }
+
+  @Get('stats/revenue')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  getRevenue(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ): Promise<{ totalRevenue: number; totalOrders: number }> {
+    const options: { startDate?: Date; endDate?: Date } = {};
+    if (startDate && endDate) {
+      options.startDate = new Date(startDate);
+      options.endDate = new Date(endDate);
+    }
+    return this.orderService.getRevenue(options);
+  }
+
+  @Get('stats/growth')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  getGrowth(@Query('days') days?: string): Promise<{
+    orders: { current: number; previous: number; percentChange: number };
+    revenue: { current: number; previous: number; percentChange: number };
+  }> {
+    const d = days ? parseInt(days) : 30;
+    return this.orderService.getGrowth(d);
   }
 }

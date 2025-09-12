@@ -29,6 +29,12 @@ export class RecentStatsDto {
   last90Days: number;
 }
 
+export class RecentChangeDto {
+  current: number;
+  previous: number;
+  percentChange: number; // positive means increase, negative decrease
+}
+
 export class CategoryStatsDto {
   categoryId: number;
   categoryName: string;
@@ -78,6 +84,27 @@ export class ScheduledProductDto {
   publishState: PublishState;
 }
 
+export class SalesByCategoryDto {
+  categoryId: number;
+  categoryName: string;
+  totalSales: number;
+  productCount: number;
+}
+
+export class BestSellingProductDto {
+  id: number;
+  name: string;
+  sales: number;
+}
+
+export class SalesStatsDto {
+  totalSales: number;
+  totalRevenue: number;
+  averageSalesPerProduct: number;
+  bestSellingProduct: BestSellingProductDto | null;
+  salesByCategory: SalesByCategoryDto[];
+}
+
 export class ComprehensiveStatsDto {
   totalProducts: number;
   publishStateStats: PublishStateStatsDto;
@@ -88,6 +115,7 @@ export class ComprehensiveStatsDto {
   topSelling: TopSellingProductDto[];
   lowStock: LowStockProductDto[];
   missingImages: number;
+  salesStats: SalesStatsDto;
 }
 
 export class DateRangeStatsDto {

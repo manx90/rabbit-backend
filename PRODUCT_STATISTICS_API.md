@@ -50,6 +50,11 @@ Returns a complete overview of all product statistics in a single request.
     "last30Days": 20,
     "last90Days": 45
   },
+  "recentChange": {
+    "last7Days": { "current": 5, "previous": 3, "percentChange": 66.67 },
+    "last30Days": { "current": 20, "previous": 18, "percentChange": 11.11 },
+    "last90Days": { "current": 45, "previous": 40, "percentChange": 12.5 }
+  },
   "categoryStats": [
     {
       "categoryId": 1,
@@ -73,11 +78,101 @@ Returns a complete overview of all product statistics in a single request.
       "season": "winter"
     }
   ],
-  "missingImages": 8
+  "missingImages": 8,
+  "salesStats": {
+    "totalSales": 1250,
+    "totalRevenue": 45680.5,
+    "averageSalesPerProduct": 12.5,
+    "bestSellingProduct": {
+      "id": 15,
+      "name": "Premium T-Shirt",
+      "sales": 150
+    },
+    "salesByCategory": [
+      {
+        "categoryId": 1,
+        "categoryName": "Clothing",
+        "totalSales": 800,
+        "productCount": 25
+      },
+      {
+        "categoryId": 2,
+        "categoryName": "Accessories",
+        "totalSales": 450,
+        "productCount": 15
+      }
+    ]
+  }
 }
 ```
 
-### 2. Total Products Count
+### 2. Sales Statistics
+
+**GET** `/product/stats/sales`
+
+Returns comprehensive sales statistics including total sales, revenue, and performance metrics.
+
+**Response:**
+
+```json
+{
+  "totalSales": 1250,
+  "totalRevenue": 45680.5,
+  "averageSalesPerProduct": 12.5,
+  "bestSellingProduct": {
+    "id": 15,
+    "name": "Premium T-Shirt",
+    "sales": 150
+  },
+  "salesByCategory": [
+    {
+      "categoryId": 1,
+      "categoryName": "Clothing",
+      "totalSales": 800,
+      "productCount": 25
+    },
+    {
+      "categoryId": 2,
+      "categoryName": "Accessories",
+      "totalSales": 450,
+      "productCount": 15
+    }
+  ]
+}
+```
+
+**Sales Statistics Fields:**
+
+- `totalSales`: Total number of units sold across all products
+- `totalRevenue`: Total revenue calculated as sum of (sales × price) for all products
+- `averageSalesPerProduct`: Average sales per product (totalSales ÷ totalProducts)
+- `bestSellingProduct`: Product with the highest sales count
+- `salesByCategory`: Array of sales data grouped by category, ordered by highest sales
+
+### Percentage Change Fields
+
+- `recentChange.last7Days` / `last30Days` / `last90Days`:
+  - **current**: Count in the current period
+  - **previous**: Count in the immediately previous period of the same length
+  - **percentChange**: Percentage change vs previous period (positive = increase, negative = decrease)
+
+### 2.1 Average Sales Per Product
+
+**GET** `/product/stats/avg-sales`
+
+Returns average sales per product across the catalog.
+
+**Response:**
+
+```json
+{
+  "averageSalesPerProduct": 12.5,
+  "totalProducts": 150,
+  "totalSales": 1875
+}
+```
+
+### 3. Total Products Count
 
 **GET** `/product/stats/total`
 
@@ -91,7 +186,7 @@ Returns the total number of products.
 }
 ```
 
-### 3. Products by Publish State
+### 4. Products by Publish State
 
 **GET** `/product/stats/publish-state`
 
@@ -107,7 +202,7 @@ Returns count of products by their publish state.
 }
 ```
 
-### 4. Products by Season
+### 5. Products by Season
 
 **GET** `/product/stats/season`
 
@@ -125,7 +220,7 @@ Returns count of products by season.
 }
 ```
 
-### 5. Products by Special Flags
+### 6. Products by Special Flags
 
 **GET** `/product/stats/flags`
 
@@ -143,7 +238,7 @@ Returns count of products by special flags (featured, trending, new, etc.).
 }
 ```
 
-### 6. Recent Products
+### 7. Recent Products
 
 **GET** `/product/stats/recent/{days}`
 
@@ -165,7 +260,7 @@ Returns count of products created in the last N days.
 }
 ```
 
-### 7. Products by Category
+### 8. Products by Category
 
 **GET** `/product/stats/category`
 
@@ -188,7 +283,7 @@ Returns count of products grouped by category.
 ]
 ```
 
-### 8. Products by Subcategory
+### 9. Products by Subcategory
 
 **GET** `/product/stats/subcategory`
 
@@ -207,7 +302,7 @@ Returns count of products grouped by subcategory with parent category informatio
 ]
 ```
 
-### 9. Top Selling Products
+### 10. Top Selling Products
 
 **GET** `/product/stats/top-selling/{limit?}`
 
@@ -232,7 +327,9 @@ Returns the top selling products by sales count.
 ]
 ```
 
-### 10. Low Stock Products
+Note: This endpoint also supports a path parameter variant: `/product/stats/top-selling/:limit`.
+
+### 11. Low Stock Products
 
 **GET** `/product/stats/low-stock/{threshold?}`
 
@@ -257,7 +354,9 @@ Returns products with low stock levels.
 ]
 ```
 
-### 11. Products Missing Images
+Note: This endpoint also supports a path parameter variant: `/product/stats/low-stock/:threshold`.
+
+### 12. Products Missing Images
 
 **GET** `/product/stats/missing-images`
 
@@ -278,7 +377,7 @@ Returns products that are missing required images.
 ]
 ```
 
-### 12. Products by Creator
+### 13. Products by Creator
 
 **GET** `/product/stats/creators`
 
@@ -296,7 +395,7 @@ Returns count of products grouped by their creators.
 ]
 ```
 
-### 13. Scheduled Products
+### 14. Scheduled Products
 
 **GET** `/product/stats/scheduled`
 
@@ -315,7 +414,7 @@ Returns products with scheduled publishing dates.
 ]
 ```
 
-### 14. Products by Date Range
+### 15. Products by Date Range
 
 **GET** `/product/stats/date-range?startDate={date}&endDate={date}`
 
@@ -339,6 +438,80 @@ Returns count of products created within a specific date range.
 }
 ```
 
+### 16. Revenue Summary
+
+**GET** `/order/stats/revenue`
+
+Returns revenue aggregated from shipped orders. Supports optional date range.
+
+**Query Parameters (optional):**
+
+- `startDate` (string, ISO): Start date
+- `endDate` (string, ISO): End date
+
+**Examples:**
+
+- All-time: `/order/stats/revenue`
+- Date range: `/order/stats/revenue?startDate=2025-09-01&endDate=2025-09-30`
+
+**Response:**
+
+```json
+{
+  "totalRevenue": 45680.5,
+  "totalOrders": 120
+}
+```
+
+### 17. Growth Rates (Orders & Revenue)
+
+**GET** `/order/stats/growth?days=30`
+
+Compares the last N days vs the previous N days for shipped orders and revenue.
+
+**Query Parameters:**
+
+- `days` (optional, number): Period length in days (default: 30)
+
+**Response:**
+
+```json
+{
+  "orders": {
+    "current": 18,
+    "previous": 12,
+    "percentChange": 50
+  },
+  "revenue": {
+    "current": 4230.5,
+    "previous": 3500,
+    "percentChange": 20.86
+  }
+}
+```
+
+## Sales Tracking System
+
+The sales statistics are automatically updated when orders are processed:
+
+### Sales Update Flow
+
+1. **Order Created**: Product quantities are reduced from inventory
+2. **Order Shipped**: Product sales count is incremented (sale completed)
+3. **Order Cancelled**:
+   - Quantities are returned to inventory
+   - Sales count is decremented (if order was previously shipped)
+
+### Real-time Sales Data
+
+Sales statistics are calculated in real-time and include:
+
+- **Total Sales**: Sum of all product sales across the catalog
+- **Total Revenue**: Calculated as `SUM(sales × price)` for all products
+- **Average Sales**: Total sales divided by total products
+- **Best Seller**: Product with the highest sales count
+- **Category Performance**: Sales breakdown by product category
+
 ## Usage Examples
 
 ### Dashboard Overview
@@ -348,6 +521,24 @@ Use the comprehensive overview endpoint to populate a dashboard:
 ```javascript
 const stats = await fetch('/product/stats/overview');
 const data = await stats.json();
+
+// Access sales statistics
+console.log('Total Sales:', data.salesStats.totalSales);
+console.log('Total Revenue:', data.salesStats.totalRevenue);
+console.log('Best Seller:', data.salesStats.bestSellingProduct);
+```
+
+### Sales Analysis
+
+Get detailed sales statistics:
+
+```javascript
+const salesStats = await fetch('/product/stats/sales');
+const sales = await salesStats.json();
+
+// Analyze sales performance
+console.log('Average sales per product:', sales.averageSalesPerProduct);
+console.log('Top performing category:', sales.salesByCategory[0]);
 ```
 
 ### Inventory Management
@@ -402,3 +593,7 @@ Potential future additions:
 - Export functionality for statistics data
 - Custom date range filtering for all endpoints
 - Product performance analytics over time
+- Sales trend analysis (daily, weekly, monthly)
+- Revenue forecasting based on sales patterns
+- Customer purchase behavior analytics
+- Seasonal sales performance tracking

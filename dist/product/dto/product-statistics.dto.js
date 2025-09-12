@@ -9,6 +9,9 @@ function _export(target, all) {
     });
 }
 _export(exports, {
+    BestSellingProductDto: function() {
+        return BestSellingProductDto;
+    },
     CategoryStatsDto: function() {
         return CategoryStatsDto;
     },
@@ -33,11 +36,20 @@ _export(exports, {
     PublishStateStatsDto: function() {
         return PublishStateStatsDto;
     },
+    RecentChangeDto: function() {
+        return RecentChangeDto;
+    },
     RecentDaysStatsDto: function() {
         return RecentDaysStatsDto;
     },
     RecentStatsDto: function() {
         return RecentStatsDto;
+    },
+    SalesByCategoryDto: function() {
+        return SalesByCategoryDto;
+    },
+    SalesStatsDto: function() {
+        return SalesStatsDto;
     },
     ScheduledProductDto: function() {
         return ScheduledProductDto;
@@ -63,6 +75,8 @@ let FlagStatsDto = class FlagStatsDto {
 };
 let RecentStatsDto = class RecentStatsDto {
 };
+let RecentChangeDto = class RecentChangeDto {
+};
 let CategoryStatsDto = class CategoryStatsDto {
 };
 let SubCategoryStatsDto = class SubCategoryStatsDto {
@@ -76,6 +90,12 @@ let ProductWithoutImagesDto = class ProductWithoutImagesDto {
 let CreatorStatsDto = class CreatorStatsDto {
 };
 let ScheduledProductDto = class ScheduledProductDto {
+};
+let SalesByCategoryDto = class SalesByCategoryDto {
+};
+let BestSellingProductDto = class BestSellingProductDto {
+};
+let SalesStatsDto = class SalesStatsDto {
 };
 let ComprehensiveStatsDto = class ComprehensiveStatsDto {
 };

@@ -71,4 +71,18 @@ export class OrderService {
   countReadiedOrders(): Promise<number> {
     return this.orderRepository.countReadiedOrders();
   }
+
+  getRevenue(options?: { startDate?: Date; endDate?: Date }): Promise<{
+    totalRevenue: number;
+    totalOrders: number;
+  }> {
+    return this.orderRepository.getRevenue(options);
+  }
+
+  getGrowth(days: number = 30): Promise<{
+    orders: { current: number; previous: number; percentChange: number };
+    revenue: { current: number; previous: number; percentChange: number };
+  }> {
+    return this.orderRepository.getGrowth(days);
+  }
 }

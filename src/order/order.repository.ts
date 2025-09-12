@@ -227,10 +227,25 @@ export class OrderRepository {
   }
 
   async updateOrderStatusToShipped(id: string): Promise<void> {
-    const order = await this.orderRepo.findOne({ where: { id } });
+    const order = await this.orderRepo.findOne({
+      where: { id },
+      relations: ['items', 'items.product'],
+    });
     if (!order) {
       throw new NotFoundException(`Order ${id} not found`);
     }
+
+    // Update product sales count when order is shipped (completed)
+    if (order.items && order.items.length > 0) {
+      for (const item of order.items) {
+        if (item.product) {
+          // Increment the sales count for this product
+          item.product.sales += item.quantity;
+          await this.productRepo.save(item.product);
+        }
+      }
+    }
+
     order.status = OrderStatus.SHIPPED;
     await this.orderRepo.save(order);
     return;
@@ -266,8 +281,17 @@ export class OrderRepository {
             }
           }
 
-          // Save the updated product
-          await this.orderRepo.manager.save(item.product);
+          // If order was already shipped, decrement sales count
+          if (order.status === OrderStatus.SHIPPED) {
+            item.product.sales -= item.quantity;
+            // Ensure sales count doesn't go below 0
+            if (item.product.sales < 0) {
+              item.product.sales = 0;
+            }
+          }
+
+          // Save the updated product using the product repository
+          await this.productRepo.save(item.product);
         }
       }
     }
@@ -380,5 +404,111 @@ export class OrderRepository {
 
   async countReadiedOrders(): Promise<number> {
     return this.orderRepo.count({ where: { status: OrderStatus.READIED } });
+  }
+
+  async getRevenue(options?: { startDate?: Date; endDate?: Date }): Promise<{
+    totalRevenue: number;
+    totalOrders: number;
+  }> {
+    const qb = this.orderRepo.createQueryBuilder('order');
+    qb.select('SUM(order.amount)', 'totalRevenue')
+      .addSelect('COUNT(order.id)', 'totalOrders')
+      .where('order.status = :status', { status: OrderStatus.SHIPPED });
+
+    if (options?.startDate && options?.endDate) {
+      qb.andWhere('order.createdAt BETWEEN :start AND :end', {
+        start: options.startDate,
+        end: options.endDate,
+      });
+    }
+
+    const raw = await qb.getRawOne();
+    return {
+      totalRevenue: parseFloat(raw?.totalRevenue || '0'),
+      totalOrders: parseInt(raw?.totalOrders || '0'),
+    };
+  }
+
+  async getGrowth(days: number = 30): Promise<{
+    orders: { current: number; previous: number; percentChange: number };
+    revenue: { current: number; previous: number; percentChange: number };
+  }> {
+    const now = new Date();
+    const startCurrent = new Date();
+    startCurrent.setDate(now.getDate() - days);
+    const startPrevious = new Date();
+    startPrevious.setDate(startCurrent.getDate() - days);
+
+    // Orders growth (by shipped count)
+    const [ordersCurrent, ordersPrevious] = await Promise.all([
+      this.orderRepo.count({
+        where: {
+          status: OrderStatus.SHIPPED,
+          createdAt:
+            (startCurrent as unknown as any) && (now as unknown as any),
+        } as any,
+      }),
+      this.orderRepo.count({
+        where: {
+          status: OrderStatus.SHIPPED,
+          createdAt:
+            (startPrevious as unknown as any) &&
+            (startCurrent as unknown as any),
+        } as any,
+      }),
+    ]);
+
+    const ordersPercent =
+      ordersPrevious === 0
+        ? ordersCurrent > 0
+          ? 100
+          : 0
+        : ((ordersCurrent - ordersPrevious) / ordersPrevious) * 100;
+
+    // Revenue growth (sum amounts for shipped orders)
+    const revenueCurrentQb = this.orderRepo
+      .createQueryBuilder('order')
+      .select('SUM(order.amount)', 'sum')
+      .where('order.status = :status', { status: OrderStatus.SHIPPED })
+      .andWhere('order.createdAt BETWEEN :start AND :end', {
+        start: startCurrent,
+        end: now,
+      });
+
+    const revenuePreviousQb = this.orderRepo
+      .createQueryBuilder('order')
+      .select('SUM(order.amount)', 'sum')
+      .where('order.status = :status', { status: OrderStatus.SHIPPED })
+      .andWhere('order.createdAt BETWEEN :start AND :end', {
+        start: startPrevious,
+        end: startCurrent,
+      });
+
+    const [revCurRaw, revPrevRaw] = await Promise.all([
+      revenueCurrentQb.getRawOne(),
+      revenuePreviousQb.getRawOne(),
+    ]);
+
+    const revenueCurrent = parseFloat(revCurRaw?.sum || '0');
+    const revenuePrevious = parseFloat(revPrevRaw?.sum || '0');
+    const revenuePercent =
+      revenuePrevious === 0
+        ? revenueCurrent > 0
+          ? 100
+          : 0
+        : ((revenueCurrent - revenuePrevious) / revenuePrevious) * 100;
+
+    return {
+      orders: {
+        current: ordersCurrent,
+        previous: ordersPrevious,
+        percentChange: Math.round(ordersPercent * 100) / 100,
+      },
+      revenue: {
+        current: Math.round(revenueCurrent * 100) / 100,
+        previous: Math.round(revenuePrevious * 100) / 100,
+        percentChange: Math.round(revenuePercent * 100) / 100,
+      },
+    };
   }
 }

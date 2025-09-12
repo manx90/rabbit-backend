@@ -200,10 +200,24 @@ let OrderRepository = class OrderRepository {
         const order = await this.orderRepo.findOne({
             where: {
                 id
-            }
+            },
+            relations: [
+                'items',
+                'items.product'
+            ]
         });
         if (!order) {
             throw new _common.NotFoundException(`Order ${id} not found`);
+        }
+        // Update product sales count when order is shipped (completed)
+        if (order.items && order.items.length > 0) {
+            for (const item of order.items){
+                if (item.product) {
+                    // Increment the sales count for this product
+                    item.product.sales += item.quantity;
+                    await this.productRepo.save(item.product);
+                }
+            }
         }
         order.status = _ordertypes.OrderStatus.SHIPPED;
         await this.orderRepo.save(order);
@@ -235,8 +249,16 @@ let OrderRepository = class OrderRepository {
                             colorQuantity.quantity += item.quantity;
                         }
                     }
-                    // Save the updated product
-                    await this.orderRepo.manager.save(item.product);
+                    // If order was already shipped, decrement sales count
+                    if (order.status === _ordertypes.OrderStatus.SHIPPED) {
+                        item.product.sales -= item.quantity;
+                        // Ensure sales count doesn't go below 0
+                        if (item.product.sales < 0) {
+                            item.product.sales = 0;
+                        }
+                    }
+                    // Save the updated product using the product repository
+                    await this.productRepo.save(item.product);
                 }
             }
         }
@@ -370,6 +392,78 @@ let OrderRepository = class OrderRepository {
                 status: _ordertypes.OrderStatus.READIED
             }
         });
+    }
+    async getRevenue(options) {
+        const qb = this.orderRepo.createQueryBuilder('order');
+        qb.select('SUM(order.amount)', 'totalRevenue').addSelect('COUNT(order.id)', 'totalOrders').where('order.status = :status', {
+            status: _ordertypes.OrderStatus.SHIPPED
+        });
+        if ((options === null || options === void 0 ? void 0 : options.startDate) && (options === null || options === void 0 ? void 0 : options.endDate)) {
+            qb.andWhere('order.createdAt BETWEEN :start AND :end', {
+                start: options.startDate,
+                end: options.endDate
+            });
+        }
+        const raw = await qb.getRawOne();
+        return {
+            totalRevenue: parseFloat((raw === null || raw === void 0 ? void 0 : raw.totalRevenue) || '0'),
+            totalOrders: parseInt((raw === null || raw === void 0 ? void 0 : raw.totalOrders) || '0')
+        };
+    }
+    async getGrowth(days = 30) {
+        const now = new Date();
+        const startCurrent = new Date();
+        startCurrent.setDate(now.getDate() - days);
+        const startPrevious = new Date();
+        startPrevious.setDate(startCurrent.getDate() - days);
+        // Orders growth (by shipped count)
+        const [ordersCurrent, ordersPrevious] = await Promise.all([
+            this.orderRepo.count({
+                where: {
+                    status: _ordertypes.OrderStatus.SHIPPED,
+                    createdAt: startCurrent && now
+                }
+            }),
+            this.orderRepo.count({
+                where: {
+                    status: _ordertypes.OrderStatus.SHIPPED,
+                    createdAt: startPrevious && startCurrent
+                }
+            })
+        ]);
+        const ordersPercent = ordersPrevious === 0 ? ordersCurrent > 0 ? 100 : 0 : (ordersCurrent - ordersPrevious) / ordersPrevious * 100;
+        // Revenue growth (sum amounts for shipped orders)
+        const revenueCurrentQb = this.orderRepo.createQueryBuilder('order').select('SUM(order.amount)', 'sum').where('order.status = :status', {
+            status: _ordertypes.OrderStatus.SHIPPED
+        }).andWhere('order.createdAt BETWEEN :start AND :end', {
+            start: startCurrent,
+            end: now
+        });
+        const revenuePreviousQb = this.orderRepo.createQueryBuilder('order').select('SUM(order.amount)', 'sum').where('order.status = :status', {
+            status: _ordertypes.OrderStatus.SHIPPED
+        }).andWhere('order.createdAt BETWEEN :start AND :end', {
+            start: startPrevious,
+            end: startCurrent
+        });
+        const [revCurRaw, revPrevRaw] = await Promise.all([
+            revenueCurrentQb.getRawOne(),
+            revenuePreviousQb.getRawOne()
+        ]);
+        const revenueCurrent = parseFloat((revCurRaw === null || revCurRaw === void 0 ? void 0 : revCurRaw.sum) || '0');
+        const revenuePrevious = parseFloat((revPrevRaw === null || revPrevRaw === void 0 ? void 0 : revPrevRaw.sum) || '0');
+        const revenuePercent = revenuePrevious === 0 ? revenueCurrent > 0 ? 100 : 0 : (revenueCurrent - revenuePrevious) / revenuePrevious * 100;
+        return {
+            orders: {
+                current: ordersCurrent,
+                previous: ordersPrevious,
+                percentChange: Math.round(ordersPercent * 100) / 100
+            },
+            revenue: {
+                current: Math.round(revenueCurrent * 100) / 100,
+                previous: Math.round(revenuePrevious * 100) / 100,
+                percentChange: Math.round(revenuePercent * 100) / 100
+            }
+        };
     }
     constructor(orderRepo, productRepo, authRepo, optosService){
         this.orderRepo = orderRepo;

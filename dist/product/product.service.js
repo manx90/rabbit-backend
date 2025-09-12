@@ -301,9 +301,24 @@ let ProductService = class ProductService {
             }));
     }
     /**
+   * Get average sales per product
+   */ async getAverageSalesPerProduct() {
+        const [totalProducts, totalSalesRaw] = await Promise.all([
+            this.getTotalProductsCount(),
+            this.productRepo.createQueryBuilder('product').select('SUM(product.sales)', 'totalSales').getRawOne()
+        ]);
+        const totalSales = parseInt((totalSalesRaw === null || totalSalesRaw === void 0 ? void 0 : totalSalesRaw.totalSales) || '0');
+        const average = totalProducts > 0 ? totalSales / totalProducts : 0;
+        return {
+            averageSalesPerProduct: Math.round(average * 100) / 100,
+            totalProducts,
+            totalSales
+        };
+    }
+    /**
    * Get comprehensive product statistics
    */ async getComprehensiveStats() {
-        const [totalProducts, publishStateStats, seasonStats, flagStats, last7Days, last30Days, last90Days, categoryStats, topSelling, lowStock, productsWithoutImages] = await Promise.all([
+        const [totalProducts, publishStateStats, seasonStats, flagStats, last7Days, last30Days, last90Days, categoryStats, topSelling, lowStock, productsWithoutImages, salesStats] = await Promise.all([
             this.getTotalProductsCount(),
             this.getProductsCountByPublishState(),
             this.getProductsCountBySeason(),
@@ -314,7 +329,8 @@ let ProductService = class ProductService {
             this.getProductsCountByCategory(),
             this.getTopSellingProducts(5),
             this.getLowStockProducts(10),
-            this.getProductsWithoutImages()
+            this.getProductsWithoutImages(),
+            this.getSalesStatistics()
         ]);
         return {
             totalProducts,
@@ -329,7 +345,38 @@ let ProductService = class ProductService {
             categoryStats,
             topSelling,
             lowStock,
-            missingImages: productsWithoutImages.length
+            missingImages: productsWithoutImages.length,
+            salesStats,
+            recentChange: {
+                last7Days: await this.getPeriodChange(7),
+                last30Days: await this.getPeriodChange(30),
+                last90Days: await this.getPeriodChange(90)
+            }
+        };
+    }
+    async getPeriodChange(days) {
+        const now = new Date();
+        const startCurrent = new Date();
+        startCurrent.setDate(now.getDate() - days);
+        const startPrevious = new Date();
+        startPrevious.setDate(startCurrent.getDate() - days);
+        const [current, previous] = await Promise.all([
+            this.productRepo.count({
+                where: {
+                    createdAt: (0, _typeorm1.Between)(startCurrent, now)
+                }
+            }),
+            this.productRepo.count({
+                where: {
+                    createdAt: (0, _typeorm1.Between)(startPrevious, startCurrent)
+                }
+            })
+        ]);
+        const percentChange = previous === 0 ? current > 0 ? 100 : 0 : (current - previous) / previous * 100;
+        return {
+            current,
+            previous,
+            percentChange: Math.round(percentChange * 100) / 100
         };
     }
     /**
@@ -365,6 +412,66 @@ let ProductService = class ProductService {
                 datePublished: product.datePublished,
                 publishState: product.publishState
             }));
+    }
+    /**
+   * Get comprehensive sales statistics
+   */ async getSalesStatistics() {
+        // Get total sales across all products
+        const totalSalesResult = await this.productRepo.createQueryBuilder('product').select('SUM(product.sales)', 'totalSales').getRawOne();
+        const totalSales = parseInt((totalSalesResult === null || totalSalesResult === void 0 ? void 0 : totalSalesResult.totalSales) || '0');
+        // Get total revenue by estimating unit price from sizeDetails (no product.price column)
+        // Strategy: for each product, compute the average price across its sizes, then multiply by sales
+        const productsForRevenue = await this.productRepo.find({
+            select: [
+                'id',
+                'sales',
+                'sizeDetails'
+            ]
+        });
+        const totalRevenue = productsForRevenue.reduce((sum, p)=>{
+            const sizes = Array.isArray(p.sizeDetails) ? p.sizeDetails : [];
+            if (sizes.length === 0 || typeof p.sales !== 'number' || p.sales <= 0) return sum;
+            const priceValues = sizes.map((s)=>typeof (s === null || s === void 0 ? void 0 : s.price) === 'number' ? s.price : Number(s === null || s === void 0 ? void 0 : s.price)).filter((v)=>Number.isFinite(v));
+            if (priceValues.length === 0) return sum;
+            const avgPrice = priceValues.reduce((a, b)=>a + b, 0) / priceValues.length;
+            return sum + avgPrice * p.sales;
+        }, 0);
+        // Get total products count for average calculation
+        const totalProducts = await this.getTotalProductsCount();
+        const averageSalesPerProduct = totalProducts > 0 ? totalSales / totalProducts : 0;
+        // Get best selling product
+        const bestSellingProduct = await this.productRepo.findOne({
+            select: [
+                'id',
+                'name',
+                'sales'
+            ],
+            where: {
+                sales: (0, _typeorm1.Between)(1, 999999)
+            },
+            order: {
+                sales: 'DESC'
+            }
+        });
+        // Get sales by category
+        const salesByCategoryResult = await this.productRepo.createQueryBuilder('product').leftJoin('product.category', 'category').select('category.id', 'categoryId').addSelect('category.name', 'categoryName').addSelect('SUM(product.sales)', 'totalSales').addSelect('COUNT(product.id)', 'productCount').where('product.sales > 0').groupBy('category.id, category.name').orderBy('totalSales', 'DESC').getRawMany();
+        const salesByCategory = salesByCategoryResult.map((row)=>({
+                categoryId: parseInt(row.categoryId || '0'),
+                categoryName: row.categoryName || 'Uncategorized',
+                totalSales: parseInt(row.totalSales || '0'),
+                productCount: parseInt(row.productCount || '0')
+            }));
+        return {
+            totalSales,
+            totalRevenue,
+            averageSalesPerProduct: Math.round(averageSalesPerProduct * 100) / 100,
+            bestSellingProduct: bestSellingProduct ? {
+                id: bestSellingProduct.id,
+                name: bestSellingProduct.name,
+                sales: bestSellingProduct.sales
+            } : null,
+            salesByCategory
+        };
     }
     constructor(productRepo){
         this.productRepo = productRepo;

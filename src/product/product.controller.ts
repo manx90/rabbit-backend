@@ -326,10 +326,26 @@ export class ProductController {
     return await this.productservice.getTopSellingProducts(limitNum);
   }
 
+  @Get('stats/top-selling/:limit')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  async getTopSellingProductsByParam(@Param('limit') limit: string) {
+    const limitNum = limit ? parseInt(limit.toString()) : 10;
+    return await this.productservice.getTopSellingProducts(limitNum);
+  }
+
   @Get('stats/low-stock')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.SuperAdmin)
   async getLowStockProducts(@Query('threshold') threshold?: number) {
+    const thresholdNum = threshold ? parseInt(threshold.toString()) : 10;
+    return await this.productservice.getLowStockProducts(thresholdNum);
+  }
+
+  @Get('stats/low-stock/:threshold')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  async getLowStockProductsByParam(@Param('threshold') threshold: string) {
     const thresholdNum = threshold ? parseInt(threshold.toString()) : 10;
     return await this.productservice.getLowStockProducts(thresholdNum);
   }
@@ -346,6 +362,20 @@ export class ProductController {
   @Roles(Role.Admin, Role.SuperAdmin)
   async getProductsCountByCreator() {
     return await this.productservice.getProductsCountByCreator();
+  }
+
+  @Get('stats/sales')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  async getSalesStatistics() {
+    return await this.productservice.getSalesStatistics();
+  }
+
+  @Get('stats/avg-sales')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin, Role.SuperAdmin)
+  async getAverageSalesPerProduct() {
+    return await this.productservice.getAverageSalesPerProduct();
   }
 
   @Get('stats/scheduled')

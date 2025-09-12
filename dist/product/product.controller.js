@@ -174,7 +174,15 @@ let ProductController = class ProductController {
         const limitNum = limit ? parseInt(limit.toString()) : 10;
         return await this.productservice.getTopSellingProducts(limitNum);
     }
+    async getTopSellingProductsByParam(limit) {
+        const limitNum = limit ? parseInt(limit.toString()) : 10;
+        return await this.productservice.getTopSellingProducts(limitNum);
+    }
     async getLowStockProducts(threshold) {
+        const thresholdNum = threshold ? parseInt(threshold.toString()) : 10;
+        return await this.productservice.getLowStockProducts(thresholdNum);
+    }
+    async getLowStockProductsByParam(threshold) {
         const thresholdNum = threshold ? parseInt(threshold.toString()) : 10;
         return await this.productservice.getLowStockProducts(thresholdNum);
     }
@@ -183,6 +191,12 @@ let ProductController = class ProductController {
     }
     async getProductsCountByCreator() {
         return await this.productservice.getProductsCountByCreator();
+    }
+    async getSalesStatistics() {
+        return await this.productservice.getSalesStatistics();
+    }
+    async getAverageSalesPerProduct() {
+        return await this.productservice.getAverageSalesPerProduct();
     }
     async getScheduledProducts() {
         return await this.productservice.getScheduledProducts();
@@ -468,6 +482,17 @@ _ts_decorate([
     _ts_metadata("design:returntype", Promise)
 ], ProductController.prototype, "getTopSellingProducts", null);
 _ts_decorate([
+    (0, _common.Get)('stats/top-selling/:limit'),
+    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
+    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    _ts_param(0, (0, _common.Param)('limit')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], ProductController.prototype, "getTopSellingProductsByParam", null);
+_ts_decorate([
     (0, _common.Get)('stats/low-stock'),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
     (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
@@ -478,6 +503,17 @@ _ts_decorate([
     ]),
     _ts_metadata("design:returntype", Promise)
 ], ProductController.prototype, "getLowStockProducts", null);
+_ts_decorate([
+    (0, _common.Get)('stats/low-stock/:threshold'),
+    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
+    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    _ts_param(0, (0, _common.Param)('threshold')),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", [
+        String
+    ]),
+    _ts_metadata("design:returntype", Promise)
+], ProductController.prototype, "getLowStockProductsByParam", null);
 _ts_decorate([
     (0, _common.Get)('stats/missing-images'),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
@@ -494,6 +530,22 @@ _ts_decorate([
     _ts_metadata("design:paramtypes", []),
     _ts_metadata("design:returntype", Promise)
 ], ProductController.prototype, "getProductsCountByCreator", null);
+_ts_decorate([
+    (0, _common.Get)('stats/sales'),
+    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
+    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:returntype", Promise)
+], ProductController.prototype, "getSalesStatistics", null);
+_ts_decorate([
+    (0, _common.Get)('stats/avg-sales'),
+    (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
+    (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    _ts_metadata("design:type", Function),
+    _ts_metadata("design:paramtypes", []),
+    _ts_metadata("design:returntype", Promise)
+], ProductController.prototype, "getAverageSalesPerProduct", null);
 _ts_decorate([
     (0, _common.Get)('stats/scheduled'),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
