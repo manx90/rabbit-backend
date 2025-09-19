@@ -62,7 +62,7 @@ let OptosApiService = class OptosApiService {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const access_token = await this.OptosService.Login();
         const City = city;
-        const response = await this.httpService.axiosRef.get(`https://opost.ps/api/resources/areas?city=${City}`, {
+        const response = await this.httpService.axiosRef.get(`https://opost.ps/api/resources/areas?city=${City}&limit=1000`, {
             headers: {
                 Authorization: `Bearer ${access_token}`,
                 Accept: 'application/json'

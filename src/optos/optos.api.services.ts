@@ -59,7 +59,7 @@ export class OptosApiService {
     const access_token = await this.OptosService.Login();
     const City = city;
     const response = await this.httpService.axiosRef.get(
-      `https://opost.ps/api/resources/areas?city=${City}`,
+      `https://opost.ps/api/resources/areas?city=${City}&limit=1000`,
       {
         headers: {
           Authorization: `Bearer ${access_token}`,
