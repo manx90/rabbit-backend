@@ -7,6 +7,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SizeTable, SizeDimension, SizeField } from './entities/sizeTable';
+import {
+  SizeDimensionResponseDto,
+  SizeFieldResponseDto,
+  SizeTableResponseDto,
+} from './dto/size-table.dto';
 
 @Injectable()
 export class SizeTableCrud {
@@ -19,6 +24,46 @@ export class SizeTableCrud {
     private readonly sizeFieldRepo: Repository<SizeField>,
   ) {}
 
+  private sanitizeSizeField(field: SizeField): SizeFieldResponseDto {
+    const { id, fieldName, fieldValue } = field;
+
+    return {
+      id,
+      fieldName,
+      fieldValue,
+    };
+  }
+
+  private sanitizeSizeDimension(
+    dimension: SizeDimension,
+  ): SizeDimensionResponseDto {
+    const { id, sizeName } = dimension;
+    const fields = Array.isArray(dimension.fields)
+      ? dimension.fields.map((field) => this.sanitizeSizeField(field))
+      : [];
+
+    return {
+      id,
+      sizeName,
+      fields,
+    };
+  }
+
+  private sanitizeSizeTable(sizeTable: SizeTable): SizeTableResponseDto {
+    const { id, tableName } = sizeTable;
+    const sizeDimensions = Array.isArray(sizeTable.sizeDimensions)
+      ? sizeTable.sizeDimensions.map((dimension) =>
+          this.sanitizeSizeDimension(dimension),
+        )
+      : [];
+
+    return {
+      id,
+      tableName,
+      sizeDimensions,
+    };
+  }
+
   async createSizeTable(tableData: {
     tableName: string;
     sizeDimensions?: Array<{
@@ -28,7 +73,7 @@ export class SizeTableCrud {
         fieldValue: string;
       }>;
     }>;
-  }): Promise<SizeTable | null> {
+  }): Promise<SizeTableResponseDto | null> {
     const sizeTable = this.sizeTableRepo.create({
       tableName: tableData.tableName,
     });
@@ -58,20 +103,24 @@ export class SizeTableCrud {
       }
     }
 
-    return await this.sizeTableRepo.findOne({
+    const createdTable = await this.sizeTableRepo.findOne({
       where: { id: savedTable.id },
       relations: ['sizeDimensions', 'sizeDimensions.fields'],
     });
+
+    return createdTable ? this.sanitizeSizeTable(createdTable) : null;
   }
 
-  async getAllSizeTables(): Promise<SizeTable[]> {
-    return await this.sizeTableRepo.find({
+  async getAllSizeTables(): Promise<SizeTableResponseDto[]> {
+    const sizeTables = await this.sizeTableRepo.find({
       relations: ['sizeDimensions', 'sizeDimensions.fields'],
       order: { id: 'ASC' },
     });
+
+    return sizeTables.map((table) => this.sanitizeSizeTable(table));
   }
 
-  async getSizeTableById(id: number): Promise<SizeTable> {
+  async getSizeTableById(id: number): Promise<SizeTableResponseDto> {
     const sizeTable = await this.sizeTableRepo.findOne({
       where: { id },
       relations: ['sizeDimensions', 'sizeDimensions.fields'],
@@ -81,7 +130,7 @@ export class SizeTableCrud {
       throw new NotFoundException(`Size table with ID ${id} not found`);
     }
 
-    return sizeTable;
+    return this.sanitizeSizeTable(sizeTable);
   }
 
   async updateSizeTable(
@@ -89,7 +138,7 @@ export class SizeTableCrud {
     updateData: {
       tableName?: string;
     },
-  ): Promise<SizeTable> {
+  ): Promise<SizeTableResponseDto> {
     const sizeTable = await this.sizeTableRepo.findOne({
       where: { id },
     });
@@ -99,7 +148,18 @@ export class SizeTableCrud {
     }
 
     Object.assign(sizeTable, updateData);
-    return await this.sizeTableRepo.save(sizeTable);
+    const updatedTable = await this.sizeTableRepo.save(sizeTable);
+    const reloadedTable = await this.sizeTableRepo.findOne({
+      where: { id: updatedTable.id },
+      relations: ['sizeDimensions', 'sizeDimensions.fields'],
+    });
+
+    return reloadedTable
+      ? this.sanitizeSizeTable(reloadedTable)
+      : this.sanitizeSizeTable({
+          ...updatedTable,
+          sizeDimensions: [],
+        });
   }
 
   async deleteSizeTable(id: number): Promise<void> {
@@ -123,7 +183,7 @@ export class SizeTableCrud {
         fieldValue: string;
       }>;
     },
-  ): Promise<SizeDimension | null> {
+  ): Promise<SizeDimensionResponseDto | null> {
     const sizeTable = await this.sizeTableRepo.findOne({
       where: { id: tableId },
     });
@@ -150,9 +210,11 @@ export class SizeTableCrud {
       }
     }
 
-    return await this.sizeDimensionRepo.findOne({
+    const dimension = await this.sizeDimensionRepo.findOne({
       where: { id: savedDimension.id },
       relations: ['fields'],
     });
+
+    return dimension ? this.sanitizeSizeDimension(dimension) : null;
   }
 }

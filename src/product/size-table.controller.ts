@@ -21,8 +21,9 @@ import {
   CreateSizeTableDto,
   UpdateSizeTableDto,
   AddSizeDimensionDto,
+  SizeTableResponseDto,
+  SizeDimensionResponseDto,
 } from './dto/size-table.dto';
-import { SizeTable, SizeDimension } from './entities/sizeTable';
 
 @ApiTags('Size Tables')
 @Controller('size-tables')
@@ -35,11 +36,11 @@ export class SizeTableController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'Size table created successfully',
-    type: SizeTable,
+    type: SizeTableResponseDto,
   })
   async createSizeTable(
     @Body() createDto: CreateSizeTableDto,
-  ): Promise<SizeTable | null> {
+  ): Promise<SizeTableResponseDto | null> {
     return await this.sizeTableService.createSizeTable(createDto);
   }
 
@@ -48,9 +49,9 @@ export class SizeTableController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Size tables retrieved successfully',
-    type: [SizeTable],
+    type: [SizeTableResponseDto],
   })
-  async getAllSizeTables(): Promise<SizeTable[]> {
+  async getAllSizeTables(): Promise<SizeTableResponseDto[]> {
     return await this.sizeTableService.getAllSizeTables();
   }
 
@@ -60,7 +61,7 @@ export class SizeTableController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Size table retrieved successfully',
-    type: SizeTable,
+    type: SizeTableResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
@@ -68,7 +69,7 @@ export class SizeTableController {
   })
   async getSizeTableById(
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<SizeTable> {
+  ): Promise<SizeTableResponseDto> {
     return await this.sizeTableService.getSizeTableById(id);
   }
 
@@ -79,7 +80,7 @@ export class SizeTableController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Size table updated successfully',
-    type: SizeTable,
+    type: SizeTableResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
@@ -88,7 +89,7 @@ export class SizeTableController {
   async updateSizeTable(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDto: UpdateSizeTableDto,
-  ): Promise<SizeTable> {
+  ): Promise<SizeTableResponseDto> {
     return await this.sizeTableService.updateSizeTable(id, updateDto);
   }
 
@@ -115,7 +116,7 @@ export class SizeTableController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'Size dimension added successfully',
-    type: SizeDimension,
+    type: SizeDimensionResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
@@ -124,7 +125,7 @@ export class SizeTableController {
   async addSizeDimension(
     @Param('id', ParseIntPipe) tableId: number,
     @Body() addDto: AddSizeDimensionDto,
-  ): Promise<SizeDimension | null> {
+  ): Promise<SizeDimensionResponseDto | null> {
     return await this.sizeTableService.addSizeDimension(tableId, addDto);
   }
 }
