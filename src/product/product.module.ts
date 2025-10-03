@@ -12,6 +12,10 @@ import { ProductCollectionService } from './product-collection.service';
 import { ProductController } from './product.controller';
 import { ProductCrud } from './product.crud';
 import { ProductService } from './product.service';
+import { SizeTableController } from './size-table.controller';
+import { SizeTableService } from './size-table.service';
+import { SizeTableCrud } from './size-table.crud';
+import { SizeTable, SizeDimension, SizeField } from './entities/sizeTable';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -20,6 +24,9 @@ import { ProductService } from './product.service';
       subCategory,
       ProductCollection,
       ProductService,
+      SizeTable,
+      SizeDimension,
+      SizeField,
     ]),
     FileStorageModule,
   ],
@@ -27,6 +34,7 @@ import { ProductService } from './product.service';
     ProductController,
     CategoryController,
     ProductCollectionController,
+    SizeTableController,
   ],
   providers: [
     ProductService,
@@ -34,12 +42,16 @@ import { ProductService } from './product.service';
     CategoryService,
     ProductCollectionService,
     LoggerService,
+    SizeTableService,
+    SizeTableCrud,
   ],
   exports: [
     ProductService,
     ProductCrud,
     CategoryService,
     ProductCollectionService,
+    SizeTableService,
+    SizeTableCrud,
   ],
 })
 export class ProductModule {}

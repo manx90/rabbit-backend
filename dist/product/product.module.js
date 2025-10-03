@@ -22,6 +22,10 @@ const _productcollectionservice = require("./product-collection.service");
 const _productcontroller = require("./product.controller");
 const _productcrud = require("./product.crud");
 const _productservice = require("./product.service");
+const _sizetablecontroller = require("./size-table.controller");
+const _sizetableservice = require("./size-table.service");
+const _sizetablecrud = require("./size-table.crud");
+const _sizeTable = require("./entities/sizeTable");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -38,27 +42,35 @@ ProductModule = _ts_decorate([
                 _Categoryentity.category,
                 _Categoryentity.subCategory,
                 _productcollectionentity.ProductCollection,
-                _productservice.ProductService
+                _productservice.ProductService,
+                _sizeTable.SizeTable,
+                _sizeTable.SizeDimension,
+                _sizeTable.SizeField
             ]),
             _filestoragemodule.FileStorageModule
         ],
         controllers: [
             _productcontroller.ProductController,
             _categorycontroller.CategoryController,
-            _productcollectioncontroller.ProductCollectionController
+            _productcollectioncontroller.ProductCollectionController,
+            _sizetablecontroller.SizeTableController
         ],
         providers: [
             _productservice.ProductService,
             _productcrud.ProductCrud,
             _categoryservice.CategoryService,
             _productcollectionservice.ProductCollectionService,
-            _loggerservice.LoggerService
+            _loggerservice.LoggerService,
+            _sizetableservice.SizeTableService,
+            _sizetablecrud.SizeTableCrud
         ],
         exports: [
             _productservice.ProductService,
             _productcrud.ProductCrud,
             _categoryservice.CategoryService,
-            _productcollectionservice.ProductCollectionService
+            _productcollectionservice.ProductCollectionService,
+            _sizetableservice.SizeTableService,
+            _sizetablecrud.SizeTableCrud
         ]
     })
 ], ProductModule);
