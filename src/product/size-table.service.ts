@@ -9,8 +9,9 @@ import {
   CreateSizeTableDto,
   UpdateSizeTableDto,
   AddSizeDimensionDto,
+  SizeTableResponseDto,
+  SizeDimensionResponseDto,
 } from './dto/size-table.dto';
-import { SizeTable, SizeDimension } from './entities/sizeTable';
 
 @Injectable()
 export class SizeTableService {
@@ -18,22 +19,22 @@ export class SizeTableService {
 
   async createSizeTable(
     createDto: CreateSizeTableDto,
-  ): Promise<SizeTable | null> {
+  ): Promise<SizeTableResponseDto | null> {
     return await this.sizeTableCrud.createSizeTable(createDto);
   }
 
-  async getAllSizeTables(): Promise<SizeTable[]> {
+  async getAllSizeTables(): Promise<SizeTableResponseDto[]> {
     return await this.sizeTableCrud.getAllSizeTables();
   }
 
-  async getSizeTableById(id: number): Promise<SizeTable> {
+  async getSizeTableById(id: number): Promise<SizeTableResponseDto> {
     return await this.sizeTableCrud.getSizeTableById(id);
   }
 
   async updateSizeTable(
     id: number,
     updateDto: UpdateSizeTableDto,
-  ): Promise<SizeTable> {
+  ): Promise<SizeTableResponseDto> {
     return await this.sizeTableCrud.updateSizeTable(id, updateDto);
   }
 
@@ -44,7 +45,7 @@ export class SizeTableService {
   async addSizeDimension(
     tableId: number,
     addDto: AddSizeDimensionDto,
-  ): Promise<SizeDimension | null> {
+  ): Promise<SizeDimensionResponseDto | null> {
     return await this.sizeTableCrud.addSizeDimension(tableId, addDto);
   }
 }
