@@ -36,7 +36,7 @@ import { LoggerService } from './common/utils/logger.service';
         database: config.db,
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         migrations: [join(__dirname, 'migrations', '*{.ts,.js}')],
-        synchronize: false, // Prevent auto sync on cPanel
+        synchronize: true, // Prevent auto sync on cPanel
         migrationsRun: false, // We handle schema fix in DatabaseBootstrapService
         // Memory optimization for cPanel
         extra: {

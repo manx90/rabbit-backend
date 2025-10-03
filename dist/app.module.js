@@ -68,7 +68,7 @@ AppModule = _ts_decorate([
                         migrations: [
                             (0, _path.join)(__dirname, 'migrations', '*{.ts,.js}')
                         ],
-                        synchronize: false,
+                        synchronize: true,
                         migrationsRun: false,
                         // Memory optimization for cPanel
                         extra: {

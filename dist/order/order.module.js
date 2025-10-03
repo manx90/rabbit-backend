@@ -11,11 +11,14 @@ Object.defineProperty(exports, "OrderModule", {
 const _common = require("@nestjs/common");
 const _typeorm = require("@nestjs/typeorm");
 const _ordercontroller = require("./order.controller");
+const _deliverycontroller = require("./delivery.controller");
 const _orderservice = require("./order.service");
 const _orderentity = require("./order.entity");
+const _deliverymodel = require("./delivery.model");
 const _productentity = require("../product/entities/product.entity");
 const _authentity = require("../auth/entities/auth.entity");
 const _orderrepository = require("./order.repository");
+const _deliveryrepository = require("./delivery.repository");
 const _authrepository = require("../common/Repositories/auth.repository");
 const _authmodule = require("../auth/auth.module");
 const _jwt = require("@nestjs/jwt");
@@ -39,7 +42,8 @@ OrderModule = _ts_decorate([
                 _orderentity.order,
                 _orderentity.orderitem,
                 _productentity.product,
-                _authentity.auth
+                _authentity.auth,
+                _deliverymodel.DeliveryModel
             ]),
             _authmodule.AuthModule,
             _optosmodule.OptosModule,
@@ -53,11 +57,13 @@ OrderModule = _ts_decorate([
             })
         ],
         controllers: [
-            _ordercontroller.OrderController
+            _ordercontroller.OrderController,
+            _deliverycontroller.DeliveryController
         ],
         providers: [
             _orderservice.OrderService,
             _orderrepository.OrderRepository,
+            _deliveryrepository.DeliveryRepository,
             _authrepository.AuthRepository,
             _optosshipmentservice.OptosShipmentService,
             _optostokenservice.OptosService,
