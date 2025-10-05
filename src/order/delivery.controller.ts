@@ -10,15 +10,32 @@ import {
   HttpStatus,
   HttpCode,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBody,
+  ApiOkResponse,
+  ApiCreatedResponse,
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+  ApiNoContentResponse,
+} from '@nestjs/swagger';
 import { DeliveryRepository } from './delivery.repository';
 import { CreateDeliveryDto, UpdateDeliveryDto } from './delivery.dto';
 
+@ApiTags('Delivery')
 @Controller('delivery')
 export class DeliveryController {
   constructor(private readonly deliveryRepository: DeliveryRepository) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create a new delivery' })
+  @ApiBody({ type: CreateDeliveryDto })
+  @ApiCreatedResponse({ description: 'Delivery created successfully' })
+  @ApiBadRequestResponse({ description: 'Bad request - validation failed' })
   async createDelivery(@Body() createDeliveryDto: CreateDeliveryDto) {
     try {
       const delivery =
@@ -38,6 +55,8 @@ export class DeliveryController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all deliveries' })
+  @ApiOkResponse({ description: 'Deliveries retrieved successfully' })
   async getAllDeliveries() {
     try {
       const deliveries = await this.deliveryRepository.getAllDeliveries();
@@ -57,6 +76,10 @@ export class DeliveryController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get delivery by ID' })
+  @ApiParam({ name: 'id', description: 'Delivery ID', type: 'number' })
+  @ApiOkResponse({ description: 'Delivery retrieved successfully' })
+  @ApiNotFoundResponse({ description: 'Delivery not found' })
   async getDeliveryById(@Param('id', ParseIntPipe) id: number) {
     try {
       const delivery = await this.deliveryRepository.getDeliveryById(id);
@@ -151,6 +174,12 @@ export class DeliveryController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update delivery by ID' })
+  @ApiParam({ name: 'id', description: 'Delivery ID', type: 'number' })
+  @ApiBody({ type: UpdateDeliveryDto })
+  @ApiOkResponse({ description: 'Delivery updated successfully' })
+  @ApiNotFoundResponse({ description: 'Delivery not found' })
+  @ApiBadRequestResponse({ description: 'Bad request - validation failed' })
   async updateDelivery(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDeliveryDto: UpdateDeliveryDto,
@@ -176,6 +205,10 @@ export class DeliveryController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete delivery by ID' })
+  @ApiParam({ name: 'id', description: 'Delivery ID', type: 'number' })
+  @ApiNoContentResponse({ description: 'Delivery deleted successfully' })
+  @ApiNotFoundResponse({ description: 'Delivery not found' })
   async deleteDelivery(@Param('id', ParseIntPipe) id: number) {
     try {
       await this.deliveryRepository.deleteDelivery(id);

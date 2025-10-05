@@ -11,7 +11,6 @@ import {
   Delete,
   Param,
   Body,
-  ParseIntPipe,
   HttpStatus,
   HttpCode,
 } from '@nestjs/common';
@@ -20,9 +19,7 @@ import { SizeTableService } from './size-table.service';
 import {
   CreateSizeTableDto,
   UpdateSizeTableDto,
-  AddSizeDimensionDto,
   SizeTableResponseDto,
-  SizeDimensionResponseDto,
 } from './dto/size-table.dto';
 
 @ApiTags('Size Tables')
@@ -57,7 +54,7 @@ export class SizeTableController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get size table by ID' })
-  @ApiParam({ name: 'id', description: 'Size table ID', type: 'number' })
+  @ApiParam({ name: 'id', description: 'Size table ID', type: 'string' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Size table retrieved successfully',
@@ -68,7 +65,7 @@ export class SizeTableController {
     description: 'Size table not found',
   })
   async getSizeTableById(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
   ): Promise<SizeTableResponseDto> {
     return await this.sizeTableService.getSizeTableById(id);
   }
@@ -76,7 +73,7 @@ export class SizeTableController {
   @Put(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update size table' })
-  @ApiParam({ name: 'id', description: 'Size table ID', type: 'number' })
+  @ApiParam({ name: 'id', description: 'Size table ID', type: 'string' })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Size table updated successfully',
@@ -87,7 +84,7 @@ export class SizeTableController {
     description: 'Size table not found',
   })
   async updateSizeTable(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateDto: UpdateSizeTableDto,
   ): Promise<SizeTableResponseDto> {
     return await this.sizeTableService.updateSizeTable(id, updateDto);
@@ -96,7 +93,7 @@ export class SizeTableController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete size table' })
-  @ApiParam({ name: 'id', description: 'Size table ID', type: 'number' })
+  @ApiParam({ name: 'id', description: 'Size table ID', type: 'string' })
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
     description: 'Size table deleted successfully',
@@ -105,27 +102,7 @@ export class SizeTableController {
     status: HttpStatus.NOT_FOUND,
     description: 'Size table not found',
   })
-  async deleteSizeTable(@Param('id', ParseIntPipe) id: number): Promise<void> {
+  async deleteSizeTable(@Param('id') id: string): Promise<void> {
     return await this.sizeTableService.deleteSizeTable(id);
-  }
-
-  @Post(':id/size-dimensions')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Add a size dimension to a size table' })
-  @ApiParam({ name: 'id', description: 'Size table ID', type: 'number' })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: 'Size dimension added successfully',
-    type: SizeDimensionResponseDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Size table not found',
-  })
-  async addSizeDimension(
-    @Param('id', ParseIntPipe) tableId: number,
-    @Body() addDto: AddSizeDimensionDto,
-  ): Promise<SizeDimensionResponseDto | null> {
-    return await this.sizeTableService.addSizeDimension(tableId, addDto);
   }
 }

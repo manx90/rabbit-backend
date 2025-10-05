@@ -248,22 +248,6 @@ _ts_decorate([
 ], CreateProductDto.prototype, "imgCover", void 0);
 _ts_decorate([
     (0, _swagger.ApiPropertyOptional)({
-        example: 'size-chart.jpg'
-    }),
-    (0, _classvalidator.IsString)(),
-    (0, _classvalidator.IsOptional)(),
-    _ts_metadata("design:type", String)
-], CreateProductDto.prototype, "imgSizeChart", void 0);
-_ts_decorate([
-    (0, _swagger.ApiPropertyOptional)({
-        example: 'measure.jpg'
-    }),
-    (0, _classvalidator.IsString)(),
-    (0, _classvalidator.IsOptional)(),
-    _ts_metadata("design:type", String)
-], CreateProductDto.prototype, "imgMeasure", void 0);
-_ts_decorate([
-    (0, _swagger.ApiPropertyOptional)({
         example: 'images.jpg'
     }),
     (0, _classvalidator.IsString)(),
@@ -311,6 +295,15 @@ _ts_decorate([
     (0, _classvalidator.IsOptional)(),
     _ts_metadata("design:type", String)
 ], CreateProductDto.prototype, "videoLink", void 0);
+_ts_decorate([
+    (0, _swagger.ApiPropertyOptional)({
+        description: 'ID of the size table to associate with this product',
+        example: '123e4567-e89b-12d3-a456-426614174000'
+    }),
+    (0, _classvalidator.IsUUID)(),
+    (0, _classvalidator.IsOptional)(),
+    _ts_metadata("design:type", String)
+], CreateProductDto.prototype, "sizeTableId", void 0);
 let UpdateProductDto = class UpdateProductDto {
 };
 _ts_decorate([
@@ -404,5 +397,10 @@ _ts_decorate([
     (0, _classvalidator.IsString)(),
     _ts_metadata("design:type", String)
 ], UpdateProductDto.prototype, "videoLink", void 0);
+_ts_decorate([
+    (0, _classvalidator.IsOptional)(),
+    (0, _classvalidator.IsUUID)(),
+    _ts_metadata("design:type", String)
+], UpdateProductDto.prototype, "sizeTableId", void 0);
 
 //# sourceMappingURL=Product.dto.js.map

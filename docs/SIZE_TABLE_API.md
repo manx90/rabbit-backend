@@ -171,7 +171,7 @@ Delete a size table by ID.
 
 **Response:** `204 No Content`
 
-### 6. Add Dimension to Size Table
+<!-- ### 6. Add Dimension to Size Table
 Add a new size dimension to an existing size table.
 
 **Endpoint:** `POST /size-tables/:id/dimensions`
@@ -211,7 +211,7 @@ Add a new size dimension to an existing size table.
     }
   ]
 }
-```
+``` -->
 
 ## Error Responses
 

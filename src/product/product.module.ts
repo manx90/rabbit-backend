@@ -15,7 +15,7 @@ import { ProductService } from './product.service';
 import { SizeTableController } from './size-table.controller';
 import { SizeTableService } from './size-table.service';
 import { SizeTableCrud } from './size-table.crud';
-import { SizeTable, SizeDimension, SizeField } from './entities/sizeTable';
+import { SizeTable } from './entities/sizeTable.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -25,8 +25,6 @@ import { SizeTable, SizeDimension, SizeField } from './entities/sizeTable';
       ProductCollection,
       ProductService,
       SizeTable,
-      SizeDimension,
-      SizeField,
     ]),
     FileStorageModule,
   ],

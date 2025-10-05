@@ -4,6 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Transform } from 'class-transformer';
 import { auth } from 'src/auth/entities/auth.entity';
+import { SizeTable } from './sizeTable.entity';
 import {
   AfterInsert,
   AfterLoad,
@@ -145,6 +146,10 @@ export class product {
     nullable: true,
   })
   datePublished: Date;
+
+  @ManyToOne(() => SizeTable, { nullable: true })
+  @JoinColumn({ name: 'sizeTableId' })
+  sizeTable: SizeTable | null;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

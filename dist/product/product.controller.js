@@ -9,6 +9,7 @@ Object.defineProperty(exports, "ProductController", {
     }
 });
 const _common = require("@nestjs/common");
+const _swagger = require("@nestjs/swagger");
 const _platformexpress = require("@nestjs/platform-express");
 const _express = require("express");
 const _rolesconstant = require("../common/constants/roles.constant");
@@ -220,6 +221,42 @@ let ProductController = class ProductController {
 };
 _ts_decorate([
     (0, _common.Get)(),
+    (0, _swagger.ApiOperation)({
+        summary: 'Get all products with pagination and filters'
+    }),
+    (0, _swagger.ApiQuery)({
+        name: 'page',
+        required: false,
+        description: 'Page number'
+    }),
+    (0, _swagger.ApiQuery)({
+        name: 'limit',
+        required: false,
+        description: 'Items per page'
+    }),
+    (0, _swagger.ApiQuery)({
+        name: 'category',
+        required: false,
+        description: 'Filter by category'
+    }),
+    (0, _swagger.ApiQuery)({
+        name: 'subcategory',
+        required: false,
+        description: 'Filter by subcategory'
+    }),
+    (0, _swagger.ApiQuery)({
+        name: 'season',
+        required: false,
+        description: 'Filter by season'
+    }),
+    (0, _swagger.ApiQuery)({
+        name: 'published',
+        required: false,
+        description: 'Filter by published status'
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'Products retrieved successfully'
+    }),
     _ts_param(0, (0, _common.Req)()),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
@@ -231,6 +268,58 @@ _ts_decorate([
     (0, _common.Post)(),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
     (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    (0, _swagger.ApiBearerAuth)(),
+    (0, _swagger.ApiOperation)({
+        summary: 'Create a new product (Admin/SuperAdmin only)'
+    }),
+    (0, _swagger.ApiConsumes)('multipart/form-data'),
+    (0, _swagger.ApiBody)({
+        description: 'Product data with file uploads',
+        schema: {
+            type: 'object',
+            properties: {
+                // Product fields will be defined by CreateProductDto
+                images: {
+                    type: 'array',
+                    items: {
+                        type: 'string',
+                        format: 'binary'
+                    }
+                },
+                imgCover: {
+                    type: 'string',
+                    format: 'binary'
+                },
+                imgSizeChart: {
+                    type: 'string',
+                    format: 'binary'
+                },
+                imgMeasure: {
+                    type: 'string',
+                    format: 'binary'
+                },
+                imgColors: {
+                    type: 'array',
+                    items: {
+                        type: 'string',
+                        format: 'binary'
+                    }
+                }
+            }
+        }
+    }),
+    (0, _swagger.ApiCreatedResponse)({
+        description: 'Product created successfully'
+    }),
+    (0, _swagger.ApiBadRequestResponse)({
+        description: 'Bad request - validation failed or missing required files'
+    }),
+    (0, _swagger.ApiUnauthorizedResponse)({
+        description: 'Unauthorized'
+    }),
+    (0, _swagger.ApiForbiddenResponse)({
+        description: 'Forbidden - Admin/SuperAdmin role required'
+    }),
     (0, _common.UseInterceptors)((0, _platformexpress.FileFieldsInterceptor)([
         {
             name: 'images',
@@ -266,6 +355,20 @@ _ts_decorate([
 ], ProductController.prototype, "createProduct", null);
 _ts_decorate([
     (0, _common.Get)(':id'),
+    (0, _swagger.ApiOperation)({
+        summary: 'Get product by ID'
+    }),
+    (0, _swagger.ApiParam)({
+        name: 'id',
+        description: 'Product ID',
+        type: 'number'
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'Product retrieved successfully'
+    }),
+    (0, _swagger.ApiNotFoundResponse)({
+        description: 'Product not found'
+    }),
     _ts_param(0, (0, _common.Param)('id')),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
@@ -277,6 +380,58 @@ _ts_decorate([
     (0, _common.Put)(':id'),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
     (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    (0, _swagger.ApiBearerAuth)(),
+    (0, _swagger.ApiOperation)({
+        summary: 'Update product by ID (Admin/SuperAdmin only)'
+    }),
+    (0, _swagger.ApiParam)({
+        name: 'id',
+        description: 'Product ID',
+        type: 'number'
+    }),
+    (0, _swagger.ApiConsumes)('multipart/form-data'),
+    (0, _swagger.ApiBody)({
+        description: 'Product data with optional file uploads',
+        schema: {
+            type: 'object',
+            properties: {
+                // Product fields will be defined by UpdateProductDto
+                images: {
+                    type: 'array',
+                    items: {
+                        type: 'string',
+                        format: 'binary'
+                    }
+                },
+                imgCover: {
+                    type: 'string',
+                    format: 'binary'
+                },
+                imgColors: {
+                    type: 'array',
+                    items: {
+                        type: 'string',
+                        format: 'binary'
+                    }
+                }
+            }
+        }
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'Product updated successfully'
+    }),
+    (0, _swagger.ApiNotFoundResponse)({
+        description: 'Product not found'
+    }),
+    (0, _swagger.ApiBadRequestResponse)({
+        description: 'Bad request - validation failed'
+    }),
+    (0, _swagger.ApiUnauthorizedResponse)({
+        description: 'Unauthorized'
+    }),
+    (0, _swagger.ApiForbiddenResponse)({
+        description: 'Forbidden - Admin/SuperAdmin role required'
+    }),
     (0, _common.UseInterceptors)((0, _platformexpress.FileFieldsInterceptor)([
         {
             name: 'images',
@@ -316,6 +471,27 @@ _ts_decorate([
     (0, _common.Delete)(':id'),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
     (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    (0, _swagger.ApiBearerAuth)(),
+    (0, _swagger.ApiOperation)({
+        summary: 'Delete product by ID (Admin/SuperAdmin only)'
+    }),
+    (0, _swagger.ApiParam)({
+        name: 'id',
+        description: 'Product ID',
+        type: 'number'
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'Product deleted successfully'
+    }),
+    (0, _swagger.ApiNotFoundResponse)({
+        description: 'Product not found'
+    }),
+    (0, _swagger.ApiUnauthorizedResponse)({
+        description: 'Unauthorized'
+    }),
+    (0, _swagger.ApiForbiddenResponse)({
+        description: 'Forbidden - Admin/SuperAdmin role required'
+    }),
     _ts_param(0, (0, _common.Param)('id')),
     _ts_param(1, (0, _common.Req)()),
     _ts_metadata("design:type", Function),
@@ -568,6 +744,7 @@ _ts_decorate([
     _ts_metadata("design:returntype", Promise)
 ], ProductController.prototype, "getProductsCreatedInDateRange", null);
 ProductController = _ts_decorate([
+    (0, _swagger.ApiTags)('Products'),
     (0, _common.Controller)('product'),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [

@@ -9,9 +9,6 @@ function _export(target, all) {
     });
 }
 _export(exports, {
-    AddSizeDimensionDto: function() {
-        return AddSizeDimensionDto;
-    },
     CreateSizeTableDto: function() {
         return CreateSizeTableDto;
     },
@@ -20,6 +17,12 @@ _export(exports, {
     },
     SizeFieldDto: function() {
         return SizeFieldDto;
+    },
+    SizeTableDataDto: function() {
+        return SizeTableDataDto;
+    },
+    SizeTableResponseDto: function() {
+        return SizeTableResponseDto;
     },
     UpdateSizeTableDto: function() {
         return UpdateSizeTableDto;
@@ -66,13 +69,12 @@ _ts_decorate([
     _ts_metadata("design:type", String)
 ], SizeDimensionDto.prototype, "sizeName", void 0);
 _ts_decorate([
-    (0, _swagger.ApiPropertyOptional)({
-        description: 'Optional fields for this size',
+    (0, _swagger.ApiProperty)({
+        description: 'Fields for this size',
         type: [
             SizeFieldDto
         ]
     }),
-    (0, _classvalidator.IsOptional)(),
     (0, _classvalidator.IsArray)(),
     (0, _classvalidator.ValidateNested)({
         each: true
@@ -80,6 +82,56 @@ _ts_decorate([
     (0, _classtransformer.Type)(()=>SizeFieldDto),
     _ts_metadata("design:type", Array)
 ], SizeDimensionDto.prototype, "fields", void 0);
+let SizeTableDataDto = class SizeTableDataDto {
+};
+_ts_decorate([
+    (0, _swagger.ApiProperty)({
+        example: 'T-Shirt Size Chart'
+    }),
+    (0, _classvalidator.IsString)(),
+    (0, _classvalidator.IsNotEmpty)(),
+    _ts_metadata("design:type", String)
+], SizeTableDataDto.prototype, "tableName", void 0);
+_ts_decorate([
+    (0, _swagger.ApiProperty)({
+        description: 'Size dimensions for this table',
+        type: [
+            SizeDimensionDto
+        ]
+    }),
+    (0, _classvalidator.IsArray)(),
+    (0, _classvalidator.ValidateNested)({
+        each: true
+    }),
+    (0, _classtransformer.Type)(()=>SizeDimensionDto),
+    _ts_metadata("design:type", Array)
+], SizeTableDataDto.prototype, "dimensions", void 0);
+let SizeTableResponseDto = class SizeTableResponseDto {
+};
+_ts_decorate([
+    (0, _swagger.ApiProperty)({
+        example: '123e4567-e89b-12d3-a456-426614174000'
+    }),
+    (0, _classvalidator.IsString)(),
+    _ts_metadata("design:type", String)
+], SizeTableResponseDto.prototype, "id", void 0);
+_ts_decorate([
+    (0, _swagger.ApiProperty)({
+        example: 'T-Shirt Size Chart'
+    }),
+    (0, _classvalidator.IsString)(),
+    (0, _classvalidator.IsNotEmpty)(),
+    _ts_metadata("design:type", String)
+], SizeTableResponseDto.prototype, "tableName", void 0);
+_ts_decorate([
+    (0, _swagger.ApiProperty)({
+        description: 'Size table data',
+        type: SizeTableDataDto
+    }),
+    (0, _classvalidator.ValidateNested)(),
+    (0, _classtransformer.Type)(()=>SizeTableDataDto),
+    _ts_metadata("design:type", typeof SizeTableDataDto === "undefined" ? Object : SizeTableDataDto)
+], SizeTableResponseDto.prototype, "data", void 0);
 let CreateSizeTableDto = class CreateSizeTableDto {
 };
 _ts_decorate([
@@ -91,20 +143,19 @@ _ts_decorate([
     _ts_metadata("design:type", String)
 ], CreateSizeTableDto.prototype, "tableName", void 0);
 _ts_decorate([
-    (0, _swagger.ApiPropertyOptional)({
-        description: 'Optional size dimensions to create with the table',
+    (0, _swagger.ApiProperty)({
+        description: 'Size dimensions for this table',
         type: [
             SizeDimensionDto
         ]
     }),
-    (0, _classvalidator.IsOptional)(),
     (0, _classvalidator.IsArray)(),
     (0, _classvalidator.ValidateNested)({
         each: true
     }),
     (0, _classtransformer.Type)(()=>SizeDimensionDto),
     _ts_metadata("design:type", Array)
-], CreateSizeTableDto.prototype, "sizeDimensions", void 0);
+], CreateSizeTableDto.prototype, "dimensions", void 0);
 let UpdateSizeTableDto = class UpdateSizeTableDto {
 };
 _ts_decorate([
@@ -116,21 +167,11 @@ _ts_decorate([
     (0, _classvalidator.IsNotEmpty)(),
     _ts_metadata("design:type", String)
 ], UpdateSizeTableDto.prototype, "tableName", void 0);
-let AddSizeDimensionDto = class AddSizeDimensionDto {
-};
-_ts_decorate([
-    (0, _swagger.ApiProperty)({
-        example: 'Large'
-    }),
-    (0, _classvalidator.IsString)(),
-    (0, _classvalidator.IsNotEmpty)(),
-    _ts_metadata("design:type", String)
-], AddSizeDimensionDto.prototype, "sizeName", void 0);
 _ts_decorate([
     (0, _swagger.ApiPropertyOptional)({
-        description: 'Optional fields for this size',
+        description: 'Updated size dimensions for this table',
         type: [
-            SizeFieldDto
+            SizeDimensionDto
         ]
     }),
     (0, _classvalidator.IsOptional)(),
@@ -138,8 +179,8 @@ _ts_decorate([
     (0, _classvalidator.ValidateNested)({
         each: true
     }),
-    (0, _classtransformer.Type)(()=>SizeFieldDto),
+    (0, _classtransformer.Type)(()=>SizeDimensionDto),
     _ts_metadata("design:type", Array)
-], AddSizeDimensionDto.prototype, "fields", void 0);
+], UpdateSizeTableDto.prototype, "dimensions", void 0);
 
 //# sourceMappingURL=size-table.dto.js.map

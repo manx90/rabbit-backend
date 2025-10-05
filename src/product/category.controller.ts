@@ -16,6 +16,22 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiBody,
+  ApiOkResponse,
+  ApiCreatedResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Request as ExpressRequest } from 'express';
 import { ParsedQs } from 'qs';
@@ -34,12 +50,20 @@ import {
   UploadIcon,
 } from './dto/category.dto';
 
+@ApiTags('Categories')
 @Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
   @Get('subcategory')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.SuperAdmin)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get all subcategories (Admin/SuperAdmin only)' })
+  @ApiOkResponse({ description: 'Subcategories retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({
+    description: 'Forbidden - Admin/SuperAdmin role required',
+  })
   async getSubCategories() {
     return this.categoryService.getSubCategories();
   }
@@ -54,6 +78,11 @@ export class CategoryController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all categories with pagination' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page' })
+  @ApiQuery({ name: 'search', required: false, description: 'Search term' })
+  @ApiOkResponse({ description: 'Categories retrieved successfully' })
   async getAllCategories(
     @Query() query: ParsedQs,
     @Req() req: ExpressRequest,
@@ -70,6 +99,11 @@ export class CategoryController {
     return this.categoryService.getAllCategories(query, req);
   }
   @Get('active')
+  @ApiOperation({ summary: 'Get all active categories with pagination' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page' })
+  @ApiQuery({ name: 'search', required: false, description: 'Search term' })
+  @ApiOkResponse({ description: 'Active categories retrieved successfully' })
   async getAllActiveCategories(
     @Query() query: ParsedQs,
     @Req() req: ExpressRequest,
@@ -90,6 +124,26 @@ export class CategoryController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.SuperAdmin)
   @HttpCode(HttpStatus.CREATED)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create a new category (Admin/SuperAdmin only)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Category data with icon upload',
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        description: { type: 'string' },
+        iconCat: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  @ApiCreatedResponse({ description: 'Category created successfully' })
+  @ApiBadRequestResponse({ description: 'Bad request - validation failed' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({
+    description: 'Forbidden - Admin/SuperAdmin role required',
+  })
   @UseInterceptors(FileFieldsInterceptor([{ name: 'iconCat', maxCount: 1 }]))
   async createCategory(
     @UploadedFiles() files: { iconCat?: Express.Multer.File[] },
@@ -108,6 +162,10 @@ export class CategoryController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get category by ID' })
+  @ApiParam({ name: 'id', description: 'Category ID', type: 'string' })
+  @ApiOkResponse({ description: 'Category retrieved successfully' })
+  @ApiNotFoundResponse({ description: 'Category not found' })
   async getCategoryById(@Param('id') id: string): Promise<CategoryResponseDto> {
     try {
       return await this.categoryService.getCategoryById(Number(id));

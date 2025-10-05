@@ -9,6 +9,7 @@ Object.defineProperty(exports, "CategoryController", {
     }
 });
 const _common = require("@nestjs/common");
+const _swagger = require("@nestjs/swagger");
 const _platformexpress = require("@nestjs/platform-express");
 const _express = require("express");
 const _qs = require("qs");
@@ -147,6 +148,19 @@ _ts_decorate([
     (0, _common.Get)('subcategory'),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
     (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
+    (0, _swagger.ApiBearerAuth)(),
+    (0, _swagger.ApiOperation)({
+        summary: 'Get all subcategories (Admin/SuperAdmin only)'
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'Subcategories retrieved successfully'
+    }),
+    (0, _swagger.ApiUnauthorizedResponse)({
+        description: 'Unauthorized'
+    }),
+    (0, _swagger.ApiForbiddenResponse)({
+        description: 'Forbidden - Admin/SuperAdmin role required'
+    }),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", []),
     _ts_metadata("design:returntype", Promise)
@@ -164,6 +178,27 @@ _ts_decorate([
 ], CategoryController.prototype, "getSubCategoryById", null);
 _ts_decorate([
     (0, _common.Get)(),
+    (0, _swagger.ApiOperation)({
+        summary: 'Get all categories with pagination'
+    }),
+    (0, _swagger.ApiQuery)({
+        name: 'page',
+        required: false,
+        description: 'Page number'
+    }),
+    (0, _swagger.ApiQuery)({
+        name: 'limit',
+        required: false,
+        description: 'Items per page'
+    }),
+    (0, _swagger.ApiQuery)({
+        name: 'search',
+        required: false,
+        description: 'Search term'
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'Categories retrieved successfully'
+    }),
     _ts_param(0, (0, _common.Query)()),
     _ts_param(1, (0, _common.Req)()),
     _ts_metadata("design:type", Function),
@@ -175,6 +210,27 @@ _ts_decorate([
 ], CategoryController.prototype, "getAllCategories", null);
 _ts_decorate([
     (0, _common.Get)('active'),
+    (0, _swagger.ApiOperation)({
+        summary: 'Get all active categories with pagination'
+    }),
+    (0, _swagger.ApiQuery)({
+        name: 'page',
+        required: false,
+        description: 'Page number'
+    }),
+    (0, _swagger.ApiQuery)({
+        name: 'limit',
+        required: false,
+        description: 'Items per page'
+    }),
+    (0, _swagger.ApiQuery)({
+        name: 'search',
+        required: false,
+        description: 'Search term'
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'Active categories retrieved successfully'
+    }),
     _ts_param(0, (0, _common.Query)()),
     _ts_param(1, (0, _common.Req)()),
     _ts_metadata("design:type", Function),
@@ -189,6 +245,41 @@ _ts_decorate([
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
     (0, _rolesdecorator.Roles)(_rolesconstant.Role.Admin, _rolesconstant.Role.SuperAdmin),
     (0, _common.HttpCode)(_common.HttpStatus.CREATED),
+    (0, _swagger.ApiBearerAuth)(),
+    (0, _swagger.ApiOperation)({
+        summary: 'Create a new category (Admin/SuperAdmin only)'
+    }),
+    (0, _swagger.ApiConsumes)('multipart/form-data'),
+    (0, _swagger.ApiBody)({
+        description: 'Category data with icon upload',
+        schema: {
+            type: 'object',
+            properties: {
+                name: {
+                    type: 'string'
+                },
+                description: {
+                    type: 'string'
+                },
+                iconCat: {
+                    type: 'string',
+                    format: 'binary'
+                }
+            }
+        }
+    }),
+    (0, _swagger.ApiCreatedResponse)({
+        description: 'Category created successfully'
+    }),
+    (0, _swagger.ApiBadRequestResponse)({
+        description: 'Bad request - validation failed'
+    }),
+    (0, _swagger.ApiUnauthorizedResponse)({
+        description: 'Unauthorized'
+    }),
+    (0, _swagger.ApiForbiddenResponse)({
+        description: 'Forbidden - Admin/SuperAdmin role required'
+    }),
     (0, _common.UseInterceptors)((0, _platformexpress.FileFieldsInterceptor)([
         {
             name: 'iconCat',
@@ -206,6 +297,20 @@ _ts_decorate([
 ], CategoryController.prototype, "createCategory", null);
 _ts_decorate([
     (0, _common.Get)(':id'),
+    (0, _swagger.ApiOperation)({
+        summary: 'Get category by ID'
+    }),
+    (0, _swagger.ApiParam)({
+        name: 'id',
+        description: 'Category ID',
+        type: 'string'
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'Category retrieved successfully'
+    }),
+    (0, _swagger.ApiNotFoundResponse)({
+        description: 'Category not found'
+    }),
     _ts_param(0, (0, _common.Param)('id')),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
@@ -330,6 +435,7 @@ _ts_decorate([
     _ts_metadata("design:returntype", Promise)
 ], CategoryController.prototype, "UpdateStateSub", null);
 CategoryController = _ts_decorate([
+    (0, _swagger.ApiTags)('Categories'),
     (0, _common.Controller)('category'),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [

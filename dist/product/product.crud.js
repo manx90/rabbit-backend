@@ -18,6 +18,7 @@ const _filestorageservice = require("../file-storage/file-storage.service");
 const _loggerservice = require("../common/utils/logger.service");
 const _Categoryentity = require("./entities/Category.entity");
 const _productentity = require("./entities/product.entity");
+const _sizeTableentity = require("./entities/sizeTable.entity");
 function _define_property(obj, key, value) {
     if (key in obj) {
         Object.defineProperty(obj, key, {
@@ -102,12 +103,6 @@ let ProductCrud = class ProductCrud {
         if (files.imgCover && files.imgCover.length > 0) {
             result.imgCover = await this.saveFile(files.imgCover[0], productName, 'cover');
         }
-        if (files.imgSizeChart && files.imgSizeChart.length > 0) {
-            result.imgSizeChart = await this.saveFile(files.imgSizeChart[0], productName, 'size-chart');
-        }
-        if (files.imgMeasure && files.imgMeasure.length > 0) {
-            result.imgMeasure = await this.saveFile(files.imgMeasure[0], productName, 'measure');
-        }
         if (files.imgColors && files.imgColors.length > 0) {
             result.imgColors = await this.saveFiles(files.imgColors, productName, 'colors');
         }
@@ -125,14 +120,6 @@ let ProductCrud = class ProductCrud {
             if (transformed.imgCover && !transformed.imgCover.startsWith('http')) {
                 transformed.imgCover = `${baseUrl}/uploads/${transformed.imgCover}`;
             }
-            // Transform size chart image URL
-            if (transformed.imgSizeChart && !transformed.imgSizeChart.startsWith('http')) {
-                transformed.imgSizeChart = `${baseUrl}/uploads/${transformed.imgSizeChart}`;
-            }
-            // Transform measure image URL
-            if (transformed.imgMeasure && !transformed.imgMeasure.startsWith('http')) {
-                transformed.imgMeasure = `${baseUrl}/uploads/${transformed.imgMeasure}`;
-            }
             // Transform product images URLs
             if (transformed.images && Array.isArray(transformed.images)) {
                 transformed.images = transformed.images.map((img)=>img && !img.startsWith('http') ? `${baseUrl}/uploads/${img}` : img);
@@ -149,7 +136,7 @@ let ProductCrud = class ProductCrud {
     /** ----------  Get All Products  ---------- */ async getAllProducts(query, req) {
         try {
             this.logger.debug(`Starting getAllProducts with query: ${JSON.stringify(query)}`, 'ProductCrud');
-            const queryBuilder = this.productRepo.createQueryBuilder('product').leftJoinAndSelect('product.category', 'category').leftJoinAndSelect('product.subCategory', 'subCategory').leftJoinAndSelect('product.poster', 'auth').select([
+            const queryBuilder = this.productRepo.createQueryBuilder('product').leftJoinAndSelect('product.category', 'category').leftJoinAndSelect('product.subCategory', 'subCategory').leftJoinAndSelect('product.poster', 'auth').leftJoinAndSelect('product.sizeTable', 'sizeTable').select([
                 'product.id',
                 'product.name',
                 'product.season',
@@ -159,8 +146,6 @@ let ProductCrud = class ProductCrud {
                 'product.images',
                 'product.productIdsCollection',
                 'product.imgCover',
-                'product.imgSizeChart',
-                'product.imgMeasure',
                 'product.sizeDetails',
                 'product.publishState',
                 'product.isManualPublishState',
@@ -180,7 +165,10 @@ let ProductCrud = class ProductCrud {
                 'category.name',
                 'subCategory.name',
                 'subCategory.id',
-                'auth.username'
+                'auth.username',
+                'sizeTable.id',
+                'sizeTable.tableName',
+                'sizeTable.data'
             ]);
             this.logger.debug('Query builder created successfully', 'ProductCrud');
             const features = new _apifeatures.ApiFeatures(queryBuilder, query || {}, this.productRepo.metadata).filter().sort().paginate();
@@ -241,20 +229,10 @@ let ProductCrud = class ProductCrud {
             var _dto_colors;
             // Initialize image fields
             Product.imgCover = '';
-            Product.imgSizeChart = '';
-            Product.imgMeasure = '';
             Product.images = [];
             // Save cover image if provided
             if (files.imgCover && files.imgCover[0]) {
                 Product.imgCover = await this.saveFile(files.imgCover[0], dto.name, 'cover');
-            }
-            // Save size chart image if provided
-            if (files.imgSizeChart && files.imgSizeChart[0]) {
-                Product.imgSizeChart = await this.saveFile(files.imgSizeChart[0], dto.name, 'size-chart');
-            }
-            // Save measure image if provided
-            if (files.imgMeasure && files.imgMeasure[0]) {
-                Product.imgMeasure = await this.saveFile(files.imgMeasure[0], dto.name, 'measure');
             }
             // Validate that the count of color images matches the count of color names
             if (files.imgColors && files.imgColors.length !== ((_dto_colors = dto.colors) === null || _dto_colors === void 0 ? void 0 : _dto_colors.length)) {
@@ -336,6 +314,10 @@ let ProductCrud = class ProductCrud {
         if (dto.wordKeys) Product.wordKeys = dto.wordKeys;
         if (dto.videoLink) Product.videoLink = dto.videoLink;
         if (dto.season) Product.season = dto.season;
+        if (dto.sizeTableId) {
+            Product.sizeTable = new _sizeTableentity.SizeTable();
+            Product.sizeTable.id = dto.sizeTableId;
+        }
         // Calculate total quantity
         Product.quantity = Product.getTotalQuantity();
         try {
@@ -362,7 +344,8 @@ let ProductCrud = class ProductCrud {
             relations: [
                 'category',
                 'subCategory',
-                'poster'
+                'poster',
+                'sizeTable'
             ]
         });
         if (!product) throw new _common.NotFoundException('Product not found');
@@ -390,24 +373,6 @@ let ProductCrud = class ProductCrud {
                 }
                 // Save new cover image
                 product.imgCover = await this.saveFile(files.imgCover[0], product.name, 'cover');
-            }
-            // Handle size chart image (single file)
-            if (files.imgSizeChart && files.imgSizeChart[0]) {
-                // Delete old size chart image if it exists
-                if (product.imgSizeChart) {
-                    this.fileStorageService.deleteFile(product.imgSizeChart);
-                }
-                // Save new size chart image
-                product.imgSizeChart = await this.saveFile(files.imgSizeChart[0], product.name, 'size-chart');
-            }
-            // Handle measure image (single file)
-            if (files.imgMeasure && files.imgMeasure[0]) {
-                // Delete old measure image if it exists
-                if (product.imgMeasure) {
-                    this.fileStorageService.deleteFile(product.imgMeasure);
-                }
-                // Save new measure image
-                product.imgMeasure = await this.saveFile(files.imgMeasure[0], product.name, 'measure');
             }
         } catch (error) {
             console.error('Error handling product files:', error);
@@ -450,6 +415,18 @@ let ProductCrud = class ProductCrud {
         } catch (error) {
             console.error('Error handling product color images:', error);
             throw new Error(`Failed to process product color images: ${error.message}`);
+        }
+        // Update optional fields
+        if (dto.wordKeys !== undefined) product.wordKeys = dto.wordKeys;
+        if (dto.videoLink !== undefined) product.videoLink = dto.videoLink;
+        if (dto.season !== undefined) product.season = dto.season;
+        if (dto.sizeTableId !== undefined) {
+            if (dto.sizeTableId) {
+                product.sizeTable = new _sizeTableentity.SizeTable();
+                product.sizeTable.id = dto.sizeTableId;
+            } else {
+                product.sizeTable = null;
+            }
         }
         product.updatedAt = new Date();
         await this.productRepo.update(id, product);
@@ -547,7 +524,8 @@ let ProductCrud = class ProductCrud {
             },
             relations: [
                 'category',
-                'subCategory'
+                'subCategory',
+                'sizeTable'
             ]
         });
         if (!product) {

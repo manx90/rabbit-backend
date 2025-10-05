@@ -11,6 +11,7 @@ Object.defineProperty(exports, "FileStorageController", {
 const _common = require("@nestjs/common");
 const _express = require("express");
 const _path = require("path");
+const _swagger = require("@nestjs/swagger");
 const _filestorageservice = require("./file-storage.service");
 const _imageoptimizationservice = require("./image-optimization.service");
 function _ts_decorate(decorators, target, key, desc) {
@@ -77,6 +78,23 @@ let FileStorageController = class FileStorageController {
 };
 _ts_decorate([
     (0, _common.Get)(':subdir/:filename'),
+    (0, _swagger.ApiOperation)({
+        summary: 'Get file by subdirectory and filename'
+    }),
+    (0, _swagger.ApiParam)({
+        name: 'subdir',
+        description: 'Subdirectory path'
+    }),
+    (0, _swagger.ApiParam)({
+        name: 'filename',
+        description: 'File name'
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'File retrieved successfully'
+    }),
+    (0, _swagger.ApiNotFoundResponse)({
+        description: 'File not found'
+    }),
     _ts_param(0, (0, _common.Param)('subdir')),
     _ts_param(1, (0, _common.Param)('filename')),
     _ts_param(2, (0, _common.Res)()),
@@ -90,6 +108,85 @@ _ts_decorate([
 ], FileStorageController.prototype, "getFile", null);
 _ts_decorate([
     (0, _common.Post)('optimize'),
+    (0, _swagger.ApiOperation)({
+        summary: 'Optimize all uploaded images'
+    }),
+    (0, _swagger.ApiBody)({
+        description: 'Optimization options',
+        required: false,
+        schema: {
+            type: 'object',
+            properties: {
+                quality: {
+                    type: 'number',
+                    minimum: 1,
+                    maximum: 100
+                },
+                format: {
+                    type: 'string',
+                    enum: [
+                        'jpeg',
+                        'png',
+                        'webp'
+                    ]
+                },
+                resize: {
+                    type: 'object',
+                    properties: {
+                        width: {
+                            type: 'number'
+                        },
+                        height: {
+                            type: 'number'
+                        }
+                    }
+                }
+            }
+        }
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'Image optimization completed',
+        schema: {
+            type: 'object',
+            properties: {
+                message: {
+                    type: 'string'
+                },
+                summary: {
+                    type: 'object',
+                    properties: {
+                        totalProcessed: {
+                            type: 'number'
+                        },
+                        successful: {
+                            type: 'number'
+                        },
+                        failed: {
+                            type: 'number'
+                        },
+                        totalOriginalSizeMB: {
+                            type: 'string'
+                        },
+                        totalOptimizedSizeMB: {
+                            type: 'string'
+                        },
+                        totalSavedMB: {
+                            type: 'string'
+                        },
+                        averageReduction: {
+                            type: 'string'
+                        }
+                    }
+                },
+                results: {
+                    type: 'array'
+                }
+            }
+        }
+    }),
+    (0, _swagger.ApiBadRequestResponse)({
+        description: 'Bad request - invalid optimization options'
+    }),
     _ts_param(0, (0, _common.Body)()),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
@@ -98,6 +195,7 @@ _ts_decorate([
     _ts_metadata("design:returntype", Promise)
 ], FileStorageController.prototype, "optimizeAllImages", null);
 FileStorageController = _ts_decorate([
+    (0, _swagger.ApiTags)('File Storage'),
     (0, _common.Controller)('uploads'),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [

@@ -12,7 +12,6 @@ const _common = require("@nestjs/common");
 const _swagger = require("@nestjs/swagger");
 const _sizetableservice = require("./size-table.service");
 const _sizetabledto = require("./dto/size-table.dto");
-const _sizeTable = require("./entities/sizeTable");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -43,9 +42,6 @@ let SizeTableController = class SizeTableController {
     async deleteSizeTable(id) {
         return await this.sizeTableService.deleteSizeTable(id);
     }
-    async addSizeDimension(tableId, addDto) {
-        return await this.sizeTableService.addSizeDimension(tableId, addDto);
-    }
     constructor(sizeTableService){
         this.sizeTableService = sizeTableService;
     }
@@ -59,7 +55,7 @@ _ts_decorate([
     (0, _swagger.ApiResponse)({
         status: _common.HttpStatus.CREATED,
         description: 'Size table created successfully',
-        type: _sizeTable.SizeTable
+        type: _sizetabledto.SizeTableResponseDto
     }),
     _ts_param(0, (0, _common.Body)()),
     _ts_metadata("design:type", Function),
@@ -77,7 +73,7 @@ _ts_decorate([
         status: _common.HttpStatus.OK,
         description: 'Size tables retrieved successfully',
         type: [
-            _sizeTable.SizeTable
+            _sizetabledto.SizeTableResponseDto
         ]
     }),
     _ts_metadata("design:type", Function),
@@ -92,21 +88,21 @@ _ts_decorate([
     (0, _swagger.ApiParam)({
         name: 'id',
         description: 'Size table ID',
-        type: 'number'
+        type: 'string'
     }),
     (0, _swagger.ApiResponse)({
         status: _common.HttpStatus.OK,
         description: 'Size table retrieved successfully',
-        type: _sizeTable.SizeTable
+        type: _sizetabledto.SizeTableResponseDto
     }),
     (0, _swagger.ApiResponse)({
         status: _common.HttpStatus.NOT_FOUND,
         description: 'Size table not found'
     }),
-    _ts_param(0, (0, _common.Param)('id', _common.ParseIntPipe)),
+    _ts_param(0, (0, _common.Param)('id')),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
-        Number
+        String
     ]),
     _ts_metadata("design:returntype", Promise)
 ], SizeTableController.prototype, "getSizeTableById", null);
@@ -119,22 +115,22 @@ _ts_decorate([
     (0, _swagger.ApiParam)({
         name: 'id',
         description: 'Size table ID',
-        type: 'number'
+        type: 'string'
     }),
     (0, _swagger.ApiResponse)({
         status: _common.HttpStatus.OK,
         description: 'Size table updated successfully',
-        type: _sizeTable.SizeTable
+        type: _sizetabledto.SizeTableResponseDto
     }),
     (0, _swagger.ApiResponse)({
         status: _common.HttpStatus.NOT_FOUND,
         description: 'Size table not found'
     }),
-    _ts_param(0, (0, _common.Param)('id', _common.ParseIntPipe)),
+    _ts_param(0, (0, _common.Param)('id')),
     _ts_param(1, (0, _common.Body)()),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
-        Number,
+        String,
         typeof _sizetabledto.UpdateSizeTableDto === "undefined" ? Object : _sizetabledto.UpdateSizeTableDto
     ]),
     _ts_metadata("design:returntype", Promise)
@@ -148,7 +144,7 @@ _ts_decorate([
     (0, _swagger.ApiParam)({
         name: 'id',
         description: 'Size table ID',
-        type: 'number'
+        type: 'string'
     }),
     (0, _swagger.ApiResponse)({
         status: _common.HttpStatus.NO_CONTENT,
@@ -158,42 +154,13 @@ _ts_decorate([
         status: _common.HttpStatus.NOT_FOUND,
         description: 'Size table not found'
     }),
-    _ts_param(0, (0, _common.Param)('id', _common.ParseIntPipe)),
+    _ts_param(0, (0, _common.Param)('id')),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
-        Number
+        String
     ]),
     _ts_metadata("design:returntype", Promise)
 ], SizeTableController.prototype, "deleteSizeTable", null);
-_ts_decorate([
-    (0, _common.Post)(':id/size-dimensions'),
-    (0, _common.HttpCode)(_common.HttpStatus.CREATED),
-    (0, _swagger.ApiOperation)({
-        summary: 'Add a size dimension to a size table'
-    }),
-    (0, _swagger.ApiParam)({
-        name: 'id',
-        description: 'Size table ID',
-        type: 'number'
-    }),
-    (0, _swagger.ApiResponse)({
-        status: _common.HttpStatus.CREATED,
-        description: 'Size dimension added successfully',
-        type: _sizeTable.SizeDimension
-    }),
-    (0, _swagger.ApiResponse)({
-        status: _common.HttpStatus.NOT_FOUND,
-        description: 'Size table not found'
-    }),
-    _ts_param(0, (0, _common.Param)('id', _common.ParseIntPipe)),
-    _ts_param(1, (0, _common.Body)()),
-    _ts_metadata("design:type", Function),
-    _ts_metadata("design:paramtypes", [
-        Number,
-        typeof _sizetabledto.AddSizeDimensionDto === "undefined" ? Object : _sizetabledto.AddSizeDimensionDto
-    ]),
-    _ts_metadata("design:returntype", Promise)
-], SizeTableController.prototype, "addSizeDimension", null);
 SizeTableController = _ts_decorate([
     (0, _swagger.ApiTags)('Size Tables'),
     (0, _common.Controller)('size-tables'),

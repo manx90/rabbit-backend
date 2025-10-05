@@ -11,7 +11,7 @@ Object.defineProperty(exports, "SizeTableCrud", {
 const _common = require("@nestjs/common");
 const _typeorm = require("@nestjs/typeorm");
 const _typeorm1 = require("typeorm");
-const _sizeTable = require("./entities/sizeTable");
+const _sizeTableentity = require("./entities/sizeTable.entity");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -27,138 +27,108 @@ function _ts_param(paramIndex, decorator) {
     };
 }
 let SizeTableCrud = class SizeTableCrud {
-    async createSizeTable(tableData) {
-        const sizeTable = this.sizeTableRepo.create({
-            tableName: tableData.tableName
-        });
-        const savedTable = await this.sizeTableRepo.save(sizeTable);
-        // Create size dimensions if provided
-        if (tableData.sizeDimensions && tableData.sizeDimensions.length > 0) {
-            for (const sizeDim of tableData.sizeDimensions){
-                const sizeDimension = this.sizeDimensionRepo.create({
-                    sizeName: sizeDim.sizeName,
-                    sizeTable: savedTable
-                });
-                const savedDimension = await this.sizeDimensionRepo.save(sizeDimension);
-                // Create fields if provided
-                if (sizeDim.fields && sizeDim.fields.length > 0) {
-                    for (const field of sizeDim.fields){
-                        await this.sizeFieldRepo.save({
-                            fieldName: field.fieldName,
-                            fieldValue: field.fieldValue,
-                            sizeDimension: savedDimension
-                        });
-                    }
-                }
-            }
+    sanitizeSizeTable(sizeTable) {
+        return {
+            id: sizeTable.id,
+            tableName: sizeTable.tableName,
+            data: sizeTable.data
+        };
+    }
+    async createSizeTable(createDto) {
+        try {
+            const sizeTable = new _sizeTableentity.SizeTable();
+            sizeTable.tableName = createDto.tableName;
+            sizeTable.data = {
+                tableName: createDto.tableName,
+                dimensions: createDto.dimensions
+            };
+            const savedSizeTable = await this.sizeTableRepo.save(sizeTable);
+            return this.sanitizeSizeTable(savedSizeTable);
+        } catch (error) {
+            console.error('Error creating size table:', error);
+            return null;
         }
-        return await this.sizeTableRepo.findOne({
-            where: {
-                id: savedTable.id
-            },
-            relations: [
-                'sizeDimensions',
-                'sizeDimensions.fields'
-            ]
-        });
     }
     async getAllSizeTables() {
-        return await this.sizeTableRepo.find({
-            relations: [
-                'sizeDimensions',
-                'sizeDimensions.fields'
-            ],
-            order: {
-                id: 'ASC'
-            }
-        });
+        try {
+            const sizeTables = await this.sizeTableRepo.find({
+                order: {
+                    tableName: 'ASC'
+                }
+            });
+            return sizeTables.map((sizeTable)=>this.sanitizeSizeTable(sizeTable));
+        } catch (error) {
+            console.error('Error getting all size tables:', error);
+            return [];
+        }
     }
     async getSizeTableById(id) {
-        const sizeTable = await this.sizeTableRepo.findOne({
-            where: {
-                id
-            },
-            relations: [
-                'sizeDimensions',
-                'sizeDimensions.fields'
-            ]
-        });
-        if (!sizeTable) {
-            throw new _common.NotFoundException(`Size table with ID ${id} not found`);
-        }
-        return sizeTable;
-    }
-    async updateSizeTable(id, updateData) {
-        const sizeTable = await this.sizeTableRepo.findOne({
-            where: {
-                id
+        try {
+            const sizeTable = await this.sizeTableRepo.findOne({
+                where: {
+                    id
+                }
+            });
+            if (!sizeTable) {
+                throw new _common.NotFoundException(`Size table with ID ${id} not found`);
             }
-        });
-        if (!sizeTable) {
-            throw new _common.NotFoundException(`Size table with ID ${id} not found`);
+            return this.sanitizeSizeTable(sizeTable);
+        } catch (error) {
+            console.error('Error getting size table by ID:', error);
+            throw error;
         }
-        Object.assign(sizeTable, updateData);
-        return await this.sizeTableRepo.save(sizeTable);
+    }
+    async updateSizeTable(id, updateDto) {
+        try {
+            const sizeTable = await this.sizeTableRepo.findOne({
+                where: {
+                    id
+                }
+            });
+            if (!sizeTable) {
+                throw new _common.NotFoundException(`Size table with ID ${id} not found`);
+            }
+            // Update table name if provided
+            if (updateDto.tableName !== undefined) {
+                sizeTable.tableName = updateDto.tableName;
+                sizeTable.data.tableName = updateDto.tableName;
+            }
+            // Update dimensions if provided
+            if (updateDto.dimensions !== undefined) {
+                sizeTable.data.dimensions = updateDto.dimensions;
+            }
+            const updatedSizeTable = await this.sizeTableRepo.save(sizeTable);
+            return this.sanitizeSizeTable(updatedSizeTable);
+        } catch (error) {
+            console.error('Error updating size table:', error);
+            throw error;
+        }
     }
     async deleteSizeTable(id) {
-        const sizeTable = await this.sizeTableRepo.findOne({
-            where: {
-                id
+        try {
+            const sizeTable = await this.sizeTableRepo.findOne({
+                where: {
+                    id
+                }
+            });
+            if (!sizeTable) {
+                throw new _common.NotFoundException(`Size table with ID ${id} not found`);
             }
-        });
-        if (!sizeTable) {
-            throw new _common.NotFoundException(`Size table with ID ${id} not found`);
+            await this.sizeTableRepo.remove(sizeTable);
+        } catch (error) {
+            console.error('Error deleting size table:', error);
+            throw error;
         }
-        await this.sizeTableRepo.remove(sizeTable);
     }
-    async addSizeDimension(tableId, sizeData) {
-        const sizeTable = await this.sizeTableRepo.findOne({
-            where: {
-                id: tableId
-            }
-        });
-        if (!sizeTable) {
-            throw new _common.NotFoundException(`Size table with ID ${tableId} not found`);
-        }
-        const sizeDimension = this.sizeDimensionRepo.create({
-            sizeName: sizeData.sizeName,
-            sizeTable
-        });
-        const savedDimension = await this.sizeDimensionRepo.save(sizeDimension);
-        // Create fields if provided
-        if (sizeData.fields && sizeData.fields.length > 0) {
-            for (const field of sizeData.fields){
-                await this.sizeFieldRepo.save({
-                    fieldName: field.fieldName,
-                    fieldValue: field.fieldValue,
-                    sizeDimension: savedDimension
-                });
-            }
-        }
-        return await this.sizeDimensionRepo.findOne({
-            where: {
-                id: savedDimension.id
-            },
-            relations: [
-                'fields'
-            ]
-        });
-    }
-    constructor(sizeTableRepo, sizeDimensionRepo, sizeFieldRepo){
+    constructor(sizeTableRepo){
         this.sizeTableRepo = sizeTableRepo;
-        this.sizeDimensionRepo = sizeDimensionRepo;
-        this.sizeFieldRepo = sizeFieldRepo;
     }
 };
 SizeTableCrud = _ts_decorate([
     (0, _common.Injectable)(),
-    _ts_param(0, (0, _typeorm.InjectRepository)(_sizeTable.SizeTable)),
-    _ts_param(1, (0, _typeorm.InjectRepository)(_sizeTable.SizeDimension)),
-    _ts_param(2, (0, _typeorm.InjectRepository)(_sizeTable.SizeField)),
+    _ts_param(0, (0, _typeorm.InjectRepository)(_sizeTableentity.SizeTable)),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
-        typeof _typeorm1.Repository === "undefined" ? Object : _typeorm1.Repository,
-        typeof _typeorm1.Repository === "undefined" ? Object : _typeorm1.Repository,
         typeof _typeorm1.Repository === "undefined" ? Object : _typeorm1.Repository
     ])
 ], SizeTableCrud);

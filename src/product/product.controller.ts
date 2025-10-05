@@ -17,6 +17,22 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiBody,
+  ApiOkResponse,
+  ApiCreatedResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { auth } from 'src/auth/entities/auth.entity';
@@ -29,6 +45,7 @@ import { LoggerService } from '../common/utils/logger.service';
 import { CreateProductDto, UpdateProductDto } from './dto/Product.dto';
 import { ProductCrud } from './product.crud';
 import { ProductService } from './product.service';
+@ApiTags('Products')
 @Controller('product')
 export class ProductController {
   constructor(
@@ -37,6 +54,30 @@ export class ProductController {
     private readonly logger: LoggerService,
   ) {}
   @Get()
+  @ApiOperation({ summary: 'Get all products with pagination and filters' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page' })
+  @ApiQuery({
+    name: 'category',
+    required: false,
+    description: 'Filter by category',
+  })
+  @ApiQuery({
+    name: 'subcategory',
+    required: false,
+    description: 'Filter by subcategory',
+  })
+  @ApiQuery({
+    name: 'season',
+    required: false,
+    description: 'Filter by season',
+  })
+  @ApiQuery({
+    name: 'published',
+    required: false,
+    description: 'Filter by published status',
+  })
+  @ApiOkResponse({ description: 'Products retrieved successfully' })
   async getAllProducts(@Req() req: Request) {
     const startTime = Date.now();
     try {
@@ -81,6 +122,34 @@ export class ProductController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.SuperAdmin)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create a new product (Admin/SuperAdmin only)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Product data with file uploads',
+    schema: {
+      type: 'object',
+      properties: {
+        // Product fields will be defined by CreateProductDto
+        images: { type: 'array', items: { type: 'string', format: 'binary' } },
+        imgCover: { type: 'string', format: 'binary' },
+        imgSizeChart: { type: 'string', format: 'binary' },
+        imgMeasure: { type: 'string', format: 'binary' },
+        imgColors: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+        },
+      },
+    },
+  })
+  @ApiCreatedResponse({ description: 'Product created successfully' })
+  @ApiBadRequestResponse({
+    description: 'Bad request - validation failed or missing required files',
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({
+    description: 'Forbidden - Admin/SuperAdmin role required',
+  })
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'images', maxCount: 10 },
@@ -111,6 +180,10 @@ export class ProductController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get product by ID' })
+  @ApiParam({ name: 'id', description: 'Product ID', type: 'number' })
+  @ApiOkResponse({ description: 'Product retrieved successfully' })
+  @ApiNotFoundResponse({ description: 'Product not found' })
   findOne(@Param('id') id: number) {
     return this.productcrud.findOne(+id);
   }
@@ -118,6 +191,32 @@ export class ProductController {
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.SuperAdmin)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update product by ID (Admin/SuperAdmin only)' })
+  @ApiParam({ name: 'id', description: 'Product ID', type: 'number' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Product data with optional file uploads',
+    schema: {
+      type: 'object',
+      properties: {
+        // Product fields will be defined by UpdateProductDto
+        images: { type: 'array', items: { type: 'string', format: 'binary' } },
+        imgCover: { type: 'string', format: 'binary' },
+        imgColors: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+        },
+      },
+    },
+  })
+  @ApiOkResponse({ description: 'Product updated successfully' })
+  @ApiNotFoundResponse({ description: 'Product not found' })
+  @ApiBadRequestResponse({ description: 'Bad request - validation failed' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({
+    description: 'Forbidden - Admin/SuperAdmin role required',
+  })
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'images', maxCount: 10 },
@@ -147,6 +246,15 @@ export class ProductController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.SuperAdmin)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete product by ID (Admin/SuperAdmin only)' })
+  @ApiParam({ name: 'id', description: 'Product ID', type: 'number' })
+  @ApiOkResponse({ description: 'Product deleted successfully' })
+  @ApiNotFoundResponse({ description: 'Product not found' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({
+    description: 'Forbidden - Admin/SuperAdmin role required',
+  })
   async remove(@Param('id') id: number, @Req() req: Request) {
     const start = Date.now();
     this.logger.logApiRequest(

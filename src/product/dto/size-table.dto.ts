@@ -4,70 +4,11 @@ import {
   IsArray,
   IsOptional,
   ValidateNested,
-  IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /* ---------- DTOs for Size Table ---------- */
-
-export class SizeFieldResponseDto {
-  @ApiProperty({ example: 1 })
-  @IsNumber()
-  id: number;
-
-  @ApiProperty({ example: 'Chest' })
-  @IsString()
-  @IsNotEmpty()
-  fieldName: string;
-
-  @ApiProperty({ example: '38 inches' })
-  @IsString()
-  @IsNotEmpty()
-  fieldValue: string;
-}
-
-export class SizeDimensionResponseDto {
-  @ApiProperty({ example: 1 })
-  @IsNumber()
-  id: number;
-
-  @ApiProperty({ example: 'Medium' })
-  @IsString()
-  @IsNotEmpty()
-  sizeName: string;
-
-  @ApiPropertyOptional({
-    description: 'Optional fields for this size',
-    type: [SizeFieldResponseDto],
-  })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => SizeFieldResponseDto)
-  fields?: SizeFieldResponseDto[];
-}
-
-export class SizeTableResponseDto {
-  @ApiProperty({ example: 1 })
-  @IsNumber()
-  id: number;
-
-  @ApiProperty({ example: 'T-Shirt Size Chart' })
-  @IsString()
-  @IsNotEmpty()
-  tableName: string;
-
-  @ApiPropertyOptional({
-    description: 'Optional size dimensions to create with the table',
-    type: [SizeDimensionResponseDto],
-  })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => SizeDimensionResponseDto)
-  sizeDimensions?: SizeDimensionResponseDto[];
-}
 
 export class SizeFieldDto {
   @ApiProperty({ example: 'Chest' })
@@ -87,15 +28,49 @@ export class SizeDimensionDto {
   @IsNotEmpty()
   sizeName: string;
 
-  @ApiPropertyOptional({
-    description: 'Optional fields for this size',
+  @ApiProperty({
+    description: 'Fields for this size',
     type: [SizeFieldDto],
   })
-  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => SizeFieldDto)
-  fields?: SizeFieldDto[];
+  fields: SizeFieldDto[];
+}
+
+export class SizeTableDataDto {
+  @ApiProperty({ example: 'T-Shirt Size Chart' })
+  @IsString()
+  @IsNotEmpty()
+  tableName: string;
+
+  @ApiProperty({
+    description: 'Size dimensions for this table',
+    type: [SizeDimensionDto],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SizeDimensionDto)
+  dimensions: SizeDimensionDto[];
+}
+
+export class SizeTableResponseDto {
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
+  @IsString()
+  id: string;
+
+  @ApiProperty({ example: 'T-Shirt Size Chart' })
+  @IsString()
+  @IsNotEmpty()
+  tableName: string;
+
+  @ApiProperty({
+    description: 'Size table data',
+    type: SizeTableDataDto,
+  })
+  @ValidateNested()
+  @Type(() => SizeTableDataDto)
+  data: SizeTableDataDto;
 }
 
 export class CreateSizeTableDto {
@@ -104,15 +79,14 @@ export class CreateSizeTableDto {
   @IsNotEmpty()
   tableName: string;
 
-  @ApiPropertyOptional({
-    description: 'Optional size dimensions to create with the table',
+  @ApiProperty({
+    description: 'Size dimensions for this table',
     type: [SizeDimensionDto],
   })
-  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => SizeDimensionDto)
-  sizeDimensions?: SizeDimensionDto[];
+  dimensions: SizeDimensionDto[];
 }
 
 export class UpdateSizeTableDto {
@@ -121,21 +95,14 @@ export class UpdateSizeTableDto {
   @IsString()
   @IsNotEmpty()
   tableName?: string;
-}
-
-export class AddSizeDimensionDto {
-  @ApiProperty({ example: 'Large' })
-  @IsString()
-  @IsNotEmpty()
-  sizeName: string;
 
   @ApiPropertyOptional({
-    description: 'Optional fields for this size',
-    type: [SizeFieldDto],
+    description: 'Updated size dimensions for this table',
+    type: [SizeDimensionDto],
   })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => SizeFieldDto)
-  fields?: SizeFieldDto[];
+  @Type(() => SizeDimensionDto)
+  dimensions?: SizeDimensionDto[];
 }

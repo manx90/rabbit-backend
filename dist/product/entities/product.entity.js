@@ -18,6 +18,7 @@ _export(exports, {
 });
 const _classtransformer = require("class-transformer");
 const _authentity = require("../../auth/entities/auth.entity");
+const _sizeTableentity = require("./sizeTable.entity");
 const _typeorm = require("typeorm");
 const _entityinterface = require("../../common/interfaces/entity.interface");
 const _Categoryentity = require("./Category.entity");
@@ -303,6 +304,15 @@ _ts_decorate([
     }),
     _ts_metadata("design:type", typeof Date === "undefined" ? Object : Date)
 ], product.prototype, "datePublished", void 0);
+_ts_decorate([
+    (0, _typeorm.ManyToOne)(()=>_sizeTableentity.SizeTable, {
+        nullable: true
+    }),
+    (0, _typeorm.JoinColumn)({
+        name: 'sizeTableId'
+    }),
+    _ts_metadata("design:type", Object)
+], product.prototype, "sizeTable", void 0);
 _ts_decorate([
     (0, _typeorm.Column)({
         type: 'timestamp',

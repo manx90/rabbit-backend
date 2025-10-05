@@ -35,9 +35,6 @@ let SizeTableService = class SizeTableService {
     async deleteSizeTable(id) {
         return await this.sizeTableCrud.deleteSizeTable(id);
     }
-    async addSizeDimension(tableId, addDto) {
-        return await this.sizeTableCrud.addSizeDimension(tableId, addDto);
-    }
     constructor(sizeTableCrud){
         this.sizeTableCrud = sizeTableCrud;
     }

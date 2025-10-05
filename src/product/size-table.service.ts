@@ -8,9 +8,7 @@ import { SizeTableCrud } from './size-table.crud';
 import {
   CreateSizeTableDto,
   UpdateSizeTableDto,
-  AddSizeDimensionDto,
   SizeTableResponseDto,
-  SizeDimensionResponseDto,
 } from './dto/size-table.dto';
 
 @Injectable()
@@ -27,25 +25,18 @@ export class SizeTableService {
     return await this.sizeTableCrud.getAllSizeTables();
   }
 
-  async getSizeTableById(id: number): Promise<SizeTableResponseDto> {
+  async getSizeTableById(id: string): Promise<SizeTableResponseDto> {
     return await this.sizeTableCrud.getSizeTableById(id);
   }
 
   async updateSizeTable(
-    id: number,
+    id: string,
     updateDto: UpdateSizeTableDto,
   ): Promise<SizeTableResponseDto> {
     return await this.sizeTableCrud.updateSizeTable(id, updateDto);
   }
 
-  async deleteSizeTable(id: number): Promise<void> {
+  async deleteSizeTable(id: string): Promise<void> {
     return await this.sizeTableCrud.deleteSizeTable(id);
-  }
-
-  async addSizeDimension(
-    tableId: number,
-    addDto: AddSizeDimensionDto,
-  ): Promise<SizeDimensionResponseDto | null> {
-    return await this.sizeTableCrud.addSizeDimension(tableId, addDto);
   }
 }

@@ -13,6 +13,21 @@ import {
   UnauthorizedException,
   Query,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+  ApiBody,
+  ApiOkResponse,
+  ApiCreatedResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+} from '@nestjs/swagger';
 import { OrderService } from './order.service';
 import { CreateOrderDto, UpdateOrderDto } from './order.dto';
 import { order } from './order.entity';
@@ -24,12 +39,20 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { Request } from 'express';
 import { auth } from 'src/auth/entities/auth.entity';
 
+@ApiTags('Orders')
 @Controller('order')
 @UseInterceptors(ClassSerializerInterceptor)
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Post('create')
+  @ApiOperation({ summary: 'Create a new order' })
+  @ApiBody({ type: CreateOrderDto })
+  @ApiCreatedResponse({
+    description: 'Order created successfully',
+    type: order,
+  })
+  @ApiBadRequestResponse({ description: 'Bad request - validation failed' })
   createOrder(@Body() createOrderDto: CreateOrderDto): Promise<order> {
     return this.orderService.createOrder(createOrderDto);
   }
@@ -37,6 +60,15 @@ export class OrderController {
   @Get('numberOfOrders')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.SuperAdmin)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get total number of orders (Admin/SuperAdmin only)',
+  })
+  @ApiOkResponse({ description: 'Total orders count retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({
+    description: 'Forbidden - Admin/SuperAdmin role required',
+  })
   numberOfOrders(): Promise<number> {
     return this.orderService.numberOfOrders();
   }
@@ -72,6 +104,17 @@ export class OrderController {
   @Put('update/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.SuperAdmin)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update order by ID (Admin/SuperAdmin only)' })
+  @ApiParam({ name: 'id', description: 'Order ID' })
+  @ApiBody({ type: UpdateOrderDto })
+  @ApiOkResponse({ description: 'Order updated successfully', type: order })
+  @ApiNotFoundResponse({ description: 'Order not found' })
+  @ApiBadRequestResponse({ description: 'Bad request - validation failed' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({
+    description: 'Forbidden - Admin/SuperAdmin role required',
+  })
   updateOrder(
     @Param('id') id: string,
     @Body() updateOrderDto: UpdateOrderDto,
@@ -82,6 +125,16 @@ export class OrderController {
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.SuperAdmin)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get all orders (Admin/SuperAdmin only)' })
+  @ApiOkResponse({
+    description: 'Orders retrieved successfully',
+    type: [order],
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({
+    description: 'Forbidden - Admin/SuperAdmin role required',
+  })
   getAllOrders(): Promise<order[]> {
     return this.orderService.getAllOrders();
   }
@@ -89,6 +142,15 @@ export class OrderController {
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin, Role.SuperAdmin)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get order by ID (Admin/SuperAdmin only)' })
+  @ApiParam({ name: 'id', description: 'Order ID' })
+  @ApiOkResponse({ description: 'Order retrieved successfully', type: order })
+  @ApiNotFoundResponse({ description: 'Order not found' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiForbiddenResponse({
+    description: 'Forbidden - Admin/SuperAdmin role required',
+  })
   getOrderById(@Param('id') id: string): Promise<order> {
     return this.orderService.getOrderById(id);
   }

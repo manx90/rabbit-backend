@@ -9,6 +9,7 @@ Object.defineProperty(exports, "DeliveryController", {
     }
 });
 const _common = require("@nestjs/common");
+const _swagger = require("@nestjs/swagger");
 const _deliveryrepository = require("./delivery.repository");
 const _deliverydto = require("./delivery.dto");
 function _ts_decorate(decorators, target, key, desc) {
@@ -236,6 +237,18 @@ let DeliveryController = class DeliveryController {
 _ts_decorate([
     (0, _common.Post)(),
     (0, _common.HttpCode)(_common.HttpStatus.CREATED),
+    (0, _swagger.ApiOperation)({
+        summary: 'Create a new delivery'
+    }),
+    (0, _swagger.ApiBody)({
+        type: _deliverydto.CreateDeliveryDto
+    }),
+    (0, _swagger.ApiCreatedResponse)({
+        description: 'Delivery created successfully'
+    }),
+    (0, _swagger.ApiBadRequestResponse)({
+        description: 'Bad request - validation failed'
+    }),
     _ts_param(0, (0, _common.Body)()),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
@@ -245,12 +258,32 @@ _ts_decorate([
 ], DeliveryController.prototype, "createDelivery", null);
 _ts_decorate([
     (0, _common.Get)(),
+    (0, _swagger.ApiOperation)({
+        summary: 'Get all deliveries'
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'Deliveries retrieved successfully'
+    }),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", []),
     _ts_metadata("design:returntype", Promise)
 ], DeliveryController.prototype, "getAllDeliveries", null);
 _ts_decorate([
     (0, _common.Get)(':id'),
+    (0, _swagger.ApiOperation)({
+        summary: 'Get delivery by ID'
+    }),
+    (0, _swagger.ApiParam)({
+        name: 'id',
+        description: 'Delivery ID',
+        type: 'number'
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'Delivery retrieved successfully'
+    }),
+    (0, _swagger.ApiNotFoundResponse)({
+        description: 'Delivery not found'
+    }),
     _ts_param(0, (0, _common.Param)('id', _common.ParseIntPipe)),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
@@ -296,6 +329,26 @@ _ts_decorate([
 ], DeliveryController.prototype, "getDeliveryPriceByOptusId", null);
 _ts_decorate([
     (0, _common.Put)(':id'),
+    (0, _swagger.ApiOperation)({
+        summary: 'Update delivery by ID'
+    }),
+    (0, _swagger.ApiParam)({
+        name: 'id',
+        description: 'Delivery ID',
+        type: 'number'
+    }),
+    (0, _swagger.ApiBody)({
+        type: _deliverydto.UpdateDeliveryDto
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'Delivery updated successfully'
+    }),
+    (0, _swagger.ApiNotFoundResponse)({
+        description: 'Delivery not found'
+    }),
+    (0, _swagger.ApiBadRequestResponse)({
+        description: 'Bad request - validation failed'
+    }),
     _ts_param(0, (0, _common.Param)('id', _common.ParseIntPipe)),
     _ts_param(1, (0, _common.Body)()),
     _ts_metadata("design:type", Function),
@@ -308,6 +361,20 @@ _ts_decorate([
 _ts_decorate([
     (0, _common.Delete)(':id'),
     (0, _common.HttpCode)(_common.HttpStatus.NO_CONTENT),
+    (0, _swagger.ApiOperation)({
+        summary: 'Delete delivery by ID'
+    }),
+    (0, _swagger.ApiParam)({
+        name: 'id',
+        description: 'Delivery ID',
+        type: 'number'
+    }),
+    (0, _swagger.ApiNoContentResponse)({
+        description: 'Delivery deleted successfully'
+    }),
+    (0, _swagger.ApiNotFoundResponse)({
+        description: 'Delivery not found'
+    }),
     _ts_param(0, (0, _common.Param)('id', _common.ParseIntPipe)),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
@@ -341,6 +408,7 @@ _ts_decorate([
     _ts_metadata("design:returntype", Promise)
 ], DeliveryController.prototype, "bulkCreateDeliveries", null);
 DeliveryController = _ts_decorate([
+    (0, _swagger.ApiTags)('Delivery'),
     (0, _common.Controller)('delivery'),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [

@@ -25,7 +25,7 @@ const _productservice = require("./product.service");
 const _sizetablecontroller = require("./size-table.controller");
 const _sizetableservice = require("./size-table.service");
 const _sizetablecrud = require("./size-table.crud");
-const _sizeTable = require("./entities/sizeTable");
+const _sizeTableentity = require("./entities/sizeTable.entity");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -43,9 +43,7 @@ ProductModule = _ts_decorate([
                 _Categoryentity.subCategory,
                 _productcollectionentity.ProductCollection,
                 _productservice.ProductService,
-                _sizeTable.SizeTable,
-                _sizeTable.SizeDimension,
-                _sizeTable.SizeField
+                _sizeTableentity.SizeTable
             ]),
             _filestoragemodule.FileStorageModule
         ],

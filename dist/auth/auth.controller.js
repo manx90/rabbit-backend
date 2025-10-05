@@ -102,6 +102,22 @@ _ts_decorate([
     (0, _common.Post)('create-user'),
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
     (0, _rolesdecorator.Roles)(_rolesconstant.Role.SuperAdmin),
+    (0, _swagger.ApiBearerAuth)(),
+    (0, _swagger.ApiOperation)({
+        summary: 'Create a new user (SuperAdmin only)'
+    }),
+    (0, _swagger.ApiBody)({
+        type: _createuserdto.CreateUserDto
+    }),
+    (0, _swagger.ApiCreatedResponse)({
+        description: 'User created successfully'
+    }),
+    (0, _swagger.ApiUnauthorizedResponse)({
+        description: 'Unauthorized'
+    }),
+    (0, _swagger.ApiForbiddenResponse)({
+        description: 'Forbidden - SuperAdmin role required'
+    }),
     _ts_param(0, (0, _common.Body)()),
     _ts_param(1, (0, _common.Req)()),
     _ts_metadata("design:type", Function),
@@ -116,13 +132,14 @@ _ts_decorate([
     (0, _swagger.ApiOperation)({
         summary: 'User register'
     }),
-    (0, _swagger.ApiResponse)({
-        status: 201,
-        description: 'register successful'
+    (0, _swagger.ApiBody)({
+        type: _authdto.RegisterDto
     }),
-    (0, _swagger.ApiResponse)({
-        status: 401,
-        description: 'Unauthorized'
+    (0, _swagger.ApiCreatedResponse)({
+        description: 'User registered successfully'
+    }),
+    (0, _swagger.ApiBadRequestResponse)({
+        description: 'Bad request - validation failed'
     }),
     _ts_param(0, (0, _common.Body)()),
     _ts_metadata("design:type", Function),
@@ -136,13 +153,14 @@ _ts_decorate([
     (0, _swagger.ApiOperation)({
         summary: 'User login'
     }),
-    (0, _swagger.ApiResponse)({
-        status: 200,
+    (0, _swagger.ApiBody)({
+        type: _authdto.LoginDto
+    }),
+    (0, _swagger.ApiOkResponse)({
         description: 'Login successful'
     }),
-    (0, _swagger.ApiResponse)({
-        status: 401,
-        description: 'Unauthorized'
+    (0, _swagger.ApiUnauthorizedResponse)({
+        description: 'Invalid credentials'
     }),
     (0, _common.HttpCode)(_common.HttpStatus.OK),
     _ts_param(0, (0, _common.Body)()),
@@ -155,6 +173,16 @@ _ts_decorate([
 _ts_decorate([
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard),
     (0, _common.Get)('user'),
+    (0, _swagger.ApiBearerAuth)(),
+    (0, _swagger.ApiOperation)({
+        summary: 'Get current user profile'
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'User profile retrieved successfully'
+    }),
+    (0, _swagger.ApiUnauthorizedResponse)({
+        description: 'Unauthorized'
+    }),
     _ts_param(0, (0, _common.Req)()),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
@@ -165,6 +193,22 @@ _ts_decorate([
 _ts_decorate([
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard),
     (0, _common.Post)('change-password'),
+    (0, _swagger.ApiBearerAuth)(),
+    (0, _swagger.ApiOperation)({
+        summary: 'Change user password'
+    }),
+    (0, _swagger.ApiBody)({
+        type: _authdto.ChangePasswordDto
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'Password changed successfully'
+    }),
+    (0, _swagger.ApiUnauthorizedResponse)({
+        description: 'Unauthorized'
+    }),
+    (0, _swagger.ApiBadRequestResponse)({
+        description: 'Bad request - validation failed'
+    }),
     _ts_param(0, (0, _common.Req)()),
     _ts_param(1, (0, _common.Body)()),
     _ts_metadata("design:type", Function),
@@ -178,6 +222,19 @@ _ts_decorate([
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
     (0, _rolesdecorator.Roles)(_rolesconstant.Role.SuperAdmin),
     (0, _common.Get)('all'),
+    (0, _swagger.ApiBearerAuth)(),
+    (0, _swagger.ApiOperation)({
+        summary: 'Get all users (SuperAdmin only)'
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'Users retrieved successfully'
+    }),
+    (0, _swagger.ApiUnauthorizedResponse)({
+        description: 'Unauthorized'
+    }),
+    (0, _swagger.ApiForbiddenResponse)({
+        description: 'Forbidden - SuperAdmin role required'
+    }),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", []),
     _ts_metadata("design:returntype", void 0)
@@ -186,6 +243,23 @@ _ts_decorate([
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
     (0, _rolesdecorator.Roles)(_rolesconstant.Role.SuperAdmin, _rolesconstant.Role.Admin),
     (0, _common.Delete)('user/:username'),
+    (0, _swagger.ApiBearerAuth)(),
+    (0, _swagger.ApiOperation)({
+        summary: 'Delete user by username (Admin/SuperAdmin only)'
+    }),
+    (0, _swagger.ApiParam)({
+        name: 'username',
+        description: 'Username to delete'
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'User deleted successfully'
+    }),
+    (0, _swagger.ApiUnauthorizedResponse)({
+        description: 'Unauthorized'
+    }),
+    (0, _swagger.ApiForbiddenResponse)({
+        description: 'Forbidden - Admin/SuperAdmin role required'
+    }),
     _ts_param(0, (0, _common.Param)('username')),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
@@ -197,6 +271,29 @@ _ts_decorate([
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard, _rolesguard.RolesGuard),
     (0, _rolesdecorator.Roles)(_rolesconstant.Role.SuperAdmin),
     (0, _common.Post)('update-user/:userId'),
+    (0, _swagger.ApiBearerAuth)(),
+    (0, _swagger.ApiOperation)({
+        summary: 'Update user by SuperAdmin'
+    }),
+    (0, _swagger.ApiParam)({
+        name: 'userId',
+        description: 'User ID to update'
+    }),
+    (0, _swagger.ApiBody)({
+        type: _updateuserdto.UpdateUserDto
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'User updated successfully'
+    }),
+    (0, _swagger.ApiUnauthorizedResponse)({
+        description: 'Unauthorized'
+    }),
+    (0, _swagger.ApiForbiddenResponse)({
+        description: 'Forbidden - SuperAdmin role required'
+    }),
+    (0, _swagger.ApiBadRequestResponse)({
+        description: 'Bad request - validation failed'
+    }),
     _ts_param(0, (0, _common.Req)()),
     _ts_param(1, (0, _common.Param)('userId')),
     _ts_param(2, (0, _common.Body)()),
@@ -211,6 +308,16 @@ _ts_decorate([
 _ts_decorate([
     (0, _common.UseGuards)(_jwtauthguard.JwtAuthGuard),
     (0, _common.Get)('isLoggedIn'),
+    (0, _swagger.ApiBearerAuth)(),
+    (0, _swagger.ApiOperation)({
+        summary: 'Check if user is logged in'
+    }),
+    (0, _swagger.ApiOkResponse)({
+        description: 'Login status checked successfully'
+    }),
+    (0, _swagger.ApiUnauthorizedResponse)({
+        description: 'Unauthorized'
+    }),
     _ts_param(0, (0, _common.Req)()),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [
@@ -219,6 +326,7 @@ _ts_decorate([
     _ts_metadata("design:returntype", void 0)
 ], AuthController.prototype, "isLoggedIn", null);
 AuthController = _ts_decorate([
+    (0, _swagger.ApiTags)('Authentication'),
     (0, _common.Controller)('auth'),
     _ts_metadata("design:type", Function),
     _ts_metadata("design:paramtypes", [

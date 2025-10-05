@@ -11,6 +11,7 @@ import {
   IsPositive,
   ArrayMinSize,
   IsDate,
+  IsUUID,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -146,14 +147,6 @@ export class CreateProductDto {
   @IsString()
   @IsOptional()
   imgCover?: string;
-  @ApiPropertyOptional({ example: 'size-chart.jpg' })
-  @IsString()
-  @IsOptional()
-  imgSizeChart?: string;
-  @ApiPropertyOptional({ example: 'measure.jpg' })
-  @IsString()
-  @IsOptional()
-  imgMeasure?: string;
   @ApiPropertyOptional({ example: 'images.jpg' })
   @IsString()
   @IsOptional()
@@ -182,6 +175,14 @@ export class CreateProductDto {
   @IsString()
   @IsOptional()
   videoLink?: string;
+
+  @ApiPropertyOptional({
+    description: 'ID of the size table to associate with this product',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @IsUUID()
+  @IsOptional()
+  sizeTableId?: string;
 }
 
 export class UpdateProductDto {
@@ -252,4 +253,8 @@ export class UpdateProductDto {
   @IsOptional()
   @IsString()
   videoLink?: string;
+
+  @IsOptional()
+  @IsUUID()
+  sizeTableId?: string;
 }
