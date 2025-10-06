@@ -22,6 +22,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js --dataSource src/data-source.ts",
     "optimize-images": "ts-node -r tsconfig-paths/register scripts/optimize-images.ts",
+    "logs:watch": "node scripts/watch-logs.js",
     "logs:view": "node scripts/view-logs.js view all",
     "logs:error": "node scripts/view-logs.js view error",
     "logs:app": "node scripts/view-logs.js view app",
