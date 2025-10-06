@@ -12,9 +12,9 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { LoggerService } from './common/utils/logger.service';
 
 // import dataSource from './data-source';
-async function bootstrap() {
-  const logger = new LoggerService();
+const logger = new LoggerService();
 
+(async () => {
   try {
     logger.info('Starting application bootstrap...', 'Bootstrap');
 
@@ -89,6 +89,4 @@ async function bootstrap() {
     logger.logError(error, 'Bootstrap');
     process.exit(1);
   }
-}
-
-bootstrap();
+})();

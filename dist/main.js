@@ -55,8 +55,8 @@ function _interop_require_wildcard(obj, nodeInterop) {
     return newObj;
 }
 // import dataSource from './data-source';
-async function bootstrap() {
-    const logger = new _loggerservice.LoggerService();
+const logger = new _loggerservice.LoggerService();
+(async ()=>{
     try {
         logger.info('Starting application bootstrap...', 'Bootstrap');
         // Optimize for production environment
@@ -121,7 +121,6 @@ async function bootstrap() {
         logger.logError(error, 'Bootstrap');
         process.exit(1);
     }
-}
-bootstrap();
+})();
 
 //# sourceMappingURL=main.js.map
