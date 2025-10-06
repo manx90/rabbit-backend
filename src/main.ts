@@ -14,6 +14,39 @@ import { LoggerService } from './common/utils/logger.service';
 // import dataSource from './data-source';
 const logger = new LoggerService();
 
+// Global error handlers for uncaught exceptions and unhandled promise rejections
+process.on('uncaughtException', (error: Error) => {
+  logger.logError(error, 'UNCAUGHT_EXCEPTION', {
+    type: 'uncaughtException',
+    timestamp: new Date().toISOString(),
+    pid: process.pid,
+  });
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
+  const error = reason instanceof Error ? reason : new Error(String(reason));
+  logger.logError(error, 'UNHANDLED_REJECTION', {
+    type: 'unhandledRejection',
+    timestamp: new Date().toISOString(),
+    pid: process.pid,
+    promise: promise.toString(),
+  });
+  console.error('Unhandled Rejection:', reason);
+  process.exit(1);
+});
+
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully', 'PROCESS');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, shutting down gracefully', 'PROCESS');
+  process.exit(0);
+});
+
 (async () => {
   try {
     logger.info('Starting application bootstrap...', 'Bootstrap');

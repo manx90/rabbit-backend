@@ -56,6 +56,35 @@ function _interop_require_wildcard(obj, nodeInterop) {
 }
 // import dataSource from './data-source';
 const logger = new _loggerservice.LoggerService();
+// Global error handlers for uncaught exceptions and unhandled promise rejections
+process.on('uncaughtException', (error)=>{
+    logger.logError(error, 'UNCAUGHT_EXCEPTION', {
+        type: 'uncaughtException',
+        timestamp: new Date().toISOString(),
+        pid: process.pid
+    });
+    console.error('Uncaught Exception:', error);
+    process.exit(1);
+});
+process.on('unhandledRejection', (reason, promise)=>{
+    const error = reason instanceof Error ? reason : new Error(String(reason));
+    logger.logError(error, 'UNHANDLED_REJECTION', {
+        type: 'unhandledRejection',
+        timestamp: new Date().toISOString(),
+        pid: process.pid,
+        promise: promise.toString()
+    });
+    console.error('Unhandled Rejection:', reason);
+    process.exit(1);
+});
+process.on('SIGTERM', ()=>{
+    logger.info('SIGTERM received, shutting down gracefully', 'PROCESS');
+    process.exit(0);
+});
+process.on('SIGINT', ()=>{
+    logger.info('SIGINT received, shutting down gracefully', 'PROCESS');
+    process.exit(0);
+});
 (async ()=>{
     try {
         logger.info('Starting application bootstrap...', 'Bootstrap');
