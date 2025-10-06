@@ -56,6 +56,29 @@ function _interop_require_wildcard(obj, nodeInterop) {
 }
 // import dataSource from './data-source';
 const logger = new _loggerservice.LoggerService();
+// Memory optimization for cPanel hosting
+if (process.env.NODE_ENV === 'production') {
+    // Force garbage collection more frequently
+    setInterval(()=>{
+        if (global.gc) {
+            global.gc();
+        }
+    }, 30000); // Every 30 seconds
+    // Monitor memory usage
+    setInterval(()=>{
+        const memUsage = process.memoryUsage();
+        const memUsageMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+        if (memUsageMB > 50) {
+            // If using more than 50MB
+            logger.warn(`High memory usage: ${memUsageMB}MB`, 'MEMORY');
+            if (global.gc) {
+                global.gc();
+                const newUsage = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+                logger.info(`Memory after GC: ${newUsage}MB`, 'MEMORY');
+            }
+        }
+    }, 60000); // Check every minute
+}
 // Global error handlers for uncaught exceptions and unhandled promise rejections
 process.on('uncaughtException', (error)=>{
     logger.logError(error, 'UNCAUGHT_EXCEPTION', {
@@ -91,7 +114,7 @@ process.on('SIGINT', ()=>{
         // Optimize for production environment
         const isProduction = process.env.NODE_ENV === 'production';
         const app = await _core.NestFactory.create(_appmodule.AppModule, {
-            // Reduce memory usage
+            // Reduce memory usage for cPanel hosting
             logger: isProduction ? [
                 'error',
                 'warn'
@@ -100,7 +123,10 @@ process.on('SIGINT', ()=>{
                 'error',
                 'warn',
                 'debug'
-            ]
+            ],
+            // Disable unnecessary features to save memory
+            bufferLogs: false,
+            abortOnError: false
         });
         logger.info('Application created successfully', 'Bootstrap');
         // Configure static file serving for uploads
@@ -116,14 +142,18 @@ process.on('SIGINT', ()=>{
             const documentFactory = ()=>_swagger.SwaggerModule.createDocument(app, config);
             _swagger.SwaggerModule.setup('api', app, documentFactory);
         }
-        // Reduce body parser limits to save memory
-        const bodyLimit = isProduction ? '10mb' : '50mb';
+        // Reduce body parser limits to save memory for cPanel
+        const bodyLimit = isProduction ? '5mb' : '50mb';
         app.use(_bodyparser.json({
-            limit: bodyLimit
+            limit: bodyLimit,
+            // Reduce memory usage
+            verify: undefined,
+            type: 'application/json'
         }));
         app.use(_bodyparser.urlencoded({
-            extended: true,
-            limit: bodyLimit
+            extended: false,
+            limit: bodyLimit,
+            parameterLimit: 1000
         }));
         app.use(_loggermiddleware.LoggerMiddleware);
         app.enableCors({

@@ -14,6 +14,33 @@ import { LoggerService } from './common/utils/logger.service';
 // import dataSource from './data-source';
 const logger = new LoggerService();
 
+// Memory optimization for cPanel hosting
+if (process.env.NODE_ENV === 'production') {
+  // Force garbage collection more frequently
+  setInterval(() => {
+    if (global.gc) {
+      global.gc();
+    }
+  }, 30000); // Every 30 seconds
+
+  // Monitor memory usage
+  setInterval(() => {
+    const memUsage = process.memoryUsage();
+    const memUsageMB = Math.round(memUsage.heapUsed / 1024 / 1024);
+    if (memUsageMB > 50) {
+      // If using more than 50MB
+      logger.warn(`High memory usage: ${memUsageMB}MB`, 'MEMORY');
+      if (global.gc) {
+        global.gc();
+        const newUsage = Math.round(
+          process.memoryUsage().heapUsed / 1024 / 1024,
+        );
+        logger.info(`Memory after GC: ${newUsage}MB`, 'MEMORY');
+      }
+    }
+  }, 60000); // Check every minute
+}
+
 // Global error handlers for uncaught exceptions and unhandled promise rejections
 process.on('uncaughtException', (error: Error) => {
   logger.logError(error, 'UNCAUGHT_EXCEPTION', {
@@ -55,10 +82,13 @@ process.on('SIGINT', () => {
     const isProduction = process.env.NODE_ENV === 'production';
 
     const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-      // Reduce memory usage
+      // Reduce memory usage for cPanel hosting
       logger: isProduction
         ? ['error', 'warn']
         : ['log', 'error', 'warn', 'debug'],
+      // Disable unnecessary features to save memory
+      bufferLogs: false,
+      abortOnError: false,
     });
 
     logger.info('Application created successfully', 'Bootstrap');
@@ -83,10 +113,23 @@ process.on('SIGINT', () => {
       SwaggerModule.setup('api', app, documentFactory);
     }
 
-    // Reduce body parser limits to save memory
-    const bodyLimit = isProduction ? '10mb' : '50mb';
-    app.use(bodyParser.json({ limit: bodyLimit }));
-    app.use(bodyParser.urlencoded({ extended: true, limit: bodyLimit }));
+    // Reduce body parser limits to save memory for cPanel
+    const bodyLimit = isProduction ? '5mb' : '50mb';
+    app.use(
+      bodyParser.json({
+        limit: bodyLimit,
+        // Reduce memory usage
+        verify: undefined,
+        type: 'application/json',
+      }),
+    );
+    app.use(
+      bodyParser.urlencoded({
+        extended: false, // Use false instead of true to save memory
+        limit: bodyLimit,
+        parameterLimit: 1000, // Limit number of parameters
+      }),
+    );
 
     app.use(LoggerMiddleware);
     app.enableCors({
