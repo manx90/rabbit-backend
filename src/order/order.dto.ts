@@ -57,8 +57,9 @@ export class CreateOrderDto {
   // quantity: string;
 
   // @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  items_description: string = '';
+  items_description: string = 'no description';
 
   // @IsNotEmpty()
   @IsOptional()

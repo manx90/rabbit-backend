@@ -98,6 +98,7 @@ let OptosShipmentService = class OptosShipmentService {
         data.append('has_return', createShipment.has_return || '1');
         data.append('return_notes', createShipment.return_notes || '');
         data.append('notes', createShipment.notes || '');
+        data.append('description', '');
         try {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const access_token = await this.OptosService.Login();

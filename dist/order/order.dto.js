@@ -58,7 +58,7 @@ let CreateOrderDto = class CreateOrderDto {
         // @IsString()
         // quantity: string;
         // @IsNotEmpty()
-        this.items_description = '';
+        this.items_description = 'no description';
         // @IsNotEmpty()
         this.is_cod = '1';
         // // @IsNotEmpty()
@@ -95,6 +95,7 @@ _ts_decorate([
     _ts_metadata("design:type", String)
 ], CreateOrderDto.prototype, "shipment_types", void 0);
 _ts_decorate([
+    (0, _classvalidator.IsOptional)(),
     (0, _classvalidator.IsString)(),
     _ts_metadata("design:type", String)
 ], CreateOrderDto.prototype, "items_description", void 0);
